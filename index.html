@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultado do Quiz Eleitoral</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white shadow-xl rounded-2xl p-6 max-w-md w-full text-center border border-slate-100">
+        <div id="loading" class="text-slate-500 py-8">Carregando seu resultado...</div>
+        
+        <div id="resultado" class="hidden">
+            <img id="foto" src="" alt="Foto do Candidato" class="w-32 h-32 object-cover rounded-full mx-auto mb-4 shadow-md border-2 border-slate-200">
+            <h1 id="nome" class="text-2xl font-bold text-slate-800 mb-1"></h1>
+            <p id="partido" class="text-indigo-600 font-semibold mb-3"></p>
+            <p id="numero" class="text-sm text-slate-500 mb-6 bg-slate-100 inline-block px-3 py-1 rounded-full"></p>
+            
+            <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 text-left rounded-r-lg mb-6">
+                <p class="text-xs font-bold text-indigo-800 uppercase mb-1">Por que este candidato?</p>
+                <p id="justificativa" class="text-slate-700 text-sm leading-relaxed"></p>
+            </div>
+        </div>
+
+        <div id="erro" class="hidden text-red-500 py-4 font-medium">
+            Candidato não identificado ou sessão inválida.
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURE SUAS CHAVES DO SUPABASE AQUI
+        const SUPABASE_URL = "https://hglifytalonmncphycfp.supabase.co";
+        const SUPABASE_ANON_KEY = "SUA_CHAVE_ANON_ANTIGA_OU_PUBLICA"; // Cole aqui a chave anon legacy do Supabase
+
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function buscarResultado() {
+            const params = new URLSearchParams(window.location.search);
+            const sessaoId = params.get('sessao') || params.get('id_sessao') || params.get('id');
+
+            if (!sessaoId) {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('erro').classList.remove('hidden');
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from('resultados_quiz')
+                .select('*')
+                .eq('id_sessao', sessaoId)
+                .single();
+
+            document.getElementById('loading').classList.add('hidden');
+
+            if (error || !data) {
+                document.getElementById('erro').classList.remove('hidden');
+                return;
+            }
+
+            // Preenche os dados na tela
+            document.getElementById('nome').innerText = data.nome_candidato || "Candidato";
+            document.getElementById('partido').innerText = data.partido || "";
+            document.getElementById('numero').innerText = "Número: " + (data.numero_candidato || "");
+            document.getElementById('justificativa').innerText = data.justificativa || "Nenhuma justificativa informada.";
+            if (data.foto) {
+                document.getElementById('foto').src = data.foto;
+            }
+
+            document.getElementById('resultado').classList.remove('hidden');
+        }
+
+        buscarResultado();
+    </script>
+</body>
+</html>
