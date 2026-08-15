@@ -47,7 +47,7 @@
                 const { data, error } = await db
                     .from('resultados_quiz')
                     .select('*')
-                    .eq('id', sessaoId)
+                    .eq('id_sessao', sessaoId)
                     .single();
 
                 document.getElementById('loading').classList.add('hidden');
