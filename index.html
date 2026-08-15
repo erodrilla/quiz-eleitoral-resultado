@@ -44,12 +44,11 @@ supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 document.getElementById('erro').classList.remove('hidden');
                 return;
             }
-
-            const { data, error } = await supabase
-                .from('resultados_quiz')
-                .select('*')
-              .eq('id', sessaoId)
-                .single();
+({ data, error } = await supabase
+    .from('resultados_quiz')
+    .select('*')
+    .eq('id', sessaoId)
+    .single());
 
             document.getElementById('loading').classList.add('hidden');
 
