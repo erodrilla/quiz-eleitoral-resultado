@@ -48,15 +48,16 @@ supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             const { data, error } = await supabase
                 .from('resultados_quiz')
                 .select('*')
-                .eq('id_sessao', sessaoId)
+              .eq('id', sessaoId)
                 .single();
 
             document.getElementById('loading').classList.add('hidden');
 
-            if (error || !data) {
-                document.getElementById('erro').classList.remove('hidden');
-                return;
-            }
+           const { data, error } = await supabase
+    .from('resultados_quiz')
+    .select('*')
+    .eq('id', sessaoId)
+    .single();
 
             // Preenche os dados na tela
             document.getElementById('nome').innerText = data.nome_candidato || "Candidato";
