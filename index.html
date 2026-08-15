@@ -4,48 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resultado do Quiz Eleitoral</title>
-    <!-- Importação do Supabase JS via CDN UMD oficial -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
 
-    <div class="bg-white shadow-xl rounded-2xl p-6 max-w-md w-full text-center border border-slate-100">
-        <div id="loading" class="text-slate-500 py-8">Carregando seu resultado...</div>
+    <div id="app" class="bg-white shadow-xl rounded-2xl p-6 max-w-md w-full text-center border border-slate-100">
+        <div id="loading" class="py-12 text-slate-500">
+            Carregando seu resultado...
+        </div>
         
         <div id="resultado" class="hidden">
-            <img id="foto" src="" alt="Foto do Candidato" class="w-32 h-32 object-cover rounded-full mx-auto mb-4 shadow-md border-2 border-slate-200">
-            <h1 id="nome" class="text-2xl font-bold text-slate-800 mb-1"></h1>
-            <p id="partido" class="text-indigo-600 font-semibold mb-3"></p>
-            <p id="numero" class="text-sm text-slate-500 mb-6 bg-slate-100 inline-block px-3 py-1 rounded-full"></p>
-            
-            <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 text-left rounded-r-lg mb-6">
-                <p class="text-xs font-bold text-indigo-800 uppercase mb-1">Por que este candidato?</p>
-                <p id="justificativa" class="text-slate-700 text-sm leading-relaxed"></p>
-            </div>
+            <!-- Os dados do candidato serão injetados aqui via JavaScript -->
         </div>
 
-        <div id="erro" class="hidden text-red-500 py-4 font-medium">
+        <div id="erro" class="hidden py-8 text-red-500">
             Candidato não identificado ou sessão inválida.
         </div>
     </div>
 
     <script>
-        // CONFIGURE SUAS CHAVES DO SUPABASE AQUI
-        const SUPABASE_URL = "https://hglifytalonmncphycfp.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ";
+        // Configuração do Supabase (Insira suas chaves públicas corretas)
+        const SUPABASE_URL = 'SUA_SUPABASE_URL_AQUI';
+        const SUPABASE_ANON_KEY = 'SUA_SUPABASE_ANON_KEY_AQUI';
+        
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         async function buscarResultado() {
-            // Garante que o SDK do Supabase carregou antes de instanciar
-            if (!window.supabase || !window.supabase.createClient) {
-                setTimeout(buscarResultado, 100);
-                return;
-            }
-
-            const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
             const params = new URLSearchParams(window.location.search);
-            const sessaoId = params.get('sessao') || params.get('id_sessao') || params.get('id');
+            const sessaoId = params.get('sessao') || params.get('id');
 
             if (!sessaoId) {
                 document.getElementById('loading').classList.add('hidden');
@@ -53,35 +42,47 @@
                 return;
             }
 
-            const resposta = await db
-                .from('resultados_quiz')
-                .select('*')
-               .eq('id_sessao', sessaoId)
-                .single();
+            try {
+                // Consulta buscando pelo ID numérico padrão da tabela
+                const { data, error } = await db
+                    .from('resultados_quiz')
+                    .select('*')
+                    .eq('id', sessaoId)
+                    .single();
 
-            document.getElementById('loading').classList.add('hidden');
+                document.getElementById('loading').classList.add('hidden');
 
-            if (resposta.error || !resposta.data) {
+                if (error || !data) {
+                    document.getElementById('erro').classList.remove('hidden');
+                    return;
+                }
+
+                // Renderiza o card do candidato se encontrado
+                const container = document.getElementById('resultado');
+                container.classList.remove('hidden');
+                
+                container.innerHTML = `
+                    <div class="flex flex-col items-center">
+                        <img src="${data.foto || 'https://via.placeholder.com/150'}" alt="Foto do Candidato" class="w-32 h-32 rounded-full object-cover shadow-md mb-4 border-4 border-slate-50">
+                        <h2 class="text-xl font-bold text-slate-800 uppercase mb-1">${data.nome_candidato || 'Nome não informado'}</h2>
+                        <p class="text-lg font-semibold text-indigo-600 mb-2">${data.partido || 'Partido'}</p>
+                        <span class="bg-slate-100 text-slate-600 text-sm px-3 py-1 rounded-full font-medium mb-6">Número: ${data.numero || '----'}</span>
+                        
+                        <div class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 text-left w-full">
+                            <h3 class="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-1">Por que este candidato?</h3>
+                            <p class="text-sm text-slate-600 leading-relaxed">${data.justificativa || 'Com base nas suas respostas, este candidato é o que melhor se alinha aos seus valores.'}</p>
+                        </div>
+                    </div>
+                `;
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loading').classList.add('hidden');
                 document.getElementById('erro').classList.remove('hidden');
-                return;
             }
-
-            const item = resposta.data;
-
-            // Preenche os dados na tela
-            document.getElementById('nome').innerText = item.nome_candidato || "Candidato";
-            document.getElementById('partido').innerText = item.partido || "";
-            document.getElementById('numero').innerText = "Número: " + (item.numero_candidato || "");
-            document.getElementById('justificativa').innerText = item.justificativa || "Nenhuma justificativa informada.";
-            
-            if (item.foto) {
-                document.getElementById('foto').src = item.foto;
-            }
-
-            document.getElementById('resultado').classList.remove('hidden');
         }
 
-        window.addEventListener('DOMContentLoaded', buscarResultado);
+        buscarResultado();
     </script>
 </body>
 </html>
