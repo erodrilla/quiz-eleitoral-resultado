@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resultado do Quiz Eleitoral</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
@@ -26,7 +24,6 @@
     </div>
 
     <script>
-        // Configuração do Supabase (Insira suas chaves públicas corretas)
         const SUPABASE_URL = 'https://hglifytalonmncphycfp.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ';
         
@@ -43,7 +40,6 @@
             }
 
             try {
-                // Consulta buscando pelo ID numérico padrão da tabela
                 const { data, error } = await db
                     .from('resultados_quiz')
                     .select('*')
@@ -57,7 +53,6 @@
                     return;
                 }
 
-                // Renderiza o card do candidato se encontrado
                 const container = document.getElementById('resultado');
                 container.classList.remove('hidden');
                 
@@ -66,7 +61,7 @@
                         <img src="${data.foto || 'https://via.placeholder.com/150'}" alt="Foto do Candidato" class="w-32 h-32 rounded-full object-cover shadow-md mb-4 border-4 border-slate-50">
                         <h2 class="text-xl font-bold text-slate-800 uppercase mb-1">${data.nome_candidato || 'Nome não informado'}</h2>
                         <p class="text-lg font-semibold text-indigo-600 mb-2">${data.partido || 'Partido'}</p>
-                        <span class="bg-slate-100 text-slate-600 text-sm px-3 py-1 rounded-full font-medium mb-6">Número: ${data.numero || '----'}</span>
+                        <span class="bg-slate-100 text-slate-600 text-sm px-3 py-1 rounded-full font-medium mb-6">Número: ${data.numero_candidato || data.numero || '----'}</span>
                         
                         <div class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 text-left w-full">
                             <h3 class="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-1">Por que este candidato?</h3>
