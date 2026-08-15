@@ -33,7 +33,7 @@
         // CONFIGURE SUAS CHAVES DO SUPABASE AQUI
       const SUPABASE_URL = "https://hglifytalonmncphycfp.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIwMjM3MTMsImV4cCI6MjA1NzU5OTM3M30.gFB1qb_n6qXcmV0Aj-UyEKqwj4J4oylpK_w0s_cZcVQ";
-   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         async function buscarResultado() {
             const params = new URLSearchParams(window.location.search);
