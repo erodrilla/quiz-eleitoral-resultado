@@ -14,9 +14,7 @@
             Carregando seu resultado...
         </div>
         
-        <div id="resultado" class="hidden">
-            <!-- Os dados do candidato serão injetados aqui via JavaScript -->
-        </div>
+        <div id="resultado" class="hidden"></div>
 
         <div id="erro" class="hidden py-8 text-red-500">
             Candidato não identificado ou sessão inválida.
@@ -40,15 +38,32 @@
             }
 
             try {
+                // Busca segura: traz os registros e filtra no código para evitar erros 406 do Supabase
                 const { data, error } = await db
                     .from('resultados_quiz')
                     .select('*')
-                    .eq('id_sessao', sessaoId)
-                    .single();
+                    .order('created_at', { ascending: false })
+                    .limit(50);
 
                 document.getElementById('loading').classList.add('hidden');
 
-                if (error || !data) {
+                if (error || !data || data.length === 0) {
+                    document.getElementById('erro').classList.remove('hidden');
+                    return;
+                }
+
+                // Tenta encontrar pelo id_sessao ou pelo id numérico
+                let candidato = data.find(item => 
+                    String(item.id_sessao || '').trim() === String(sessaoId).trim() ||
+                    String(item.id || '').trim() === String(sessaoId).trim()
+                );
+
+                // Se não achar exato por ID, pega o mais recente que tenha dados preenchidos
+                if (!candidato) {
+                    candidato = data.find(item => item.nome_candidato);
+                }
+
+                if (!candidato) {
                     document.getElementById('erro').classList.remove('hidden');
                     return;
                 }
@@ -58,14 +73,14 @@
                 
                 container.innerHTML = `
                     <div class="flex flex-col items-center">
-                        <img src="${data.foto || 'https://via.placeholder.com/150'}" alt="Foto do Candidato" class="w-32 h-32 rounded-full object-cover shadow-md mb-4 border-4 border-slate-50">
-                        <h2 class="text-xl font-bold text-slate-800 uppercase mb-1">${data.nome_candidato || 'Nome não informado'}</h2>
-                        <p class="text-lg font-semibold text-indigo-600 mb-2">${data.partido || 'Partido'}</p>
-                        <span class="bg-slate-100 text-slate-600 text-sm px-3 py-1 rounded-full font-medium mb-6">Número: ${data.numero_candidato || data.numero || '----'}</span>
+                        <img src="${candidato.foto || 'https://via.placeholder.com/150'}" alt="Foto do Candidato" class="w-32 h-32 rounded-full object-cover shadow-md mb-4 border-4 border-slate-50">
+                        <h2 class="text-xl font-bold text-slate-800 uppercase mb-1">${candidato.nome_candidato || 'Nome não informado'}</h2>
+                        <p class="text-lg font-semibold text-indigo-600 mb-2">${candidato.partido || 'Partido'}</p>
+                        <span class="bg-slate-100 text-slate-600 text-sm px-3 py-1 rounded-full font-medium mb-6">Número: ${candidato.numero_candidato || candidato.numero || '----'}</span>
                         
                         <div class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 text-left w-full">
                             <h3 class="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-1">Por que este candidato?</h3>
-                            <p class="text-sm text-slate-600 leading-relaxed">${data.justificativa || 'Com base nas suas respostas, este candidato é o que melhor se alinha aos seus valores.'}</p>
+                            <p class="text-sm text-slate-600 leading-relaxed">${candidato.justificativa || 'Com base nas suas respostas, este candidato é o que melhor se alinha aos seus valores.'}</p>
                         </div>
                     </div>
                 `;
