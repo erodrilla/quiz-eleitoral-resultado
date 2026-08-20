@@ -38,11 +38,12 @@
             }
 
             try {
+                // Busca restrita estritamente ao ID da sessão atual para evitar conflitos de registros antigos
                 const { data, error } = await db
                     .from('resultados_quiz')
                     .select('*')
-                    .order('created_at', { ascending: false })
-                    .limit(50);
+                    .eq('id_sessao', sessaoId)
+                    .order('created_at', { ascending: false });
 
                 document.getElementById('loading').classList.add('hidden');
 
@@ -51,33 +52,22 @@
                     return;
                 }
 
-                let candidato = data.find(item => 
-                    String(item.id_sessao || '').trim() === String(sessaoId).trim() ||
-                    String(item.id || '').trim() === String(sessaoId).trim()
-                );
-
-                if (!candidato) {
-                    candidato = data.find(item => item.nome_candidato);
-                }
-
-                if (!candidato) {
-                    document.getElementById('erro').classList.remove('hidden');
-                    return;
-                }
-
+                const candidato = data[0];
                 const container = document.getElementById('resultado');
                 container.classList.remove('hidden');
 
-                // Verifica se a flag de bloqueio está ativa para este registro
-                if (candidato.bloquear_candidatos === true || String(candidato.bloquear_candidatos) === 'true') {
+                // Verifica se a trava de bloqueio está ativa para este registro
+                const isBloqueado = candidato.bloquear_candidatos === true || String(candidato.bloquear_candidatos) === 'true';
+
+                if (isBloqueado) {
                     container.innerHTML = `
                         <div class="flex flex-col items-center text-left">
                             <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-3 mx-auto">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round5" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                             </div>
-                            <h2 class="text-lg font-bold text-slate-800 text-center mb-2">Consulta de Conscientização</h2>
+                            <h2 class="text-lg font-bold text-slate-800 text-center mb-2">Orientações de Consulta</h2>
                             <p class="text-sm text-slate-600 leading-relaxed mb-4 text-center">
-                                Com base nas suas respostas, não identificamos candidatos com afinidade direta às diretrizes avaliadas. Para que você possa analisar o histórico completo, propostas e a atuação de parlamentares de forma autônoma, recomendamos utilizar as seguintes plataformas independentes de consulta:
+                                Com base nas respostas fornecidas, recomendamos a consulta a plataformas independentes de transparência para análise aprofundada de propostas e histórico de atuação:
                             </p>
                             <div class="flex flex-col gap-2 w-full">
                                 <a href="https://quemfoiquem.org.br/?p=4" target="_blank" rel="noopener noreferrer" class="bg-indigo-600 text-white text-sm font-semibold py-2.5 px-4 rounded-xl text-center hover:bg-indigo-700 transition-colors">
