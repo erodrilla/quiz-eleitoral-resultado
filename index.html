@@ -3,28 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resultado do Quiz Eleitoral</title>
+    <title>Resultado do Quiz</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
 
     <div id="app" class="bg-white shadow-xl rounded-2xl p-6 max-w-md w-full text-center border border-slate-100">
-        <div id="loading" class="py-12 text-slate-500">
-            Carregando seu resultado...
-        </div>
-        
+        <div id="loading" class="py-12 text-slate-500">Carregando resultado...</div>
         <div id="resultado" class="hidden"></div>
-
-        <div id="erro" class="hidden py-8 text-red-500">
-            Candidato não identificado ou sessão inválida.
-        </div>
+        <div id="erro" class="hidden py-8 text-red-500 font-semibold">Dados não encontrados. Tente novamente.</div>
     </div>
 
     <script>
         const SUPABASE_URL = 'https://hglifytalonmncphycfp.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ';
-        
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         async function buscarResultado() {
@@ -32,116 +25,64 @@
             const sessaoId = params.get('sessao') || params.get('id');
 
             if (!sessaoId) {
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('erro').classList.remove('hidden');
+                exibirErro();
                 return;
             }
 
             try {
-                // Busca os registros mais recentes da tabela sem travar estritamente no filtro exato, 
-                // permitindo localizar a sessão dinamicamente no código logo abaixo.
                 const { data, error } = await db
                     .from('resultados_quiz')
                     .select('*')
-                    .order('created_at', { ascending: false })
-                    .limit(50);
-
-                document.getElementById('loading').classList.add('hidden');
+                    .eq('id_sessao', sessaoId)
+                    .order('created_at', { ascending: false });
 
                 if (error || !data || data.length === 0) {
-                    document.getElementById('erro').classList.remove('hidden');
+                    exibirErro();
                     return;
                 }
 
-                // Tenta encontrar o registro que corresponde ao ID da sessão atual
-                let candidato = data.find(item => 
-                    String(item.id_sessao || '').trim() === String(sessaoId).trim() ||
-                    String(item.id || '').trim() === String(sessaoId).trim()
-                );
-
-                // Se não achar por ID exato mas houver registros, pega o mais recente como fallback para teste
-                if (!candidato && data.length > 0) {
-                    candidato = data[0];
-                }
-
-                if (!candidato) {
-                    document.getElementById('erro').classList.remove('hidden');
-                    return;
-                }
-
-                const container = document.getElementById('resultado');
-                container.classList.remove('hidden');
-
-                // Verifica se a trava de bloqueio está ativa
-                const isBloqueado = candidato.bloquear_candidatos === true || 
-                                    String(candidato.bloquear_candidatos) === 'true' ||
-                                    candidato.bloquearCandidatos === true || 
-                                    String(candidato.bloquearCandidatos) === 'true';
-
-                if (isBloqueado) {
-                    container.innerHTML = `
-                        <div class="flex flex-col items-center text-left">
-                            <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-3 mx-auto">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                            </div>
-                            <h2 class="text-lg font-bold text-slate-800 text-center mb-2">Orientações de Consulta</h2>
-                            <p class="text-sm text-slate-600 leading-relaxed mb-4 text-center">
-                                Com base nas respostas fornecidas, recomendamos a consulta a plataformas independentes de transparência para análise aprofundada de propostas e histórico de atuação:
-                            </p>
-                            <div class="flex flex-col gap-2 w-full">
-                                <a href="https://quemfoiquem.org.br/?p=4" target="_blank" rel="noopener noreferrer" class="bg-indigo-600 text-white text-sm font-semibold py-2.5 px-4 rounded-xl text-center hover:bg-indigo-700 transition-colors">
-                                    Quem Foi Quem
-                                </a>
-                                <a href="https://www.agencialupa.org/deputometro/" target="_blank" rel="noopener noreferrer" class="bg-slate-800 text-white text-sm font-semibold py-2.5 px-4 rounded-xl text-center hover:bg-slate-900 transition-colors">
-                                    Agência Lupa - Deputômetro
-                                </a>
-                            </div>
-                        </div>
-                    `;
-                    return;
-                }
-
-                let instagramHtml = '';
-                if (candidato.instagram) {
-                    let igUrl = candidato.instagram.trim();
-                    if (!igUrl.startsWith('http://') && !igUrl.startsWith('https://')) {
-                        if (igUrl.includes('instagram.com')) {
-                            igUrl = 'https://' + igUrl;
-                        } else {
-                            const username = igUrl.replace('@', '');
-                            igUrl = `https://www.instagram.com/${username}`;
-                        }
-                    }
-
-                    instagramHtml = `
-                        <a href="${igUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 via-pink-500 to-amber-500 text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-sm hover:opacity-90 transition-opacity mb-6">
-                            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                            Ver Instagram
-                        </a>
-                    `;
-                }
-                
-                container.innerHTML = `
-                    <div class="flex flex-col items-center">
-                        <img src="${candidato.foto || 'https://via.placeholder.com/150'}" alt="Foto do Candidato" class="w-32 h-32 rounded-full object-cover shadow-md mb-4 border-4 border-slate-50">
-                        <h2 class="text-xl font-bold text-slate-800 uppercase mb-1">${candidato.nome_candidato || 'Nome não informado'}</h2>
-                        <p class="text-lg font-semibold text-indigo-600 mb-2">${candidato.partido || 'Partido'}</p>
-                        <span class="bg-slate-100 text-slate-600 text-sm px-3 py-1 rounded-full font-medium mb-3">Número: ${candidato.numero_candidato || candidato.numero || '----'}</span>
-                        
-                        ${instagramHtml}
-
-                        <div class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 text-left w-full">
-                            <h3 class="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-1">Por que este candidato?</h3>
-                            <p class="text-sm text-slate-600 leading-relaxed">${candidato.justificativa || 'Com base nas suas respostas, este candidato é o que melhor se alinha aos seus valores.'}</p>
-                        </div>
-                    </div>
-                `;
-
-            } catch (err) {
-                console.error(err);
+                const candidato = data[0];
                 document.getElementById('loading').classList.add('hidden');
-                document.getElementById('erro').classList.remove('hidden');
+
+                // Verifica se o flag de bloqueio está presente e verdadeiro
+                if (candidato.bloquear_candidatos === true || String(candidato.bloquear_candidatos) === 'true') {
+                    renderizarBloqueio();
+                } else if (candidato.nome_candidato) {
+                    renderizarCandidato(candidato);
+                } else {
+                    exibirErro();
+                }
+            } catch (err) {
+                exibirErro();
             }
+        }
+
+        function exibirErro() {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('erro').classList.remove('hidden');
+        }
+
+        function renderizarBloqueio() {
+            const container = document.getElementById('resultado');
+            container.classList.remove('hidden');
+            container.innerHTML = `
+                <div class="space-y-4">
+                    <h2 class="text-xl font-bold text-slate-800">Orientações de Consulta</h2>
+                    <p class="text-sm text-slate-600">Para uma análise aprofundada, utilize plataformas independentes:</p>
+                    <a href="https://quemfoiquem.org.br/?p=4" class="block bg-indigo-600 text-white py-2 rounded-lg">Quem Foi Quem</a>
+                    <a href="https://www.agencialupa.org/deputometro/" class="block bg-slate-800 text-white py-2 rounded-lg">Agência Lupa</a>
+                </div>`;
+        }
+
+        function renderizarCandidato(c) {
+            const container = document.getElementById('resultado');
+            container.classList.remove('hidden');
+            container.innerHTML = `
+                <img src="${c.foto || 'https://via.placeholder.com/150'}" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-slate-50">
+                <h2 class="text-lg font-bold uppercase">${c.nome_candidato}</h2>
+                <p class="text-indigo-600 font-semibold">${c.partido || ''}</p>
+                <div class="mt-4 bg-slate-50 p-3 rounded-lg text-sm text-slate-600">${c.justificativa || ''}</div>
+            `;
         }
 
         buscarResultado();
