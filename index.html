@@ -16,7 +16,7 @@
 
   <script>
     const SUPABASE_URL = 'https://hglifytalonmncphycfp.supabase.co';
-    const SUPABASE_ANON_KEY = 'SUBSTITUA_PELA_CHAVE_ANON_ATUAL';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ';
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const $ = (id) => document.getElementById(id);
@@ -34,9 +34,8 @@
       }
 
       try {
-        // Se resultados_quiz estiver no schema public, remova .schema('eleicoes_2026').
+        // A API do projeto expõe resultados_quiz no schema public.
         const { data, error } = await db
-          .schema('eleicoes_2026')
           .from('resultados_quiz')
           .select('*')
           .eq('id_sessao', sessaoId)
@@ -77,7 +76,7 @@
 
         renderizarCandidato(data);
       } catch (err) {
-        console.error(err);
+        console.error('Erro inesperado:', err);
         $('loading').classList.add('hidden');
         exibirErro('Erro inesperado ao carregar o resultado.');
       }
@@ -98,7 +97,7 @@
         <div class="flex flex-col items-center text-left">
           <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-3 mx-auto">!</div>
           <h2 class="text-lg font-bold text-slate-800 text-center mb-2">Orientações de Consulta</h2>
-          <p class="text-sm text-slate-600 leading-relaxed mb-4 text-center">${escapeHtml(data.mensagem || 'Recomendamos consultar plataformas independentes para pesquisar propostas e histórico de atuação.')}</p>
+          <p class="text-sm text-slate-600 leading-relaxed mb-4 text-center">${escapeHtml(data.mensagem || 'Com base nas respostas fornecidas, recomendamos consultar plataformas independentes para pesquisar propostas e histórico de atuação.')}</p>
           <div class="flex flex-col gap-2 w-full">
             <a href="https://quemfoiquem.org.br/lp6/" target="_blank" rel="noopener noreferrer" class="bg-indigo-600 text-white text-sm font-semibold py-2.5 px-4 rounded-xl text-center">Quem Foi Quem</a>
             <a href="https://www.agencialupa.org/deputometro/" target="_blank" rel="noopener noreferrer" class="bg-slate-800 text-white text-sm font-semibold py-2.5 px-4 rounded-xl text-center">Agência Lupa — Deputômetro</a>
