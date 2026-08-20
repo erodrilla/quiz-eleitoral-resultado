@@ -12,7 +12,7 @@
     <div id="app" class="bg-white shadow-xl rounded-2xl p-6 max-w-md w-full text-center border border-slate-100">
         <div id="loading" class="py-12 text-slate-500">Carregando resultado...</div>
         <div id="resultado" class="hidden"></div>
-        <div id="erro" class="hidden py-8 text-red-500 font-semibold">Dados não encontrados. Tente novamente.</div>
+        <div id="erro" class="hidden py-8 text-red-500 font-semibold">Sessão não encontrada ou processando. Tente novamente em instantes.</div>
     </div>
 
     <script>
@@ -36,21 +36,25 @@
                     .eq('id_sessao', sessaoId)
                     .order('created_at', { ascending: false });
 
+                document.getElementById('loading').classList.add('hidden');
+
                 if (error || !data || data.length === 0) {
                     exibirErro();
                     return;
                 }
 
                 const candidato = data[0];
-                document.getElementById('loading').classList.add('hidden');
 
-                // Verifica se o flag de bloqueio está presente e verdadeiro
-                if (candidato.bloquear_candidatos === true || String(candidato.bloquear_candidatos) === 'true') {
+                // Verifica se está explicitamente bloqueado
+                const isBloqueado = candidato.bloquear_candidatos === true || String(candidato.bloquear_candidatos) === 'true';
+
+                if (isBloqueado) {
                     renderizarBloqueio();
                 } else if (candidato.nome_candidato) {
                     renderizarCandidato(candidato);
                 } else {
-                    exibirErro();
+                    // Se encontrou a sessão mas os dados estão vazios (NULL), exibe o aviso de bloqueio por segurança ou processamento
+                    renderizarBloqueio();
                 }
             } catch (err) {
                 exibirErro();
@@ -66,22 +70,39 @@
             const container = document.getElementById('resultado');
             container.classList.remove('hidden');
             container.innerHTML = `
-                <div class="space-y-4">
-                    <h2 class="text-xl font-bold text-slate-800">Orientações de Consulta</h2>
-                    <p class="text-sm text-slate-600">Para uma análise aprofundada, utilize plataformas independentes:</p>
-                    <a href="https://quemfoiquem.org.br/?p=4" class="block bg-indigo-600 text-white py-2 rounded-lg">Quem Foi Quem</a>
-                    <a href="https://www.agencialupa.org/deputometro/" class="block bg-slate-800 text-white py-2 rounded-lg">Agência Lupa</a>
-                </div>`;
+                <div class="flex flex-col items-center text-left">
+                    <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-3 mx-auto">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <h2 class="text-lg font-bold text-slate-800 text-center mb-2">Orientações de Consulta</h2>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-4 text-center">
+                        Com base nas respostas fornecidas, recomendamos a consulta a plataformas independentes de transparência para análise aprofundada de propostas e histórico de atuação:
+                    </p>
+                    <div class="flex flex-col gap-2 w-full">
+                        <a href="https://quemfoiquem.org.br/?p=4" target="_blank" rel="noopener noreferrer" class="bg-indigo-600 text-white text-sm font-semibold py-2.5 px-4 rounded-xl text-center hover:bg-indigo-700 transition-colors">
+                            Quem Foi Quem
+                        </a>
+                        <a href="https://www.agencialupa.org/deputometro/" target="_blank" rel="noopener noreferrer" class="bg-slate-800 text-white text-sm font-semibold py-2.5 px-4 rounded-xl text-center hover:bg-slate-900 transition-colors">
+                            Agência Lupa - Deputômetro
+                        </a>
+                    </div>
+                </div>
+            `;
         }
 
         function renderizarCandidato(c) {
             const container = document.getElementById('resultado');
             container.classList.remove('hidden');
             container.innerHTML = `
-                <img src="${c.foto || 'https://via.placeholder.com/150'}" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-slate-50">
-                <h2 class="text-lg font-bold uppercase">${c.nome_candidato}</h2>
-                <p class="text-indigo-600 font-semibold">${c.partido || ''}</p>
-                <div class="mt-4 bg-slate-50 p-3 rounded-lg text-sm text-slate-600">${c.justificativa || ''}</div>
+                <div class="flex flex-col items-center">
+                    <img src="${c.foto || 'https://via.placeholder.com/150'}" class="w-32 h-32 rounded-full object-cover shadow-md mb-4 border-4 border-slate-50">
+                    <h2 class="text-xl font-bold text-slate-800 uppercase mb-1">${c.nome_candidato}</h2>
+                    <p class="text-lg font-semibold text-indigo-600 mb-2">${c.partido || ''}</p>
+                    <div class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 text-left w-full">
+                        <h3 class="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-1">Por que este candidato?</h3>
+                        <p class="text-sm text-slate-600 leading-relaxed">${c.justificativa || ''}</p>
+                    </div>
+                </div>
             `;
         }
 
