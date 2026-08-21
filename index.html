@@ -8,116 +8,139 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
-  <div id="app" class="bg-white shadow-xl rounded-2xl p-6 max-w-md w-full text-center border border-slate-100">
-    <div id="loading" class="py-12 text-slate-500">Carregando resultado...</div>
+  <main id="app" class="bg-white shadow-xl rounded-2xl p-6 max-w-md w-full text-center border border-slate-100">
+    <div id="loading" class="py-12 text-slate-500">
+      <div class="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600"></div>
+      <p id="loadingText">Estamos processando suas respostas...</p>
+      <p id="attemptText" class="mt-2 text-xs text-slate-400"></p>
+    </div>
     <div id="resultado" class="hidden"></div>
     <div id="erro" class="hidden py-8 text-red-500 font-semibold"></div>
-  </div>
+  </main>
 
   <script>
     const SUPABASE_URL = 'https://hglifytalonmncphycfp.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ';
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const $ = (id) => document.getElementById(id);
-    const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-    }[char]));
+    const POLL_INTERVAL_MS = 2500;
+    const MAX_ATTEMPTS = 24;
 
-    async function buscarResultado() {
-      const params = new URLSearchParams(window.location.search);
-      const sessaoId = (params.get('sessao') || params.get('id') || '').trim();
+    function setLoading(text, attempt) {
+      document.getElementById('loadingText').textContent = text;
+      document.getElementById('attemptText').textContent = `Aguardando processamento (${attempt}/${MAX_ATTEMPTS})`;
+    }
 
-      if (!sessaoId) {
-        exibirErro('Identificador da sessão ausente na URL.');
-        return;
-      }
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
 
-      try {
-        // A API do projeto expõe resultados_quiz no schema public.
-        const { data, error } = await db
-          .from('resultados_quiz')
-          .select('*')
-          .eq('id_sessao', sessaoId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        $('loading').classList.add('hidden');
-
-        if (error) {
-          console.error('Erro ao consultar resultados_quiz:', error);
-          exibirErro('Não foi possível consultar o resultado. Tente novamente em instantes.');
-          return;
-        }
-
-        if (!data) {
-          exibirErro('Sessão ainda não encontrada. Tente novamente em instantes.');
-          return;
-        }
-
-        const bloqueado = data.bloquear_candidatos === true ||
-          String(data.bloquear_candidatos).toLowerCase() === 'true' ||
-          data.status === 'bloqueado_contrarios' ||
-          Number(data.contrarios ?? data.total_contrarios ?? 0) >= 3;
-
-        if (bloqueado) {
-          renderizarBloqueio(data);
-          return;
-        }
-
-        const status = String(data.status || '').toLowerCase();
-        const nome = data.nome_candidato || data.candidato_nome;
-
-        if (['processando', 'processando_indicacao', 'pendente'].includes(status) || !nome) {
-          renderizarProcessando();
-          return;
-        }
-
-        renderizarCandidato(data);
-      } catch (err) {
-        console.error('Erro inesperado:', err);
-        $('loading').classList.add('hidden');
-        exibirErro('Erro inesperado ao carregar o resultado.');
-      }
+    function esconderLoading() {
+      document.getElementById('loading').classList.add('hidden');
     }
 
     function exibirErro(mensagem) {
-      $('erro').textContent = mensagem;
-      $('erro').classList.remove('hidden');
+      esconderLoading();
+      const erro = document.getElementById('erro');
+      erro.textContent = mensagem;
+      erro.classList.remove('hidden');
     }
 
-    function renderizarProcessando() {
-      $('resultado').innerHTML = '<p class="py-8 text-slate-600">Estamos processando suas respostas. Atualize esta página em alguns instantes.</p>';
-      $('resultado').classList.remove('hidden');
+    function mostrarResultado() {
+      const container = document.getElementById('resultado');
+      container.classList.remove('hidden');
+      return container;
     }
 
-    function renderizarBloqueio(data) {
-      $('resultado').innerHTML = `
+    function renderizarBloqueio() {
+      const container = mostrarResultado();
+      container.innerHTML = `
         <div class="flex flex-col items-center text-left">
-          <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-3 mx-auto">!</div>
+          <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-3 mx-auto">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77-1.333.192-3 1.732 3z"/></svg>
+          </div>
           <h2 class="text-lg font-bold text-slate-800 text-center mb-2">Orientações de Consulta</h2>
-          <p class="text-sm text-slate-600 leading-relaxed mb-4 text-center">${escapeHtml(data.mensagem || 'Com base nas respostas fornecidas, recomendamos consultar plataformas independentes para pesquisar propostas e histórico de atuação.')}</p>
+          <p class="text-sm text-slate-600 leading-relaxed mb-4 text-center">Com base nas respostas fornecidas, recomendamos a consulta a plataformas independentes de transparência para análise aprofundada de propostas e histórico de atuação.</p>
           <div class="flex flex-col gap-2 w-full">
-            <a href="https://quemfoiquem.org.br/lp6/" target="_blank" rel="noopener noreferrer" class="bg-indigo-600 text-white text-sm font-semibold py-2.5 px-4 rounded-xl text-center">Quem Foi Quem</a>
-            <a href="https://www.agencialupa.org/deputometro/" target="_blank" rel="noopener noreferrer" class="bg-slate-800 text-white text-sm font-semibold py-2.5 px-4 rounded-xl text-center">Agência Lupa — Deputômetro</a>
+            <a href="https://quemfoiquem.org.br/lp6/" target="_blank" rel="noopener noreferrer" class="bg-indigo-600 text-white text-sm font-semibold py-2.5 px-4 rounded-xl text-center hover:bg-indigo-700">Quem Foi Quem</a>
+            <a href="https://www.agencialupa.org/deputometro/" target="_blank" rel="noopener noreferrer" class="bg-slate-800 text-white text-sm font-semibold py-2.5 px-4 rounded-xl text-center hover:bg-slate-900">Agência Lupa - Deputômetro</a>
           </div>
         </div>`;
-      $('resultado').classList.remove('hidden');
     }
 
     function renderizarCandidato(c) {
-      $('resultado').innerHTML = `
+      const container = mostrarResultado();
+      const nome = c.nome_candidato || c.Nome_Candidato || 'Candidato selecionado';
+      const partido = c.partido || c.Partido || '';
+      const foto = c.foto || c.Foto || 'https://via.placeholder.com/150';
+      const justificativa = c.justificativa || c.justificativafinal || 'Este candidato apresentou o maior alinhamento com as respostas informadas.';
+
+      container.innerHTML = `
         <div class="flex flex-col items-center">
-          <img src="${escapeHtml(c.foto || 'https://via.placeholder.com/150')}" class="w-32 h-32 rounded-full object-cover shadow-md mb-4 border-4 border-slate-50" alt="Foto do candidato">
-          <h2 class="text-xl font-bold text-slate-800 uppercase mb-1">${escapeHtml(c.nome_candidato || c.candidato_nome)}</h2>
-          <p class="text-lg font-semibold text-indigo-600 mb-2">${escapeHtml(c.partido)}</p>
+          <img src="${foto}" alt="Foto de ${nome}" class="w-32 h-32 rounded-full object-cover shadow-md mb-4 border-4 border-slate-50">
+          <h2 class="text-xl font-bold text-slate-800 uppercase mb-1">${nome}</h2>
+          <p class="text-lg font-semibold text-indigo-600 mb-2">${partido}</p>
           <div class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 text-left w-full">
             <h3 class="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-1">Por que este candidato?</h3>
-            <p class="text-sm text-slate-600 leading-relaxed">${escapeHtml(c.justificativa || c.justificativafinal)}</p>
+            <p class="text-sm text-slate-600 leading-relaxed">${justificativa}</p>
           </div>
         </div>`;
-      $('resultado').classList.remove('hidden');
+    }
+
+    function estaBloqueado(row) {
+      return row.bloquear_candidatos === true || String(row.bloquear_candidatos).toLowerCase() === 'true' || row.status === 'bloqueado_contrarios';
+    }
+
+    function estaConcluido(row) {
+      return Boolean(row.nome_candidato || row.Nome_Candidato || row.id_candidato || row.numero_candidato);
+    }
+
+    async function buscarResultado() {
+      const sessaoId = new URLSearchParams(window.location.search).get('sessao') || new URLSearchParams(window.location.search).get('id');
+
+      if (!sessaoId) {
+        exibirErro('Sessão não informada. Verifique o link recebido.');
+        return;
+      }
+
+      for (let tentativa = 1; tentativa <= MAX_ATTEMPTS; tentativa += 1) {
+        setLoading('Estamos processando suas respostas...', tentativa);
+
+        try {
+          const { data, error } = await db
+            .from('resultados_quiz')
+            .select('*')
+            .eq('id_sessao', sessaoId)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          if (error) {
+            console.error('Erro Supabase:', error);
+          } else if (data && data.length > 0) {
+            const row = data[0];
+
+            if (estaBloqueado(row)) {
+              esconderLoading();
+              renderizarBloqueio();
+              return;
+            }
+
+            if (estaConcluido(row)) {
+              esconderLoading();
+              renderizarCandidato(row);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Erro de consulta:', error);
+        }
+
+        if (tentativa < MAX_ATTEMPTS) {
+          await sleep(POLL_INTERVAL_MS);
+        }
+      }
+
+      exibirErro('O processamento está demorando mais que o esperado. Aguarde alguns instantes e recarregue esta página.');
     }
 
     buscarResultado();
