@@ -73,7 +73,7 @@
       const nome = c.nome_candidato || c.Nome_Candidato || 'Candidato selecionado';
       const partido = c.partido || c.Partido || '';
       const foto = c.foto || c.Foto || 'https://via.placeholder.com/150';
-      const justificativa = c.justificativa || c.justificativafinal || 'Este candidato apresentou o maior alinhamento com as respostas informadas.';
+      const justificativa = c.justificativa || 'Este candidato apresentou o maior alinhamento com as respostas informadas.';
 
       container.innerHTML = `
         <div class="flex flex-col items-center">
@@ -91,12 +91,16 @@
       return row.bloquear_candidatos === true || String(row.bloquear_candidatos).toLowerCase() === 'true' || row.status === 'bloqueado_contrarios';
     }
 
+    // Validação robusta para verificar se a IA já concluiu o processamento e salvou os dados
     function estaConcluido(row) {
-      return Boolean(row.nome_candidato || row.Nome_Candidato || row.id_candidato || row.numero_candidato);
+      const temNome = Boolean(row.nome_candidato || row.Nome_Candidato);
+      const naoEstaEmErro = row.status !== 'erro_analise_ia';
+      return (temNome || row.status === 'concluido') && naoEstaEmErro;
     }
 
     async function buscarResultado() {
-      const sessaoId = new URLSearchParams(window.location.search).get('sessao') || new URLSearchParams(window.location.search).get('id');
+      const urlParams = new URLSearchParams(window.location.search);
+      const sessaoId = urlParams.get('sessao') || urlParams.get('id') || urlParams.get('submissionId');
 
       if (!sessaoId) {
         exibirErro('Sessão não informada. Verifique o link recebido.');
