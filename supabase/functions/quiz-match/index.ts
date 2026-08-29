@@ -1,3 +1,9 @@
+serve(async (req) => {
+  // BYPASS JWT — aceita qualquer requisição
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) {
+    // sem header — continua mesmo assim
+  }
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
