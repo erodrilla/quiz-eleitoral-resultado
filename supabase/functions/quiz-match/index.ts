@@ -10,13 +10,22 @@ function extrairResposta(fields: any[], prefixo: string): string {
     f.label?.includes(`[${prefixo}]`)
   );
   if (!field) return "Moderado";
-
   const valueId = Array.isArray(field.value) ? field.value[0] : field.value;
   const option = field.options?.find((o: any) => o.id === valueId);
   return option?.text ?? "Moderado";
 }
 
 serve(async (req) => {
+  // Responde OPTIONS para CORS
+  if (req.method === "OPTIONS") {
+    return new Response("ok", {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+      },
+    });
+  }
+
   try {
     const body = await req.json();
     const fields = body?.data?.fields ?? [];
@@ -118,14 +127,26 @@ Fale diretamente para o eleitor. Não mencione pontuações ou números.`;
         candidato: candidato.nome_urna,
         score: candidato.score,
       }),
-      { headers: { "Content-Type": "application/json" }, status: 200 }
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+        status: 200,
+      }
     );
 
   } catch (err) {
     console.log("ERRO GERAL:", String(err));
     return new Response(
       JSON.stringify({ error: String(err) }),
-      { headers: { "Content-Type": "application/json" }, status: 500 }
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+        status: 500,
+      }
     );
   }
 });
