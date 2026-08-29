@@ -5,34 +5,24 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!;
 
-function mapResposta(valor: string): string {
-  const v = valor?.trim();
-  if (v === "Favorável") return "Favorável";
-  if (v === "Moderado") return "Moderado";
-  return "Contrário";
-}
-
 function extrairResposta(fields: any[], prefixo: string): string {
   const field = fields.find((f: any) =>
     f.label?.includes(`[${prefixo}]`)
   );
-  const valor = Array.isArray(field?.value)
-    ? field.value[0]
-    : field?.value ?? "Moderado";
-  return mapResposta(valor);
+  if (!field) return "Moderado";
+
+  const valueId = Array.isArray(field.value) ? field.value[0] : field.value;
+  const option = field.options?.find((o: any) => o.id === valueId);
+  return option?.text ?? "Moderado";
 }
 
 serve(async (req) => {
   try {
-    const rawBody = await req.text();
-    console.log("RAW BODY:", rawBody);
-
-    const body = JSON.parse(rawBody);
+    const body = await req.json();
     const fields = body?.data?.fields ?? [];
     const id_sessao = body?.data?.submissionId ?? crypto.randomUUID();
 
     console.log("SUBMISSION ID:", id_sessao);
-    console.log("FIELDS:", JSON.stringify(fields.map((f: any) => ({ label: f.label, value: f.value }))));
 
     const mulheres      = extrairResposta(fields, "Mulheres");
     const educacao      = extrairResposta(fields, "Educação");
