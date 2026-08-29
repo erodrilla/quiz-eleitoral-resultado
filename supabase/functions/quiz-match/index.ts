@@ -1,199 +1,126 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seu Candidato — Quiz Eleitoral SP</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #0f172a;
-      color: #f1f5f9;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!;
 
-    .card {
-      background: #1e293b;
-      border-radius: 16px;
-      max-width: 480px;
-      width: 100%;
-      padding: 32px;
-      text-align: center;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-    }
+function mapResposta(valor: string): string {
+  const v = valor?.trim();
+  if (v === "Favorável") return "Favorável";
+  if (v === "Moderado") return "Moderado";
+  return "Contrário";
+}
 
-    .loading { font-size: 18px; color: #94a3b8; }
+function extrairResposta(fields: any[], prefixo: string): string {
+  const field = fields.find((f: any) =>
+    f.label?.includes(`[${prefixo}]`)
+  );
+  const valor = Array.isArray(field?.value)
+    ? field.value[0]
+    : field?.value ?? "Moderado";
+  return mapResposta(valor);
+}
 
-    .foto {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 4px solid #3b82f6;
-      margin-bottom: 16px;
-    }
+serve(async (req) => {
+  try {
+    const body = await req.json();
 
-    .score-badge {
-      display: inline-block;
-      background: #3b82f6;
-      color: white;
-      font-size: 14px;
-      font-weight: 700;
-      padding: 4px 14px;
-      border-radius: 999px;
-      margin-bottom: 12px;
-    }
+    const fields = body?.data?.fields ?? [];
+    const id_sessao = body?.data?.submissionId ?? crypto.randomUUID();
 
-    h1 {
-      font-size: 26px;
-      font-weight: 800;
-      margin-bottom: 4px;
-      color: #f8fafc;
-    }
+    const mulheres      = extrairResposta(fields, "Mulheres");
+    const educacao      = extrairResposta(fields, "Educação");
+    const meio_ambiente = extrairResposta(fields, "Meio Ambiente");
+    const impostos      = extrairResposta(fields, "Impostos");
+    const direitos      = extrairResposta(fields, "Direitos");
+    const seguranca     = extrairResposta(fields, "Segurança");
+    const transparencia = extrairResposta(fields, "Transparência");
 
-    .partido {
-      font-size: 15px;
-      color: #94a3b8;
-      margin-bottom: 20px;
-    }
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    .justificativa {
-      font-size: 15px;
-      line-height: 1.7;
-      color: #cbd5e1;
-      background: #0f172a;
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 24px;
-      text-align: left;
-    }
-
-    .btn {
-      display: inline-block;
-      padding: 12px 28px;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 600;
-      text-decoration: none;
-      margin: 6px;
-    }
-
-    .btn-instagram {
-      background: #e1306c;
-      color: white;
-    }
-
-    .btn-compartilhar {
-      background: #1d4ed8;
-      color: white;
-      cursor: pointer;
-      border: none;
-    }
-
-    .erro { color: #f87171; font-size: 16px; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div id="conteudo" class="loading">⏳ Buscando seu candidato...</div>
-  </div>
-
-  <script>
-    const SUPABASE_URL = 'https://hglifytalonmncphycfp.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ';
-
-    async function buscarResultado(sessao) {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${sessao}&select=nome_candidato,partido,pontuacao_afinidade,candidato_recomendado`,
-        {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          }
-        }
-      );
-      const data = await res.json();
-      return data?.[0] ?? null;
-    }
-
-    async function buscarFoto(nome) {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/candidatos?Nome_Urna=eq.${encodeURIComponent(nome)}&select=Foto,Instagram`,
-        {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          }
-        }
-      );
-      const data = await res.json();
-      return data?.[0] ?? null;
-    }
-
-    async function init() {
-      const params = new URLSearchParams(window.location.search);
-      const sessao = params.get('sessao');
-
-      if (!sessao) {
-        document.getElementById('conteudo').innerHTML =
-          '<p class="erro">Link inválido. Nenhuma sessão encontrada.</p>';
-        return;
+    const { data: match, error: matchError } = await supabase.rpc(
+      "match_completo",
+      {
+        p_mulheres:       mulheres,
+        p_educacao:       educacao,
+        p_meio_ambiente:  meio_ambiente,
+        p_impostos:       impostos,
+        p_direitos:       direitos,
+        p_seguranca:      seguranca,
+        p_transparencia:  transparencia,
       }
+    );
 
-      // Tenta até 8x com intervalo de 1.5s (aguarda Edge Function processar)
-      let resultado = null;
-      for (let i = 0; i < 8; i++) {
-        resultado = await buscarResultado(sessao);
-        if (resultado) break;
-        await new Promise(r => setTimeout(r, 1500));
-      }
-
-      if (!resultado) {
-        document.getElementById('conteudo').innerHTML =
-          '<p class="erro">Resultado não encontrado. Tente responder o quiz novamente.</p>';
-        return;
-      }
-
-      const candidato = await buscarFoto(resultado.nome_candidato);
-
-      const foto = candidato?.Foto
-        ? `<img class="foto" src="${candidato.Foto}" alt="${resultado.nome_candidato}" />`
-        : '';
-
-      const instagram = candidato?.Instagram
-        ? `<a class="btn btn-instagram" href="${candidato.Instagram}" target="_blank">📸 Ver Instagram</a>`
-        : '';
-
-      document.getElementById('conteudo').innerHTML = `
-        ${foto}
-        <div class="score-badge">⚡ ${resultado.pontuacao_afinidade}% de afinidade</div>
-        <h1>${resultado.nome_candidato}</h1>
-        <p class="partido">${resultado.partido}</p>
-        <div class="justificativa">${resultado.candidato_recomendado}</div>
-        ${instagram}
-        <button class="btn btn-compartilhar" onclick="compartilhar()">🔗 Compartilhar resultado</button>
-      `;
+    if (matchError || !match?.length) {
+      throw new Error("match_completo falhou: " + JSON.stringify(matchError));
     }
 
-    function compartilhar() {
-      if (navigator.share) {
-        navigator.share({
-          title: 'Meu candidato no Quiz Eleitoral SP',
-          url: window.location.href,
-        });
-      } else {
-        navigator.clipboard.writeText(window.location.href);
-        alert('Link copiado!');
+    const candidato = match[0];
+
+    const prompt = `Você é um assistente eleitoral progressista brasileiro.
+Em 2 frases curtas e diretas, explique por que ${candidato.nome_urna} (${candidato.partido}) 
+é o candidato mais compatível com este eleitor, com base nas posições dele:
+- Mulheres: ${mulheres}
+- Educação: ${educacao}
+- Meio Ambiente: ${meio_ambiente}
+- Impostos: ${impostos}
+- Direitos: ${direitos}
+- Segurança: ${seguranca}
+- Transparência: ${transparencia}
+Fale diretamente para o eleitor. Não mencione pontuações ou números.`;
+
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
       }
+    );
+
+    const geminiData = await geminiRes.json();
+    const justificativa =
+      geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ??
+      "Candidato selecionado por afinidade programática.";
+
+    const { error: insertError } = await supabase
+      .from("eleitores_respostas")
+      .insert({
+        id_sessao,
+        mulheres,
+        educacao,
+        meio_ambiente,
+        impostos,
+        direitos,
+        seguranca,
+        transparencia,
+        pontuacao_afinidade:   candidato.score,
+        candidato_recomendado: justificativa,
+        nome_candidato:        candidato.nome_urna,
+        partido:               candidato.partido,
+      });
+
+    if (insertError) {
+      throw new Error("Insert falhou: " + JSON.stringify(insertError));
     }
 
-    init();
-  </script>
-</body>
-</html>
+    return new Response(
+      JSON.stringify({
+        success: true,
+        id_sessao,
+        candidato: candidato.nome_urna,
+        score: candidato.score,
+      }),
+      { headers: { "Content-Type": "application/json" }, status: 200 }
+    );
+
+  } catch (err) {
+    return new Response(
+      JSON.stringify({ error: String(err) }),
+      { headers: { "Content-Type": "application/json" }, status: 500 }
+    );
+  }
+});
