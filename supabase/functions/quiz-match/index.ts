@@ -1,9 +1,3 @@
-serve(async (req) => {
-  // BYPASS JWT — aceita qualquer requisição
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
-    // sem header — continua mesmo assim
-  }
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -22,7 +16,6 @@ function extrairResposta(fields: any[], prefixo: string): string {
 }
 
 serve(async (req) => {
-  // Responde OPTIONS para CORS
   if (req.method === "OPTIONS") {
     return new Response("ok", {
       headers: {
@@ -30,6 +23,16 @@ serve(async (req) => {
         "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
       },
     });
+  }
+
+  // BYPASS JWT manual — valida anon key no header
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+  if (!authHeader.includes(ANON_KEY) && !authHeader.includes("service_role")) {
+    return new Response(
+      JSON.stringify({ error: "Unauthorized" }),
+      { status: 401, headers: { "Content-Type": "application/json" } }
+    );
   }
 
   try {
@@ -54,13 +57,13 @@ serve(async (req) => {
     const { data: match, error: matchError } = await supabase.rpc(
       "match_completo",
       {
-        p_mulheres:       mulheres,
-        p_educacao:       educacao,
-        p_meio_ambiente:  meio_ambiente,
-        p_impostos:       impostos,
-        p_direitos:       direitos,
-        p_seguranca:      seguranca,
-        p_transparencia:  transparencia,
+        p_mulheres:      mulheres,
+        p_educacao:      educacao,
+        p_meio_ambiente: meio_ambiente,
+        p_impostos:      impostos,
+        p_direitos:      direitos,
+        p_seguranca:     seguranca,
+        p_transparencia: transparencia,
       }
     );
 
