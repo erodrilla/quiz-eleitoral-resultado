@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seu Candidato — Quiz Eleitoral SP</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #1e293b;
+      border-radius: 16px;
+      max-width: 480px;
+      width: 100%;
+      padding: 32px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .loading { font-size: 18px; color: #94a3b8; }
+
+    .foto {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid #3b82f6;
+      margin-bottom: 16px;
+    }
+
+    .score-badge {
+      display: inline-block;
+      background: #3b82f6;
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 4px;
+      color: #f8fafc;
+    }
+
+    .partido {
+      font-size: 15px;
+      color: #94a3b8;
+      margin-bottom: 20px;
+    }
+
+    .justificativa {
+      font-size: 15px;
+      line-height: 1.7;
+      color: #cbd5e1;
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      margin: 6px;
+    }
+
+    .btn-instagram {
+      background: #e1306c;
+      color: white;
+    }
+
+    .btn-compartilhar {
+      background: #1d4ed8;
+      color: white;
+      cursor: pointer;
+      border: none;
+    }
+
+    .erro { color: #f87171; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div id="conteudo" class="loading">⏳ Buscando seu candidato...</div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://hglifytalonmncphycfp.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ';
+
+    async function buscarResultado(sessao) {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${sessao}&select=nome_candidato,partido,pontuacao_afinidade,candidato_recomendado`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          }
+        }
+      );
+      const data = await res.json();
+      return data?.[0] ?? null;
+    }
+
+    async function buscarFoto(nome) {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/candidatos?Nome_Urna=eq.${encodeURIComponent(nome)}&select=Foto,Instagram`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          }
+        }
+      );
+      const data = await res.json();
+      return data?.[0] ?? null;
+    }
+
+    async function init() {
+      const params = new URLSearchParams(window.location.search);
+      const sessao = params.get('sessao');
+
+      if (!sessao) {
+        document.getElementById('conteudo').innerHTML =
+          '<p class="erro">Link inválido. Nenhuma sessão encontrada.</p>';
+        return;
+      }
+
+      // Tenta até 8x com intervalo de 1.5s (aguarda Edge Function processar)
+      let resultado = null;
+      for (let i = 0; i < 8; i++) {
+        resultado = await buscarResultado(sessao);
+        if (resultado) break;
+        await new Promise(r => setTimeout(r, 1500));
+      }
+
+      if (!resultado) {
+        document.getElementById('conteudo').innerHTML =
+          '<p class="erro">Resultado não encontrado. Tente responder o quiz novamente.</p>';
+        return;
+      }
+
+      const candidato = await buscarFoto(resultado.nome_candidato);
+
+      const foto = candidato?.Foto
+        ? `<img class="foto" src="${candidato.Foto}" alt="${resultado.nome_candidato}" />`
+        : '';
+
+      const instagram = candidato?.Instagram
+        ? `<a class="btn btn-instagram" href="${candidato.Instagram}" target="_blank">📸 Ver Instagram</a>`
+        : '';
+
+      document.getElementById('conteudo').innerHTML = `
+        ${foto}
+        <div class="score-badge">⚡ ${resultado.pontuacao_afinidade}% de afinidade</div>
+        <h1>${resultado.nome_candidato}</h1>
+        <p class="partido">${resultado.partido}</p>
+        <div class="justificativa">${resultado.candidato_recomendado}</div>
+        ${instagram}
+        <button class="btn btn-compartilhar" onclick="compartilhar()">🔗 Compartilhar resultado</button>
+      `;
+    }
+
+    function compartilhar() {
+      if (navigator.share) {
+        navigator.share({
+          title: 'Meu candidato no Quiz Eleitoral SP',
+          url: window.location.href,
+        });
+      } else {
+        navigator.clipboard.writeText(window.location.href);
+        alert('Link copiado!');
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
