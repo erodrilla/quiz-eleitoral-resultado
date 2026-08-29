@@ -42,7 +42,7 @@ serve(async (req) => {
     const seguranca     = extrairResposta(fields, "Segurança");
     const transparencia = extrairResposta(fields, "Transparência");
 
-    console.log("RESPOSTAS:", { mulheres, educacao, meio_ambiente, impostos, direitos, seguranca, transparencia });
+    console.log("RESPOSTAS:", JSON.stringify({ mulheres, educacao, meio_ambiente, impostos, direitos, seguranca, transparencia }));
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
