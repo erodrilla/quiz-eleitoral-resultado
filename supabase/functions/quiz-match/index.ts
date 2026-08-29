@@ -25,16 +25,6 @@ serve(async (req) => {
     });
   }
 
-  // BYPASS JWT manual — valida anon key no header
-  const authHeader = req.headers.get("Authorization") ?? "";
-  const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
-  if (!authHeader.includes(ANON_KEY) && !authHeader.includes("service_role")) {
-    return new Response(
-      JSON.stringify({ error: "Unauthorized" }),
-      { status: 401, headers: { "Content-Type": "application/json" } }
-    );
-  }
-
   try {
     const body = await req.json();
     const fields = body?.data?.fields ?? [];
