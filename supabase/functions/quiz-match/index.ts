@@ -14,11 +14,10 @@ function extrairResposta(fields: any[], prefixo: string): string {
 }
 
 serve(async (req) => {
-  // CORS Headers
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "*",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   };
 
   if (req.method === "OPTIONS") {
@@ -40,7 +39,7 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    const { data: match, error: matchError } = await supabase.rpc("match_completo", {
+    const { data: match, error: matchError } = await supabase.rpc("match_quiz", {
       p_mulheres: mulheres,
       p_educacao: educacao,
       p_meio_ambiente: meio_ambiente,
@@ -51,41 +50,82 @@ serve(async (req) => {
     });
 
     if (matchError || !match?.length) {
-      throw new Error("match_completo falhou: " + JSON.stringify(matchError));
+      throw new Error("match_quiz falhou: " + JSON.stringify(matchError));
     }
 
     const candidato = match[0];
-    const prompt = `Em 2 frases curtas, explique por que ${candidato.nome_urna} (${candidato.partido}) é o candidato ideal baseado nestas posições: Mulheres (${mulheres}), Educação (${educacao}), Meio Ambiente (${meio_ambiente}), Impostos (${impostos}), Direitos (${direitos}), Segurança (${seguranca}), Transparência (${transparencia}). Fale para o eleitor.`;
+
+    const prompt = `Você é um assistente eleitoral progressista brasileiro.
+Em 2 frases curtas e directas, explique por que ${candidato.nome_urna} (${candidato.partido}) 
+é o candidato mais compatível com este eleitor, com base nestas respostas:
+- Mulheres: ${mulheres}
+- Educação: ${educacao}
+- Meio Ambiente: ${meio_ambiente}
+- Impostos: ${impostos}
+- Direitos: ${direitos}
+- Segurança: ${seguranca}
+- Transparência: ${transparencia}
+Fale directamente para o eleitor. Não mencione pontuações.`;
 
     const geminiRes = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
       }
     );
 
     const geminiData = await geminiRes.json();
-    const justificativa = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? "Candidato seleccionado por afinidade.";
+    const justificativa =
+      geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ??
+      "Candidato seleccionado por afinidade programática.";
 
-    await supabase.from("eleitores_respostas").insert({
-      id_sessao, mulheres, educacao, meio_ambiente, impostos, direitos, seguranca, transparencia,
-      pontuacao_afinidade: candidato.score,
-      candidato_recomendado: justificativa,
-      nome_candidato: candidato.nome_urna,
-      partido: candidato.partido,
-    });
+    const { error: insertError } = await supabase
+      .from("eleitores_respostas")
+      .insert({
+        id_sessao,
+        mulheres,
+        educacao,
+        meio_ambiente,
+        impostos,
+        direitos,
+        seguranca,
+        transparencia,
+        pontuacao_afinidade: candidato.score,
+        candidato_recomendado: justificativa,
+        nome_candidato: candidato.nome_urna,
+        partido: candidato.partido,
+      });
 
-    return new Response(JSON.stringify({ success: true, candidato: candidato.nome_urna, score: candidato.score }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+    if (insertError) {
+      throw new Error("Insert falhou: " + JSON.stringify(insertError));
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        id_sessao,
+        candidato: candidato.nome_urna,
+        partido: candidato.partido,
+        score: candidato.score,
+        justificativa,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      }
+    );
 
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    return new Response(
+      JSON.stringify({ error: String(err) }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
   }
 });
