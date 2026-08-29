@@ -24,10 +24,15 @@ function extrairResposta(fields: any[], prefixo: string): string {
 
 serve(async (req) => {
   try {
-    const body = await req.json();
+    const rawBody = await req.text();
+    console.log("RAW BODY:", rawBody);
 
+    const body = JSON.parse(rawBody);
     const fields = body?.data?.fields ?? [];
     const id_sessao = body?.data?.submissionId ?? crypto.randomUUID();
+
+    console.log("SUBMISSION ID:", id_sessao);
+    console.log("FIELDS:", JSON.stringify(fields.map((f: any) => ({ label: f.label, value: f.value }))));
 
     const mulheres      = extrairResposta(fields, "Mulheres");
     const educacao      = extrairResposta(fields, "Educação");
@@ -36,6 +41,8 @@ serve(async (req) => {
     const direitos      = extrairResposta(fields, "Direitos");
     const seguranca     = extrairResposta(fields, "Segurança");
     const transparencia = extrairResposta(fields, "Transparência");
+
+    console.log("RESPOSTAS:", { mulheres, educacao, meio_ambiente, impostos, direitos, seguranca, transparencia });
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -51,6 +58,9 @@ serve(async (req) => {
         p_transparencia:  transparencia,
       }
     );
+
+    console.log("MATCH RESULT:", JSON.stringify(match));
+    console.log("MATCH ERROR:", JSON.stringify(matchError));
 
     if (matchError || !match?.length) {
       throw new Error("match_completo falhou: " + JSON.stringify(matchError));
@@ -82,6 +92,8 @@ Fale diretamente para o eleitor. Não mencione pontuações ou números.`;
     );
 
     const geminiData = await geminiRes.json();
+    console.log("GEMINI RESPONSE:", JSON.stringify(geminiData));
+
     const justificativa =
       geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ??
       "Candidato selecionado por afinidade programática.";
@@ -103,6 +115,8 @@ Fale diretamente para o eleitor. Não mencione pontuações ou números.`;
         partido:               candidato.partido,
       });
 
+    console.log("INSERT ERROR:", JSON.stringify(insertError));
+
     if (insertError) {
       throw new Error("Insert falhou: " + JSON.stringify(insertError));
     }
@@ -118,6 +132,7 @@ Fale diretamente para o eleitor. Não mencione pontuações ou números.`;
     );
 
   } catch (err) {
+    console.log("ERRO GERAL:", String(err));
     return new Response(
       JSON.stringify({ error: String(err) }),
       { headers: { "Content-Type": "application/json" }, status: 500 }
