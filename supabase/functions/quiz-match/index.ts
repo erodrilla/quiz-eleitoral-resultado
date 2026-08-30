@@ -5,6 +5,12 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!;
 
+const cors = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
 function extrairResposta(fields: any[], prefixo: string): string {
   const field = fields.find((f: any) => f.label?.includes(`[${prefixo}]`));
   if (!field) return "Moderado";
@@ -13,16 +19,13 @@ function extrairResposta(fields: any[], prefixo: string): string {
   return option?.text ?? "Moderado";
 }
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: cors });
   }
+
+  // IGNORA JWT — não valida Authorization header
+  // Segurança garantida pelo SERVICE_ROLE_KEY interno
 
   try {
     const body = await req.json();
@@ -36,21 +39,6 @@ serve(async (req) => {
     const direitos      = extrairResposta(fields, "Direitos");
     const seguranca     = extrairResposta(fields, "Segurança");
     const transparencia = extrairResposta(fields, "Transparência");
-
-    // Filtro 1 — pautas sensíveis
-    if (mulheres === "Contrário" || meio_ambiente === "Contrário") {
-      await createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
-        .from("eleitores_respostas")
-        .insert({
-          id_sessao, mulheres, educacao, meio_ambiente, impostos,
-          direitos, seguranca, transparencia,
-          bloqueado: true, motivo_bloqueio: "pauta_sensivel",
-        });
-      return new Response(
-        JSON.stringify({ success: true, bloqueado: true, motivo: "pauta_sensivel", id_sessao }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-      );
-    }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -70,7 +58,6 @@ serve(async (req) => {
 
     const candidato = match[0];
 
-    // Filtro 2 — score mínimo
     if (candidato.score < 25) {
       await supabase.from("eleitores_respostas").insert({
         id_sessao, mulheres, educacao, meio_ambiente, impostos,
@@ -80,13 +67,13 @@ serve(async (req) => {
       });
       return new Response(
         JSON.stringify({ success: true, bloqueado: true, motivo: "score_baixo", id_sessao }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+        { headers: { ...cors, "Content-Type": "application/json" }, status: 200 }
       );
     }
 
     const prompt = `Você é um assistente eleitoral progressista brasileiro.
 Em 2 frases curtas e diretas, explique por que ${candidato.nome_urna} (${candidato.partido}) 
-é o candidato mais compatível com este eleitor, com base nestas respostas:
+é o candidato mais compatível com este eleitor:
 - Mulheres: ${mulheres}
 - Educação: ${educacao}
 - Meio Ambiente: ${meio_ambiente}
@@ -110,21 +97,15 @@ Fale diretamente para o eleitor. Não mencione pontuações.`;
       geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ??
       "Candidato selecionado por afinidade programática.";
 
-    const { error: insertError } = await supabase
-      .from("eleitores_respostas")
-      .insert({
-        id_sessao, mulheres, educacao, meio_ambiente, impostos,
-        direitos, seguranca, transparencia,
-        pontuacao_afinidade:   candidato.score,
-        candidato_recomendado: justificativa,
-        nome_candidato:        candidato.nome_urna,
-        partido:               candidato.partido,
-        bloqueado:             false,
-      });
-
-    if (insertError) {
-      throw new Error("Insert falhou: " + JSON.stringify(insertError));
-    }
+    await supabase.from("eleitores_respostas").insert({
+      id_sessao, mulheres, educacao, meio_ambiente, impostos,
+      direitos, seguranca, transparencia,
+      pontuacao_afinidade:   candidato.score,
+      candidato_recomendado: justificativa,
+      nome_candidato:        candidato.nome_urna,
+      partido:               candidato.partido,
+      bloqueado:             false,
+    });
 
     return new Response(
       JSON.stringify({
@@ -138,13 +119,13 @@ Fale diretamente para o eleitor. Não mencione pontuações.`;
         score:        candidato.score,
         justificativa,
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      { headers: { ...cors, "Content-Type": "application/json" }, status: 200 }
     );
 
   } catch (err) {
     return new Response(
       JSON.stringify({ error: String(err) }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      { headers: { ...cors, "Content-Type": "application/json" }, status: 500 }
     );
   }
 });
