@@ -129,3 +129,4 @@ Fale diretamente para o eleitor. Não mencione pontuações.`;
     );
   }
 });
+
