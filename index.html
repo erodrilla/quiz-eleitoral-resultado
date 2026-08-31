@@ -170,6 +170,8 @@
       const params = new URLSearchParams(window.location.search);
       const sessao = params.get("sessao");
 
+      console.log("Sessao capturada:", sessao);
+
       if (!sessao) {
         mostrar("erro");
         return;
