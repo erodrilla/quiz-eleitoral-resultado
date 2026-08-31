@@ -28,165 +28,134 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .foto {
-      width: 140px;
-      height: 140px;
+      width: 120px;
+      height: 120px;
       border-radius: 50%;
       object-fit: cover;
-      margin-bottom: 24px;
-      border: 4px solid rgba(255, 255, 255, 0.2);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      border: 3px solid rgba(255,255,255,0.3);
+      margin-bottom: 16px;
     }
     .score-badge {
       display: inline-block;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      background: linear-gradient(135deg, #22c55e, #16a34a);
       color: #fff;
-      padding: 8px 20px;
-      border-radius: 999px;
       font-weight: 700;
       font-size: 14px;
-      margin-bottom: 20px;
-      letter-spacing: 0.5px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      margin-bottom: 16px;
     }
-    h1 { font-size: 32px; margin-bottom: 8px; font-weight: 700; }
-    .partido { font-size: 16px; color: #94a3b8; margin-bottom: 24px; font-weight: 500; }
+    .nome {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .partido {
+      font-size: 14px;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 20px;
+    }
     .justificativa {
-      background: rgba(255, 255, 255, 0.08);
-      padding: 20px;
-      border-radius: 16px;
-      font-size: 16px;
+      background: rgba(255,255,255,0.07);
+      border-left: 4px solid #22c55e;
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 15px;
       line-height: 1.6;
       text-align: left;
-      margin-bottom: 28px;
-      border-left: 4px solid #10b981;
+      margin-bottom: 24px;
+    }
+    .aviso {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .botoes {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
     }
     .btn {
-      display: inline-block;
-      padding: 14px 28px;
-      border-radius: 12px;
-      text-decoration: none;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 14px;
       font-weight: 600;
-      font-size: 15px;
-      margin: 6px;
       cursor: pointer;
       border: none;
-      transition: transform 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); }
-    .btn-instagram { background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%); color: #fff; }
-    .btn-compartilhar { background: #fff; color: #0a1628; }
-    .erro { color: #fca5a5; font-size: 16px; padding: 20px; }
-    .loading { color: #94a3b8; font-size: 16px; animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .btn-instagram {
+      background: linear-gradient(135deg, #f43f5e, #ec4899);
+      color: #fff;
+    }
+    .btn-compartilhar {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    /* ---- estado bloqueado ---- */
+    #bloqueado {
+      display: none;
+    }
+    #bloqueado .aviso-bloqueio {
+      font-size: 15px;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 24px;
+    }
+    .btn-alternativo {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-block;
+      margin: 6px;
+    }
+    /* ---- estado erro ---- */
+    #erro {
+      display: none;
+      color: rgba(255,255,255,0.7);
+      font-size: 15px;
+    }
   </style>
 </head>
 <body>
-  <div id="conteudo">
-    <p class="loading">Carregando seu resultado...</p>
+<div id="conteudo">
+
+  <!-- Estado: carregando -->
+  <div id="carregando">
+    <p style="color:rgba(255,255,255,0.6)">Carregando seu resultado...</p>
   </div>
-  <script>
-    const SUPABASE_URL = 'https://hglifytalonmncphycfp.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ';
 
-    async function buscarResultado(sessao) {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${encodeURIComponent(sessao)}&select=id_sessao,nome_candidato,partido,pontuacao_afinidade,candidato_recomendado`,
-        {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          }
-        }
-      );
-      const data = await res.json();
-      return Array.isArray(data) && data.length > 0 ? data[0] : null;
-    }
+  <!-- Estado: resultado normal -->
+  <div id="resultado" style="display:none">
+    <img id="foto" class="foto" src="" alt="Foto do candidato" />
+    <div id="score-badge" class="score-badge"></div>
+    <div id="nome" class="nome"></div>
+    <div id="partido" class="partido"></div>
+    <div id="justificativa" class="justificativa"></div>
+    <p class="aviso">⚠️ Indicação provisória. Este candidato foi selecionado por afinidade de propostas. Com o avanço das pesquisas eleitorais, a recomendação poderá ser atualizada para potencializar o seu voto.</p>
+    <div class="botoes">
+      <a id="btn-instagram" class="btn btn-instagram" href="#" target="_blank">🌐 Ver Instagram</a>
+      <button class="btn btn-compartilhar" onclick="compartilhar()">🔗 Compartilhar resultado</button>
+    </div>
+  </div>
 
-    async function buscarFoto(nome) {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/candidatos?select=Foto,Instagram&"Nome_Urna"=eq.${encodeURIComponent(nome)}`,
-        {
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          }
-        }
-      );
-      const data = await res.json();
-      return Array.isArray(data) && data.length > 0 ? data[0] : null;
-    }
-
-    async function init() {
-      const params = new URLSearchParams(window.location.search);
-      const sessao = params.get('sessao');
-
-      if (!sessao) {
-        document.getElementById('conteudo').innerHTML =
-          '<p class="erro">Link inválido. Nenhuma sessão encontrada.</p>';
-        return;
-      }
-
-      let resultado = null;
-      for (let i = 0; i < 10; i++) {
-        resultado = await buscarResultado(sessao);
-        if (resultado) break;
-        await new Promise(r => setTimeout(r, 2000));
-      }
-
-      if (!resultado) {
-        document.getElementById('conteudo').innerHTML =
-          '<p class="erro">Resultado não encontrado. Tente responder o quiz novamente.</p>';
-        return;
-      }
-
-      const candidato = await buscarFoto(resultado.nome_candidato);
-
-      const foto = candidato?.Foto
-        ? `<img class="foto" src="${candidato.Foto}" alt="${escapeHtml(resultado.nome_candidato)}" />`
-        : '';
-
-      const instagram = candidato?.Instagram
-        ? `<a class="btn btn-instagram" href="${candidato.Instagram}" target="_blank" rel="noopener noreferrer">📸 Ver Instagram</a>`
-        : '';
-
-      document.getElementById('conteudo').innerHTML = `
-        ${foto}
-        <div class="score-badge">⚡ ${Number(resultado.pontuacao_afinidade).toFixed(1)}% de afinidade</div>
-        <h1>${escapeHtml(resultado.nome_candidato)}</h1>
-        <p class="partido">${escapeHtml(resultado.partido ?? '')}</p>
-        <div class="justificativa">${escapeHtml(resultado.candidato_recomendado)}</div>
-        ${instagram}
-        <button class="btn btn-compartilhar" onclick="compartilhar()">🔗 Compartilhar resultado</button>
-      `;
-    }
-
-    function escapeHtml(str) {
-      if (str == null) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    function compartilhar() {
-      const url = window.location.href;
-      if (navigator.share) {
-        navigator.share({
-          title: 'Meu candidato no Quiz Eleitoral SP',
-          text: 'Descubra o seu também!',
-          url,
-        }).catch(() => {
-          navigator.clipboard.writeText(url);
-          alert('Link copiado!');
-        });
-      } else {
-        navigator.clipboard.writeText(url);
-        alert('Link copiado!');
-      }
-    }
-
-    init();
-  </script>
-</body>
-</html>
+  <!-- Estado: bloqueado (Mulheres ou Meio Ambiente = Contrário) -->
+  <div id="bloqueado">
+    <p class="aviso-bloqueio">
+      Não encontramos candidatos alinhados com todas as suas posições na nossa base.<br><br>
+      Consulte outras ferramentas para explorar mais opções:
+    </p>
+    <div>
+      <a class="btn-alternativo" href="https://quemfoiquem.org.br/" target="_blank">🔍 Quem foi 
