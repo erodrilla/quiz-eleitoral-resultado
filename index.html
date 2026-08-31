@@ -170,7 +170,9 @@
 
   async function carregarResultado() {
     const params = new URLSearchParams(window.location.search);
-    const sessao = params.get("sessao");
+    // Pega direto da URL crua caso o URLSearchParams falhe em algum navegador
+const sessao = new URLSearchParams(window.location.search).get("sessao") ||
+               window.location.search.split('sessao=')[1]?.split('&')[0];;
 
     console.log("Sessao capturada:", sessao); // O console log vai aqui DENTRO do script
 
