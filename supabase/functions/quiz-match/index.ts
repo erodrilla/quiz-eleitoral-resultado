@@ -1,8 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const SUPABASE_URL          = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_SERVICE_KEY  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SUPABASE_URL         = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -10,12 +10,22 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const QUEM_FOI_QUEM = "https://quemfoiquem.org.br/";
+const DEPUTOMETRO   = "https://www.agencialupa.org/deputometro/";
+
 function extrairResposta(fields: any[], prefixo: string): string {
   const field = fields.find((f: any) => f.label?.includes(`[${prefixo}]`));
   if (!field) return "Moderado";
   const valueId = Array.isArray(field.value) ? field.value[0] : field.value;
   const option  = field.options?.find((o: any) => o.id === valueId);
   return option?.text ?? "Moderado";
+}
+
+function temasBloqueantes(mulheres: string, meio_ambiente: string): string[] {
+  const bloqueados: string[] = [];
+  if (mulheres === "Contrário")      bloqueados.push("Mulheres & Gênero");
+  if (meio_ambiente === "Contrário") bloqueados.push("Meio Ambiente");
+  return bloqueados;
 }
 
 serve(async (req) => {
@@ -38,50 +48,13 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    // 1. match_quiz — candidato mais compatível
-    const { data: match, error: matchError } = await supabase.rpc("match_quiz", {
-      p_mulheres,
-      p_educacao,
-      p_meio_ambiente,
-      p_impostos,
-      p_direitos,
-      p_seguranca,
-      p_transparencia,
-    });
+    // — Bloqueio por temas críticos —
+    const temasBloq = temasBloqueantes(mulheres, meio_ambiente);
+    const bloqueado = temasBloq.length > 0;
 
-    if (matchError || !match?.length) {
-      throw new Error("match_quiz falhou: " + JSON.stringify(matchError ?? match));
-    }
-
-    const candidato = match[0];
-    const scorePct  = Math.round((candidato.score ?? 0) * 100);
-    const bloqueado = scorePct < 40;
-
-    // 2. justificativa via SQL
-const { data: matchResult, error: matchError } = await supabase.rpc("match_quiz", {
-  p_mulheres:      mulheres,
-  p_educacao:      educacao,
-  p_meio_ambiente: meio_ambiente,
-  p_impostos:      impostos,
-  p_direitos:      direitos,
-  p_seguranca:     seguranca,
-  p_transparencia: transparencia,
-});
-
-if (matchError || !matchResult?.length) {
-  throw new Error("match_quiz falhou: " + JSON.stringify(matchError ?? matchResult));
-}
-
-const candidato = matchResult[0];    if (justError) {
-      console.error("gerar_justificativa erro:", JSON.stringify(justError));
-    }
-
-    const justificativa = justData ?? "Candidato selecionado por afinidade programática.";
-
-    // 3. gravar sempre — bloqueado ou não
-    const { error: insertError } = await supabase
-      .from("eleitores_respostas")
-      .insert({
+    if (bloqueado) {
+      // Grava mesmo bloqueado, sem candidato
+      await supabase.from("eleitores_respostas").insert({
         id_sessao,
         mulheres,
         educacao,
@@ -90,12 +63,82 @@ const candidato = matchResult[0];    if (justError) {
         direitos,
         seguranca,
         transparencia,
-        pontuacao_afinidade:   scorePct,
-        candidato_recomendado: justificativa,
-        nome_candidato:        candidato.nome_urna,
-        partido:               candidato.partido,
-        bloqueado,
+        pontuacao_afinidade:   null,
+        candidato_recomendado: null,
+        nome_candidato:        null,
+        partido:               null,
+        bloqueado:             true,
       });
+
+      return new Response(
+        JSON.stringify({
+          success:        true,
+          bloqueado:      true,
+          temas_criticos: temasBloq,
+          mensagem:       "Não foi possível identificar um candidato compatível com suas respostas nos temas essenciais. Consulte os recursos abaixo para conhecer melhor os candidatos.",
+          links: {
+            quem_foi_quem: QUEM_FOI_QUEM,
+            deputometro:   DEPUTOMETRO,
+          },
+        }),
+        { headers: { ...cors, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
+    // — Candidato normal —
+    const { data: rpcMatchResult, error: matchError } = await supabase.rpc("match_quiz", {
+      p_mulheres:      mulheres,
+      p_educacao:      educacao,
+      p_meio_ambiente: meio_ambiente,
+      p_impostos:      impostos,
+      p_direitos:      direitos,
+      p_seguranca:     seguranca,
+      p_transparencia: transparencia,
+    });
+
+    if (matchError || !rpcMatchResult?.length) {
+      throw new Error("match_quiz falhou: " + JSON.stringify(matchError ?? rpcMatchResult));
+    }
+
+    const candidato = rpcMatchResult[0];
+    const scorePct  = Math.round((candidato.score ?? 0) * 100);
+
+    // — Justificativa via SQL —
+    const { data: rpcJustResult, error: justError } = await supabase.rpc("gerar_justificativa", {
+      p_nome:          candidato.nome_urna,
+      p_partido:       candidato.partido,
+      p_score:         scorePct,
+      p_mulheres:      mulheres,
+      p_educacao:      educacao,
+      p_meio_ambiente: meio_ambiente,
+      p_impostos:      impostos,
+      p_direitos:      direitos,
+      p_seguranca:     seguranca,
+      p_transparencia: transparencia,
+    });
+
+    if (justError) {
+      console.error("gerar_justificativa erro:", JSON.stringify(justError));
+    }
+
+    const justificativa = rpcJustResult ?? "Candidato selecionado por afinidade programática.";
+
+    // — Grava resultado —
+    const { error: insertError } = await supabase.from("eleitores_respostas").insert({
+      id_sessao,
+      mulheres,
+      educacao,
+      meio_ambiente,
+      impostos,
+      direitos,
+      seguranca,
+      transparencia,
+      pontuacao_afinidade:   scorePct,
+      candidato_recomendado: justificativa,
+      nome_candidato:        candidato.nome_urna,
+      partido:               candidato.partido,
+      bloqueado:             false,
+    });
 
     if (insertError) {
       throw new Error("Insert falhou: " + JSON.stringify(insertError));
@@ -103,12 +146,12 @@ const candidato = matchResult[0];    if (justError) {
 
     return new Response(
       JSON.stringify({
-        success:       true,
-        bloqueado,
+        success:      true,
+        bloqueado:    false,
         id_sessao,
-        candidato:     candidato.nome_urna,
-        partido:       candidato.partido,
-        score:         scorePct,
+        candidato:    candidato.nome_urna,
+        partido:      candidato.partido,
+        score:        scorePct,
         justificativa,
       }),
       { headers: { ...cors, "Content-Type": "application/json" }, status: 200 }
