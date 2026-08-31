@@ -19,13 +19,13 @@
     #conteudo {
       max-width: 600px;
       width: 100%;
-      background: rgba(255,255,255,0.05);
+      background: rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(10px);
       border-radius: 24px;
       padding: 40px 30px;
       text-align: center;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .foto {
       width: 120px;
@@ -35,17 +35,6 @@
       border: 3px solid rgba(255,255,255,0.3);
       margin-bottom: 16px;
     }
-    .foto-placeholder {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.1);
-      margin: 0 auto 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 48px;
-    }
     .score-badge {
       display: inline-block;
       background: linear-gradient(135deg, #22c55e, #16a34a);
@@ -53,56 +42,34 @@
       font-weight: 700;
       font-size: 14px;
       padding: 6px 16px;
-      border-radius: 20px;
+      border-radius: 999px;
       margin-bottom: 16px;
     }
-    .score-badge.bloqueado {
-      background: linear-gradient(135deg, #ef4444, #b91c1c);
-    }
-    h1 {
+    .nome {
       font-size: 28px;
       font-weight: 800;
-      margin-bottom: 6px;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
     }
     .partido {
       font-size: 14px;
       color: rgba(255,255,255,0.5);
-      margin-bottom: 16px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .selo-integridade {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 18px;
-      padding: 7px 14px;
-      border-radius: 999px;
-      background: rgba(34, 197, 94, 0.14);
-      border: 1px solid rgba(34, 197, 94, 0.35);
-      color: #b9f6cb;
-      font-size: 13px;
-      font-weight: 700;
+      margin-bottom: 20px;
     }
     .justificativa {
-      background: rgba(255,255,255,0.05);
-      border-left: 3px solid #22c55e;
-      border-radius: 8px;
+      background: rgba(255,255,255,0.07);
+      border-left: 4px solid #22c55e;
+      border-radius: 12px;
       padding: 16px 20px;
       font-size: 15px;
       line-height: 1.6;
       text-align: left;
-      margin-bottom: 16px;
-    }
-    .justificativa.bloqueado {
-      border-left-color: #ef4444;
+      margin-bottom: 24px;
     }
     .aviso {
       font-size: 12px;
-      color: rgba(255,255,255,0.45);
-      margin-bottom: 28px;
-      font-style: italic;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 24px;
       line-height: 1.5;
     }
     .botoes {
@@ -112,220 +79,198 @@
       flex-wrap: wrap;
     }
     .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
       padding: 12px 24px;
-      border-radius: 12px;
+      border-radius: 999px;
       font-size: 14px;
       font-weight: 600;
-      text-decoration: none;
       cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    .btn:hover { opacity: 0.85; }
-    .btn-instagram {
-      background: linear-gradient(135deg, #f97316, #ec4899);
-      color: #fff;
       border: none;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-instagram {
+      background: linear-gradient(135deg, #f43f5e, #ec4899);
+      color: #fff;
     }
     .btn-compartilhar {
       background: rgba(255,255,255,0.1);
       color: #fff;
       border: 1px solid rgba(255,255,255,0.2);
     }
-    .btn-externo {
-      background: rgba(255,255,255,0.08);
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.15);
-      width: 100%;
-      justify-content: center;
-      margin-top: 6px;
+    #bloqueado {
+      display: none;
     }
-    #mensagem-estado {
-      font-size: 16px;
-      color: rgba(255,255,255,0.6);
+    #bloqueado .aviso-bloqueio {
+      font-size: 15px;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 24px;
+    }
+    .btn-alternativo {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-block;
+      margin: 6px;
+    }
+    #erro {
+      display: none;
+      color: rgba(255,255,255,0.7);
+      font-size: 15px;
     }
   </style>
 </head>
 <body>
   <div id="conteudo">
-    <p id="mensagem-estado">Carregando seu resultado...</p>
+    <div id="carregando">
+      <p style="color:rgba(255,255,255,0.6)">Carregando seu resultado...</p>
+    </div>
+
+    <div id="resultado" style="display:none">
+      <img id="foto" class="foto" src="" alt="Foto do candidato" />
+      <div id="score-badge" class="score-badge"></div>
+      <div id="nome" class="nome"></div>
+      <div id="partido" class="partido"></div>
+      <div id="justificativa" class="justificativa"></div>
+      <p class="aviso">⚠️ Indicação provisória. Este candidato foi selecionado por afinidade de propostas. Com o avanço das pesquisas eleitorais, a recomendação poderá ser atualizada para potencializar o seu voto.</p>
+      <div class="botoes">
+        <a id="btn-instagram" class="btn btn-instagram" href="#" target="_blank">🌐 Ver Instagram</a>
+        <button class="btn btn-compartilhar" onclick="compartilhar()">🔗 Compartilhar resultado</button>
+      </div>
+    </div>
+
+    <div id="bloqueado">
+      <p class="aviso-bloqueio">
+        Não encontramos candidatos alinhados com todas as suas posições na nossa base.<br><br>
+        Consulte outras ferramentas para explorar mais opções:
+      </p>
+      <div>
+        <a class="btn-alternativo" href="https://quemfoiquem.org.br/" target="_blank">🔍 Quem foi Quem</a>
+        <a class="btn-alternativo" href="https://www.agencialupa.org/deputometro/" target="_blank">📊 Deputômetro</a>
+      </div>
+    </div>
+
+    <div id="erro">
+      <p>Não foi possível carregar o resultado. Tente novamente.</p>
+    </div>
   </div>
 
   <script>
-    const SUPABASE_URL = 'https://hglifytalonmncphycfp.supabase.co';
-    const SUPABASE_ANON_KEY = 'COLE_SUA_ANON_KEY_REAL_AQUI';
-
-    const params = new URLSearchParams(window.location.search);
-    const sessao = params.get('sessao');
+    const SUPABASE_URL = "https://hglifytalonmncphycfp.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ";
 
     async function carregarResultado() {
+      const params = new URLSearchParams(window.location.search);
+      const sessao = params.get("sessao");
+
       if (!sessao) {
-        mostrarErro('Sessão não encontrada. Refaça o quiz.');
+        mostrar("erro");
         return;
       }
 
       try {
         const resEleitor = await fetch(
-          `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${encodeURIComponent(sessao)}&select=mulheres,educacao,meio_ambiente,impostos,direitos,seguranca,transparencia,pontuacao_afinidade,candidato_recomendado,nome_candidato,partido,bloqueado`,
+          `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${encodeURIComponent(sessao)}&select=*&limit=1`,
           {
             headers: {
-              apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-            },
+              "apikey": SUPABASE_ANON_KEY,
+              "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            }
           }
         );
 
-        if (!resEleitor.ok) {
-          throw new Error('Falha ao buscar resultado');
-        }
+        if (!resEleitor.ok) throw new Error("Falha ao buscar sessão");
 
-        const registros = await resEleitor.json();
+        const dadosEleitor = await resEleitor.json();
 
-        if (!registros || registros.length === 0) {
-          mostrarErro('Resultado ainda não disponível. Aguarde alguns segundos e recarregue.');
+        if (!dadosEleitor.length) {
+          mostrar("erro");
           return;
         }
 
-        const d = registros[0];
+        const d = dadosEleitor[0];
 
-        if (d.bloqueado === true || d.mulheres === 'Contrário' || d.meio_ambiente === 'Contrário') {
-          mostrarBloqueado();
+        if (d.bloqueado === true) {
+          mostrar("bloqueado");
+          return;
+        }
+
+        if (d.mulheres === "Contrário" || d.meio_ambiente === "Contrário") {
+          mostrar("bloqueado");
           return;
         }
 
         if (!d.nome_candidato) {
-          mostrarErro('Resultado indisponível.');
+          mostrar("erro");
           return;
         }
 
         const resCandidato = await fetch(
-          `${SUPABASE_URL}/rest/v1/candidatos?select=Foto,Instagram,Integridade,gravame_etico,descricao_gravame&Nome_Urna=eq.${encodeURIComponent(d.nome_candidato)}&limit=1`,
+          `${SUPABASE_URL}/rest/v1/candidatos?select=Foto,Instagram&Nome_Urna=eq.${encodeURIComponent(d.nome_candidato)}&limit=1`,
           {
             headers: {
-              apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-            },
+              "apikey": SUPABASE_ANON_KEY,
+              "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            }
           }
         );
 
-        let foto = '';
-        let instagram = '#';
-        let integridade = '';
-        let gravameEtico = false;
+        let foto = "";
+        let instagram = "#";
 
         if (resCandidato.ok) {
           const dadosCandidato = await resCandidato.json();
           if (dadosCandidato.length) {
-            foto = dadosCandidato[0].Foto || '';
-            instagram = dadosCandidato[0].Instagram || '#';
-            integridade = dadosCandidato[0].Integridade || '';
-            gravameEtico = dadosCandidato[0].gravame_etico === true;
+            foto = dadosCandidato[0].Foto || "";
+            instagram = dadosCandidato[0].Instagram || "#";
           }
         }
 
-        if (gravameEtico) {
-          mostrarBloqueado();
-          return;
-        }
+        const score = d.pontuacao_afinidade ?? 0;
 
-        const scoreRaw = Number(d.pontuacao_afinidade);
-        const score = Number.isFinite(scoreRaw)
-          ? (scoreRaw <= 1 ? Math.round(scoreRaw * 100) : Math.round(scoreRaw))
-          : 0;
+        document.getElementById("foto").src = foto || "https://via.placeholder.com/120";
+        document.getElementById("score-badge").textContent = `⚡ ${score}% de afinidade`;
+        document.getElementById("nome").textContent = d.nome_candidato;
+        document.getElementById("partido").textContent = d.partido || "";
+        document.getElementById("justificativa").textContent = d.candidato_recomendado || "";
+        document.getElementById("btn-instagram").href = instagram;
 
-        mostrarResultado({
-          nome: d.nome_candidato,
-          partido: d.partido || '',
-          justificativa: d.candidato_recomendado || '',
-          score,
-          foto,
-          instagram,
-          integridade,
-        });
+        mostrar("resultado");
       } catch (e) {
         console.error(e);
-        mostrarErro('Não foi possível carregar o resultado. Tente novamente.');
+        mostrar("erro");
       }
     }
 
-    function mostrarResultado(d) {
-      const seloIntegridade = d.integridade && d.integridade.trim()
-        ? `<div class="selo-integridade">✅ Integridade: sem bloqueios públicos relevantes</div>`
-        : '';
-
-      document.getElementById('conteudo').innerHTML = `
-        ${
-          d.foto
-            ? `<img class="foto" src="${escapeAttr(d.foto)}" alt="${escapeAttr(d.nome)}" onerror="this.style.display='none'" />`
-            : `<div class="foto-placeholder">🗳️</div>`
-        }
-        <div class="score-badge">⚡ ${Number(d.score || 0)}% de afinidade</div>
-        <h1>${escapeHtml(d.nome)}</h1>
-        <div class="partido">${escapeHtml(d.partido)}</div>
-        ${seloIntegridade}
-        <div class="justificativa">${escapeHtml(d.justificativa)}</div>
-        <p class="aviso">⚠️ Indicação provisória. Este candidato foi selecionado por afinidade de propostas. Com o avanço das pesquisas eleitorais, a recomendação poderá ser atualizada para potencializar o seu voto.</p>
-        <div class="botoes">
-          ${
-            d.instagram && d.instagram !== '#'
-              ? `<a class="btn btn-instagram" href="${escapeAttr(d.instagram)}" target="_blank" rel="noopener noreferrer">🌐 Ver Instagram</a>`
-              : ''
-          }
-          <button class="btn btn-compartilhar" onclick="compartilhar()">🔗 Compartilhar resultado</button>
-        </div>
-      `;
-    }
-
-    function mostrarBloqueado() {
-      document.getElementById('conteudo').innerHTML = `
-        <div class="foto-placeholder">⚠️</div>
-        <div class="justificativa bloqueado">
-          Não encontramos candidatos alinhados com todas as suas posições na nossa base.<br><br>
-          Consulte outras ferramentas para explorar mais opções:
-        </div>
-        <div class="botoes" style="flex-direction:column; margin-top:16px;">
-          <a class="btn btn-externo" href="https://quemfoiquem.org.br/" target="_blank" rel="noopener noreferrer">🔍 Quem foi Quem</a>
-          <a class="btn btn-externo" href="https://www.agencialupa.org/deputometro/" target="_blank" rel="noopener noreferrer">📊 Deputômetro</a>
-        </div>
-      `;
-    }
-
-    function mostrarErro(msg) {
-      document.getElementById('conteudo').innerHTML = `
-        <p id="mensagem-estado">${escapeHtml(msg)}</p>
-      `;
+    function mostrar(estado) {
+      document.getElementById("carregando").style.display = "none";
+      document.getElementById("resultado").style.display = "none";
+      document.getElementById("bloqueado").style.display = "none";
+      document.getElementById("erro").style.display = "none";
+      document.getElementById(estado).style.display = "block";
     }
 
     function compartilhar() {
       if (navigator.share) {
         navigator.share({
-          title: 'Meu candidato no Quiz Eleitoral SP',
+          title: "Meu candidato no Quiz Eleitoral SP",
           url: window.location.href,
         });
       } else {
         navigator.clipboard.writeText(window.location.href).then(() => {
-          alert('Link copiado!');
+          alert("Link copiado!");
         });
       }
-    }
-
-    function escapeHtml(str) {
-      return String(str)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#39;');
-    }
-
-    function escapeAttr(str) {
-      return escapeHtml(str);
     }
 
     carregarResultado();
   </script>
 </body>
 </html>
-
