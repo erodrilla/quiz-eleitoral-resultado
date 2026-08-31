@@ -96,14 +96,14 @@ serve(async (req) => {
     }
 
     const candidato = rpcMatchResult[0];
-    const scorePct = Math.round((candidato.score ?? 0) * 100);
+    const score = Number(candidato.score ?? 0);
 
     let justificativa = "Candidato selecionado por afinidade programática.";
 
     const { data: justData, error: justError } = await supabase.rpc("gerar_justificativa", {
       p_nome: candidato.nome_urna,
       p_partido: candidato.partido,
-      p_score: scorePct,
+      p_score: score,
       p_mulheres: mulheres,
       p_educacao: educacao,
       p_meio_ambiente: meio_ambiente,
@@ -130,7 +130,7 @@ serve(async (req) => {
         direitos: direitos,
         seguranca: seguranca,
         transparencia: transparencia,
-        pontuacao_afinidade: scorePct,
+        pontuacao_afinidade: score,
         candidato_recomendado: justificativa,
         nome_candidato: candidato.nome_urna,
         partido: candidato.partido,
@@ -148,7 +148,7 @@ serve(async (req) => {
         id_sessao: id_sessao,
         candidato: candidato.nome_urna,
         partido: candidato.partido,
-        score: scorePct,
+        score: score,
         justificativa: justificativa,
       }),
       { headers: { ...cors, "Content-Type": "application/json" }, status: 200 }
