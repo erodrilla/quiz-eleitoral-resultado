@@ -58,19 +58,15 @@ serve(async (req) => {
     const bloqueado = scorePct < 40;
 
     // 2. justificativa via SQL
-    const { data: justData, error: justError } = await supabase.rpc("gerar_justificativa", {
-      p_nome:          candidato.nome_urna,
-      p_partido:       candidato.partido,
-      p_score:         scorePct,
-      p_mulheres:      mulheres,
-      p_educacao:      educacao,
-      p_meio_ambiente: meio_ambiente,
-      p_impostos:      impostos,
-      p_direitos:      direitos,
-      p_seguranca:     seguranca,
-      p_transparencia: transparencia,
-    });
-
+const { data: match, error: matchError } = await supabase.rpc("match_quiz", {
+  p_mulheres:      mulheres,
+  p_educacao:      educacao,
+  p_meio_ambiente: meio_ambiente,
+  p_impostos:      impostos,
+  p_direitos:      direitos,
+  p_seguranca:     seguranca,
+  p_transparencia: transparencia,
+});
     if (justError) {
       console.error("gerar_justificativa erro:", JSON.stringify(justError));
     }
@@ -121,4 +117,5 @@ serve(async (req) => {
     );
   }
 });
+
 
