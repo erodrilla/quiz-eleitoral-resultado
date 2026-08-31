@@ -131,7 +131,7 @@
 <div id="conteudo">
 
   <div id="carregando">
-    <p style="color:rgba(255,255,255,0.6)">Carregando seu resultado...</p>
+    <p style="color:rgba(255,255,255,0.6)">Calculando seu resultado...</p>
   </div>
 
   <div id="resultado" style="display:none">
@@ -159,73 +159,62 @@
   </div>
 
   <div id="erro">
-    <p>Não foi possível carregar o resultado. Tente novamente.</p>
+    <p>Não foi possível carregar o resultado. Tente responder novamente.</p>
   </div>
 
 </div>
 
 <script>
   const SUPABASE_URL = "https://hglifytalonmncphycfp.supabase.co";
+  // IMPORTANTE: Cole sua anon key real aqui antes de commitar
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ";
 
-  async function carregarResultado() {
-    const params = new URLSearchParams(window.location.search);
-    // Pega direto da URL crua caso o URLSearchParams falhe em algum navegador
-const sessao = new URLSearchParams(window.location.search).get("sessao") ||
-               window.location.search.split('sessao=')[1]?.split('&')[0];;
-
-    console.log("Sessao capturada:", sessao); // O console log vai aqui DENTRO do script
-
-    if (!sessao) {
+  async function tentarBuscarSessao(sessao, tentativasRestantes) {
+    if (tentativasRestantes === 0) {
       mostrar("erro");
       return;
     }
 
     try {
-      const resEleitor = await fetch(
+      const res = await fetch(
         `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${encodeURIComponent(sessao)}&select=*&limit=1`,
-        {
-          headers: {
-            "apikey": SUPABASE_ANON_KEY,
-            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-          }
-        }
+        { headers: { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}` } }
       );
 
-      if (!resEleitor.ok) throw new Error("Falha ao buscar sessão");
+      if (!res.ok) throw new Error("Falha na API");
+      
+      const dados = await res.json();
 
-      const dadosEleitor = await resEleitor.json();
-
-      if (!dadosEleitor.length) {
-        mostrar("erro");
+      // Se não encontrou, espera 1.5s e tenta de novo (webhook ainda processando)
+      if (!dados.length) {
+        setTimeout(() => tentarBuscarSessao(sessao, tentativasRestantes - 1), 1500);
         return;
       }
 
-      const d = dadosEleitor[0];
+      // Achou! Processa os dados
+      processarDados(dados[0]);
 
-      if (d.bloqueado === true) {
-        mostrar("bloqueado");
-        return;
-      }
+    } catch (e) {
+      console.error(e);
+      setTimeout(() => tentarBuscarSessao(sessao, tentativasRestantes - 1), 1500);
+    }
+  }
 
-      if (d.mulheres === "Contrário" || d.meio_ambiente === "Contrário") {
-        mostrar("bloqueado");
-        return;
-      }
+  async function processarDados(d) {
+    if (d.bloqueado === true || d.mulheres === "Contrário" || d.meio_ambiente === "Contrário") {
+      mostrar("bloqueado");
+      return;
+    }
 
-      if (!d.nome_candidato) {
-        mostrar("erro");
-        return;
-      }
+    if (!d.nome_candidato) {
+      mostrar("erro");
+      return;
+    }
 
+    try {
       const resCandidato = await fetch(
         `${SUPABASE_URL}/rest/v1/candidatos?select=Foto,Instagram&Nome_Urna=eq.${encodeURIComponent(d.nome_candidato)}&limit=1`,
-        {
-          headers: {
-            "apikey": SUPABASE_ANON_KEY,
-            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-          }
-        }
+        { headers: { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}` } }
       );
 
       let foto = "";
@@ -240,7 +229,6 @@ const sessao = new URLSearchParams(window.location.search).get("sessao") ||
       }
 
       const score = d.pontuacao_afinidade ?? 0;
-
       document.getElementById("foto").src = foto || "https://via.placeholder.com/120";
       document.getElementById("score-badge").textContent = `⚡ ${score}% de afinidade`;
       document.getElementById("nome").textContent = d.nome_candidato;
@@ -266,18 +254,22 @@ const sessao = new URLSearchParams(window.location.search).get("sessao") ||
 
   function compartilhar() {
     if (navigator.share) {
-      navigator.share({
-        title: "Meu candidato no Quiz Eleitoral SP",
-        url: window.location.href,
-      });
+      navigator.share({ title: "Meu candidato no Quiz Eleitoral SP", url: window.location.href });
     } else {
-      navigator.clipboard.writeText(window.location.href).then(() => {
-        alert("Link copiado!");
-      });
+      navigator.clipboard.writeText(window.location.href).then(() => alert("Link copiado!"));
     }
   }
 
-  carregarResultado();
+  // Início
+  const params = new URLSearchParams(window.location.search);
+  const sessao = params.get("sessao");
+
+  if (!sessao) {
+    mostrar("erro");
+  } else {
+    // Tenta até 6 vezes, esperando 1.5s entre cada tentativa (total de ~9 segundos de tolerância)
+    tentarBuscarSessao(sessao, 6);
+  }
 </script>
 </body>
 </html>
