@@ -1,3 +1,14 @@
+async function carregarResultado() {
+  const params = new URLSearchParams(window.location.search);
+  const sessao = params.get("sessao");
+
+  console.log("Sessao capturada:", sessao);   // ← adiciona esta linha
+
+  if (!sessao) {
+    mostrar("erro");
+    return;
+  }
+  // ... resto do código
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
