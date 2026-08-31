@@ -58,7 +58,7 @@ serve(async (req) => {
     const bloqueado = scorePct < 40;
 
     // 2. justificativa via SQL
-const { data: match, error: matchError } = await supabase.rpc("match_quiz", {
+const { data: matchResult, error: matchError } = await supabase.rpc("match_quiz", {
   p_mulheres:      mulheres,
   p_educacao:      educacao,
   p_meio_ambiente: meio_ambiente,
@@ -67,7 +67,12 @@ const { data: match, error: matchError } = await supabase.rpc("match_quiz", {
   p_seguranca:     seguranca,
   p_transparencia: transparencia,
 });
-    if (justError) {
+
+if (matchError || !matchResult?.length) {
+  throw new Error("match_quiz falhou: " + JSON.stringify(matchError ?? matchResult));
+}
+
+const candidato = matchResult[0];    if (justError) {
       console.error("gerar_justificativa erro:", JSON.stringify(justError));
     }
 
@@ -117,5 +122,3 @@ const { data: match, error: matchError } = await supabase.rpc("match_quiz", {
     );
   }
 });
-
-
