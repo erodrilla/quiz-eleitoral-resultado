@@ -10,22 +10,12 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const QUEM_FOI_QUEM = "https://quemfoiquem.org.br/";
-const DEPUTOMETRO   = "https://www.agencialupa.org/deputometro/";
-
 function extrairResposta(fields: any[], prefixo: string): string {
   const field = fields.find((f: any) => f.label?.includes(`[${prefixo}]`));
   if (!field) return "Moderado";
   const valueId = Array.isArray(field.value) ? field.value[0] : field.value;
   const option  = field.options?.find((o: any) => o.id === valueId);
   return option?.text ?? "Moderado";
-}
-
-function temasBloqueantes(mulheres: string, meio_ambiente: string): string[] {
-  const bloqueados: string[] = [];
-  if (mulheres === "Contrário")      bloqueados.push("Mulheres & Gênero");
-  if (meio_ambiente === "Contrário") bloqueados.push("Meio Ambiente");
-  return bloqueados;
 }
 
 serve(async (req) => {
@@ -46,46 +36,12 @@ serve(async (req) => {
     const seguranca     = extrairResposta(fields, "Segurança");
     const transparencia = extrairResposta(fields, "Transparência");
 
+    // Bloqueio por temas críticos
+    const bloqueado = mulheres === "Contrário" || meio_ambiente === "Contrário";
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    // — Bloqueio por temas críticos —
-    const temasBloq = temasBloqueantes(mulheres, meio_ambiente);
-    const bloqueado = temasBloq.length > 0;
-
-    if (bloqueado) {
-      // Grava mesmo bloqueado, sem candidato
-      await supabase.from("eleitores_respostas").insert({
-        id_sessao,
-        mulheres,
-        educacao,
-        meio_ambiente,
-        impostos,
-        direitos,
-        seguranca,
-        transparencia,
-        pontuacao_afinidade:   null,
-        candidato_recomendado: null,
-        nome_candidato:        null,
-        partido:               null,
-        bloqueado:             true,
-      });
-
-      return new Response(
-        JSON.stringify({
-          success:        true,
-          bloqueado:      true,
-          temas_criticos: temasBloq,
-          mensagem:       "Não foi possível identificar um candidato compatível com suas respostas nos temas essenciais. Consulte os recursos abaixo para conhecer melhor os candidatos.",
-          links: {
-            quem_foi_quem: QUEM_FOI_QUEM,
-            deputometro:   DEPUTOMETRO,
-          },
-        }),
-        { headers: { ...cors, "Content-Type": "application/json" }, status: 200 }
-      );
-    }
-
-    // — Candidato normal —
+    // 1. match_quiz
     const { data: rpcMatchResult, error: matchError } = await supabase.rpc("match_quiz", {
       p_mulheres:      mulheres,
       p_educacao:      educacao,
@@ -103,8 +59,9 @@ serve(async (req) => {
     const candidato = rpcMatchResult[0];
     const scorePct  = Math.round((candidato.score ?? 0) * 100);
 
-    // — Justificativa via SQL —
-    const { data: rpcJustResult, error: justError } = await supabase.rpc("gerar_justificativa", {
+    // 2. justificativa via SQL
+    let justificativa = "Candidato selecionado por afinidade programática.";
+    const { data: justData, error: justError } = await supabase.rpc("gerar_justificativa", {
       p_nome:          candidato.nome_urna,
       p_partido:       candidato.partido,
       p_score:         scorePct,
@@ -119,26 +76,27 @@ serve(async (req) => {
 
     if (justError) {
       console.error("gerar_justificativa erro:", JSON.stringify(justError));
+    } else if (justData) {
+      justificativa = justData;
     }
 
-    const justificativa = rpcJustResult ?? "Candidato selecionado por afinidade programática.";
-
-    // — Grava resultado —
-    const { error: insertError } = await supabase.from("eleitores_respostas").insert({
-      id_sessao,
-      mulheres,
-      educacao,
-      meio_ambiente,
-      impostos,
-      direitos,
-      seguranca,
-      transparencia,
-      pontuacao_afinidade:   scorePct,
-      candidato_recomendado: justificativa,
-      nome_candidato:        candidato.nome_urna,
-      partido:               candidato.partido,
-      bloqueado:             false,
-    });
+    // 3. gravar
+    const { error: insertError } = await supabase
+      .from("eleitores_respostas")
+      .insert({
+        id_sessao,
+        mulheres,
+        educacao,
+        meio_ambiente,
+        impostos,
+        direitos,
+        seguranca,
+        transparencia,
+        pontuacao_afinidade:   String(scorePct),
+        candidato_recomendado: justificativa,
+        nome_candidato:        candidato.nome_urna,
+        partido:               candidato.partido,
+      });
 
     if (insertError) {
       throw new Error("Insert falhou: " + JSON.stringify(insertError));
@@ -147,7 +105,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success:      true,
-        bloqueado:    false,
+        bloqueado,
         id_sessao,
         candidato:    candidato.nome_urna,
         partido:      candidato.partido,
