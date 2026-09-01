@@ -27,9 +27,63 @@
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
+
+    /* ── TELA DE APRESENTAÇÃO ── */
+    #apresentacao { display: none; }
+    .apres-icon { font-size: 48px; margin-bottom: 16px; }
+    .apres-titulo {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      line-height: 1.3;
+    }
+    .apres-texto {
+      font-size: 15px;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+    .apres-aviso {
+      background: rgba(255,200,0,0.1);
+      border-left: 4px solid #f59e0b;
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.5;
+      margin-bottom: 28px;
+      text-align: left;
+    }
+    .btn-revelar {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 14px 32px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      letter-spacing: 0.5px;
+    }
+    .btn-revelar:hover { opacity: 0.9; }
+
+    /* ── CARREGANDO ── */
+    #carregando { }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid rgba(255,255,255,0.2);
+      border-top-color: #22c55e;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── RESULTADO ── */
+    #resultado { display: none; }
     .foto {
-      width: 120px;
-      height: 120px;
+      width: 120px; height: 120px;
       border-radius: 50%;
       object-fit: cover;
       border: 3px solid rgba(255,255,255,0.3);
@@ -99,6 +153,8 @@
       color: #fff;
       border: 1px solid rgba(255,255,255,0.2);
     }
+
+    /* ── BLOQUEADO ── */
     #bloqueado { display: none; }
     #bloqueado .aviso-bloqueio {
       font-size: 15px;
@@ -118,28 +174,45 @@
       display: inline-block;
       margin: 6px;
     }
-    #erro {
-      display: none;
-      color: rgba(255,255,255,0.7);
-      font-size: 15px;
-    }
-    .aguardando-msg {
-      font-size: 13px;
-      color: rgba(255,255,255,0.4);
-      margin-top: 12px;
-    }
+
+    /* ── ERRO ── */
+    #erro { display: none; color: rgba(255,255,255,0.7); font-size: 15px; }
   </style>
 </head>
 <body>
 <div id="conteudo">
 
+  <!-- CARREGANDO -->
   <div id="carregando">
-    <p style="color:rgba(255,255,255,0.6)">Carregando seu resultado...</p>
-    <p id="tentativa-msg" class="aguardando-msg"></p>
+    <div class="spinner"></div>
+    <p style="color:rgba(255,255,255,0.6)">Processando seu resultado...</p>
   </div>
 
-  <div id="resultado" style="display:none">
-    <img id="foto" class="foto" src="" alt="Foto do candidato" onerror="this.src='https://placehold.co/120x120/1e3a5f/white?text=📸'" />
+  <!-- TELA DE APRESENTAÇÃO -->
+  <div id="apresentacao">
+    <div class="apres-icon">🗳️</div>
+    <div class="apres-titulo">Encontramos seu candidato!</div>
+    <div class="apres-texto">
+      Com base nas suas respostas, identificamos o candidato a vereador de São Paulo
+      com maior alinhamento às suas posições em temas como direitos das mulheres,
+      meio ambiente, educação, segurança e transparência pública.
+      <br><br>
+      A indicação é baseada em análise programática das propostas e histórico
+      público dos candidatos — não é uma recomendação partidária.
+    </div>
+    <div class="apres-aviso">
+      ⚠️ Indicação provisória. Este candidato foi selecionado por afinidade de propostas.
+      Com o avanço das pesquisas eleitorais, a recomendação poderá ser atualizada
+      para potencializar o seu voto.
+    </div>
+    <button class="btn-revelar" onclick="revelarCandidato()">
+      🔍 Ver meu candidato
+    </button>
+  </div>
+
+  <!-- RESULTADO -->
+  <div id="resultado">
+    <img id="foto" class="foto" src="" alt="Foto do candidato" onerror="this.src='https://via.placeholder.com/120/1e3a5f/ffffff?text=?'" />
     <div id="score-badge" class="score-badge"></div>
     <div id="nome" class="nome"></div>
     <div id="partido" class="partido"></div>
@@ -151,6 +224,7 @@
     </div>
   </div>
 
+  <!-- BLOQUEADO -->
   <div id="bloqueado">
     <p class="aviso-bloqueio">
       Não encontramos candidatos alinhados com todas as suas posições na nossa base.<br><br>
@@ -162,6 +236,7 @@
     </div>
   </div>
 
+  <!-- ERRO -->
   <div id="erro">
     <p>Não foi possível carregar o resultado. Tente novamente.</p>
   </div>
@@ -169,47 +244,58 @@
 </div>
 
 <script>
-  const SUPABASE_URL      = "https://hglifytalonmncphycfp.supabase.co";
+  const SUPABASE_URL     = "https://hglifytalonmncphycfp.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ";
 
-  // Normaliza qualquer valor de Instagram para URL https://
-  function normalizarInstagram(valor) {
-    if (!valor || valor.trim() === "" || valor === "#") return null;
-    const v = valor.trim();
-    // já é URL completa
-    if (v.startsWith("http://") || v.startsWith("https://")) return v;
-    // handle com ou sem @
-    const handle = v.replace(/^@/, "");
-    return "https://www.instagram.com/" + handle + "/";
-  }
+  // Dados carregados ficam aqui para o botão "revelar" usar
+  let _dadosCarregados = null;
 
-  // Busca com retry: tenta até maxTentativas vezes com intervalo crescente
-  async function buscarComRetry(sessao, maxTentativas = 6, intervaloMs = 1200) {
-    for (let i = 1; i <= maxTentativas; i++) {
-      if (i > 1) {
-        document.getElementById("tentativa-msg").textContent =
-          `Aguardando resultado... (tentativa ${i}/${maxTentativas})`;
-        await new Promise(r => setTimeout(r, intervaloMs));
-      }
-
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${encodeURIComponent(sessao)}&select=*&limit=1`,
-        {
-          headers: {
-            "apikey": SUPABASE_ANON_KEY,
-            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-          }
-        }
-      );
-
-      if (!res.ok) continue;
-
-      const dados = await res.json();
-      if (dados.length && dados[0].nome_candidato) return dados[0];
+  // ── Normaliza URL do Instagram ──────────────────────────────────────────────
+  function normalizarInstagram(raw) {
+    if (!raw || raw === "#") return null;
+    // Remove espaços
+    raw = raw.trim();
+    // Se já é URL completa
+    if (raw.startsWith("http")) {
+      // Garante https e sem deep link
+      return raw.replace(/^http:/, "https:").replace("instagram://", "https://instagram.com/");
     }
-    return null;
+    // Handle com ou sem @
+    const handle = raw.replace(/^@/, "");
+    return `https://www.instagram.com/${handle}/`;
   }
 
+  // ── Retry com backoff: tenta até maxTentativas vezes ───────────────────────
+  async function buscarComRetry(sessao, tentativa = 1, maxTentativas = 5) {
+    const delay = tentativa === 1 ? 0 : tentativa * 800; // 0, 800, 1600, 2400, 3200ms
+    if (delay > 0) await new Promise(r => setTimeout(r, delay));
+
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${encodeURIComponent(sessao)}&select=*&limit=1`,
+      {
+        headers: {
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+        }
+      }
+    );
+
+    if (!res.ok) throw new Error("Falha HTTP: " + res.status);
+
+    const dados = await res.json();
+
+    if (!dados.length) {
+      if (tentativa < maxTentativas) {
+        console.log(`Sessão ainda não gravada, tentativa ${tentativa}/${maxTentativas}...`);
+        return buscarComRetry(sessao, tentativa + 1, maxTentativas);
+      }
+      return null; // esgotou tentativas
+    }
+
+    return dados[0];
+  }
+
+  // ── Carrega e prepara dados, exibe tela de apresentação ───────────────────
   async function carregarResultado() {
     const params = new URLSearchParams(window.location.search);
     const sessao = params.get("sessao");
@@ -227,7 +313,7 @@
         return;
       }
 
-      // Bloqueio
+      // ── Bloqueio ──
       if (d.bloqueado === true || d.mulheres === "Contrário" || d.meio_ambiente === "Contrário") {
         mostrar("bloqueado");
         return;
@@ -238,9 +324,9 @@
         return;
       }
 
-      // Buscar foto e instagram
-      let foto = "";
-      let instagramUrl = null;
+      // ── Buscar foto e instagram ──
+      let foto      = "";
+      let instagram = null;
 
       const resCandidato = await fetch(
         `${SUPABASE_URL}/rest/v1/candidatos?select=Foto,Instagram&Nome_Urna=eq.${encodeURIComponent(d.nome_candidato)}&limit=1`,
@@ -253,31 +339,18 @@
       );
 
       if (resCandidato.ok) {
-        const dadosCandidato = await resCandidato.json();
-        if (dadosCandidato.length) {
-          foto          = dadosCandidato[0].Foto || "";
-          instagramUrl  = normalizarInstagram(dadosCandidato[0].Instagram);
+        const dadosCand = await resCandidato.json();
+        if (dadosCand.length) {
+          foto      = dadosCand[0].Foto      || "";
+          instagram = normalizarInstagram(dadosCand[0].Instagram);
         }
       }
 
-      // Score: usar pontuacao_afinidade já gravada (já é %)
-      const score = Math.round(parseFloat(d.pontuacao_afinidade) || 0);
+      // ── Guardar para revelar depois ──
+      _dadosCarregados = { d, foto, instagram };
 
-      document.getElementById("foto").src             = foto || "https://placehold.co/120x120/1e3a5f/white?text=📸";
-      document.getElementById("score-badge").textContent = `⚡ ${score}% de afinidade`;
-      document.getElementById("nome").textContent      = d.nome_candidato;
-      document.getElementById("partido").textContent   = d.partido || "";
-      document.getElementById("justificativa").textContent = d.candidato_recomendado || "";
-
-      const btnInsta = document.getElementById("btn-instagram");
-      if (instagramUrl) {
-        btnInsta.href = instagramUrl;
-        btnInsta.style.display = "inline-flex";
-      } else {
-        btnInsta.style.display = "none";
-      }
-
-      mostrar("resultado");
+      // ── Mostrar tela de apresentação ──
+      mostrar("apresentacao");
 
     } catch (e) {
       console.error(e);
@@ -285,8 +358,33 @@
     }
   }
 
+  // ── Botão "Ver meu candidato" ──────────────────────────────────────────────
+  function revelarCandidato() {
+    if (!_dadosCarregados) { mostrar("erro"); return; }
+
+    const { d, foto, instagram } = _dadosCarregados;
+    const score = d.pontuacao_afinidade ?? 0;
+
+    document.getElementById("foto").src           = foto || "https://via.placeholder.com/120/1e3a5f/ffffff?text=?";
+    document.getElementById("score-badge").textContent = `⚡ ${score}% de afinidade`;
+    document.getElementById("nome").textContent    = d.nome_candidato;
+    document.getElementById("partido").textContent = d.partido || "";
+    document.getElementById("justificativa").textContent = d.candidato_recomendado || "";
+
+    const btnInsta = document.getElementById("btn-instagram");
+    if (instagram) {
+      btnInsta.href = instagram;
+      btnInsta.style.display = "inline-flex";
+    } else {
+      btnInsta.style.display = "none";
+    }
+
+    mostrar("resultado");
+  }
+
+  // ── Utilitários ────────────────────────────────────────────────────────────
   function mostrar(estado) {
-    ["carregando","resultado","bloqueado","erro"].forEach(id => {
+    ["carregando","apresentacao","resultado","bloqueado","erro"].forEach(id => {
       document.getElementById(id).style.display = "none";
     });
     document.getElementById(estado).style.display = "block";
