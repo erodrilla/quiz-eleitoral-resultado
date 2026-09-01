@@ -118,11 +118,15 @@
       display: inline-block;
       margin: 6px;
     }
-    #erro { display: none; color: rgba(255,255,255,0.7); font-size: 15px; }
-    .tentando {
-      font-size: 12px;
+    #erro {
+      display: none;
+      color: rgba(255,255,255,0.7);
+      font-size: 15px;
+    }
+    .aguardando-msg {
+      font-size: 13px;
       color: rgba(255,255,255,0.4);
-      margin-top: 8px;
+      margin-top: 12px;
     }
   </style>
 </head>
@@ -131,19 +135,18 @@
 
   <div id="carregando">
     <p style="color:rgba(255,255,255,0.6)">Carregando seu resultado...</p>
-    <p class="tentando" id="msg-tentativa"></p>
+    <p id="tentativa-msg" class="aguardando-msg"></p>
   </div>
 
   <div id="resultado" style="display:none">
-    <img id="foto" class="foto" src="" alt="Foto do candidato"
-         onerror="this.src='https://via.placeholder.com/120'" />
+    <img id="foto" class="foto" src="" alt="Foto do candidato" onerror="this.src='https://placehold.co/120x120/1e3a5f/white?text=📸'" />
     <div id="score-badge" class="score-badge"></div>
     <div id="nome" class="nome"></div>
     <div id="partido" class="partido"></div>
     <div id="justificativa" class="justificativa"></div>
     <p class="aviso">⚠️ Indicação provisória. Este candidato foi selecionado por afinidade de propostas. Com o avanço das pesquisas eleitorais, a recomendação poderá ser atualizada para potencializar o seu voto.</p>
     <div class="botoes">
-      <a id="btn-instagram" class="btn btn-instagram" href="#" target="_blank" rel="noopener">🌐 Ver Instagram</a>
+      <a id="btn-instagram" class="btn btn-instagram" href="#" target="_blank" rel="noopener noreferrer">🌐 Ver Instagram</a>
       <button class="btn btn-compartilhar" onclick="compartilhar()">🔗 Compartilhar resultado</button>
     </div>
   </div>
@@ -154,8 +157,8 @@
       Consulte outras ferramentas para explorar mais opções:
     </p>
     <div>
-      <a class="btn-alternativo" href="https://quemfoiquem.org.br/" target="_blank">🔍 Quem foi Quem</a>
-      <a class="btn-alternativo" href="https://www.agencialupa.org.br/deputometro/" target="_blank">📊 Deputômetro</a>
+      <a class="btn-alternativo" href="https://quemfoiquem.org.br/" target="_blank" rel="noopener noreferrer">🔍 Quem foi Quem</a>
+      <a class="btn-alternativo" href="https://www.agencialupa.org/deputometro/" target="_blank" rel="noopener noreferrer">📊 Deputômetro</a>
     </div>
   </div>
 
@@ -169,122 +172,117 @@
   const SUPABASE_URL      = "https://hglifytalonmncphycfp.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ";
 
-  const MAX_TENTATIVAS = 6;
-  const DELAY_MS       = 1500; // 1.5s entre tentativas
-
-  function sleep(ms) {
-    return new Promise(r => setTimeout(r, ms));
+  // Normaliza qualquer valor de Instagram para URL https://
+  function normalizarInstagram(valor) {
+    if (!valor || valor.trim() === "" || valor === "#") return null;
+    const v = valor.trim();
+    // já é URL completa
+    if (v.startsWith("http://") || v.startsWith("https://")) return v;
+    // handle com ou sem @
+    const handle = v.replace(/^@/, "");
+    return "https://www.instagram.com/" + handle + "/";
   }
 
-  async function buscarSessao(sessao) {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${encodeURIComponent(sessao)}&select=*&limit=1`,
-      {
-        headers: {
-          "apikey":        SUPABASE_ANON_KEY,
-          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-        }
+  // Busca com retry: tenta até maxTentativas vezes com intervalo crescente
+  async function buscarComRetry(sessao, maxTentativas = 6, intervaloMs = 1200) {
+    for (let i = 1; i <= maxTentativas; i++) {
+      if (i > 1) {
+        document.getElementById("tentativa-msg").textContent =
+          `Aguardando resultado... (tentativa ${i}/${maxTentativas})`;
+        await new Promise(r => setTimeout(r, intervaloMs));
       }
-    );
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    return await res.json();
+
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${encodeURIComponent(sessao)}&select=*&limit=1`,
+        {
+          headers: {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          }
+        }
+      );
+
+      if (!res.ok) continue;
+
+      const dados = await res.json();
+      if (dados.length && dados[0].nome_candidato) return dados[0];
+    }
+    return null;
   }
 
   async function carregarResultado() {
     const params = new URLSearchParams(window.location.search);
     const sessao = params.get("sessao");
 
-    console.log("Sessão capturada:", sessao);
-
     if (!sessao) {
       mostrar("erro");
       return;
     }
 
-    let dadosEleitor = [];
-
-    // Retry loop — aguarda a Edge Function gravar antes de desistir
-    for (let tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
-      try {
-        const msgEl = document.getElementById("msg-tentativa");
-        if (tentativa > 1 && msgEl) {
-          msgEl.textContent = `Aguardando processamento... (${tentativa}/${MAX_TENTATIVAS})`;
-        }
-
-        dadosEleitor = await buscarSessao(sessao);
-
-        // Só avança se o registro já tem nome_candidato preenchido
-        if (dadosEleitor.length && dadosEleitor[0].nome_candidato) break;
-
-        if (tentativa < MAX_TENTATIVAS) await sleep(DELAY_MS);
-
-      } catch (e) {
-        console.warn(`Tentativa ${tentativa} falhou:`, e);
-        if (tentativa < MAX_TENTATIVAS) await sleep(DELAY_MS);
-      }
-    }
-
-    if (!dadosEleitor.length || !dadosEleitor[0].nome_candidato) {
-      mostrar("erro");
-      return;
-    }
-
-    const d = dadosEleitor[0];
-
-    // Bloqueio por flag explícita ou por respostas diretas
-    if (
-      d.bloqueado === true ||
-      d.mulheres === "Contrário" ||
-      d.meio_ambiente === "Contrário"
-    ) {
-      mostrar("bloqueado");
-      return;
-    }
-
-    // Buscar foto e instagram
-    let foto      = "";
-    let instagram = "";
-
     try {
+      const d = await buscarComRetry(sessao);
+
+      if (!d) {
+        mostrar("erro");
+        return;
+      }
+
+      // Bloqueio
+      if (d.bloqueado === true || d.mulheres === "Contrário" || d.meio_ambiente === "Contrário") {
+        mostrar("bloqueado");
+        return;
+      }
+
+      if (!d.nome_candidato) {
+        mostrar("erro");
+        return;
+      }
+
+      // Buscar foto e instagram
+      let foto = "";
+      let instagramUrl = null;
+
       const resCandidato = await fetch(
         `${SUPABASE_URL}/rest/v1/candidatos?select=Foto,Instagram&Nome_Urna=eq.${encodeURIComponent(d.nome_candidato)}&limit=1`,
         {
           headers: {
-            "apikey":        SUPABASE_ANON_KEY,
+            "apikey": SUPABASE_ANON_KEY,
             "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
           }
         }
       );
+
       if (resCandidato.ok) {
         const dadosCandidato = await resCandidato.json();
         if (dadosCandidato.length) {
-          foto      = dadosCandidato[0].Foto      || "";
-          instagram = dadosCandidato[0].Instagram || "";
+          foto          = dadosCandidato[0].Foto || "";
+          instagramUrl  = normalizarInstagram(dadosCandidato[0].Instagram);
         }
       }
+
+      // Score: usar pontuacao_afinidade já gravada (já é %)
+      const score = Math.round(parseFloat(d.pontuacao_afinidade) || 0);
+
+      document.getElementById("foto").src             = foto || "https://placehold.co/120x120/1e3a5f/white?text=📸";
+      document.getElementById("score-badge").textContent = `⚡ ${score}% de afinidade`;
+      document.getElementById("nome").textContent      = d.nome_candidato;
+      document.getElementById("partido").textContent   = d.partido || "";
+      document.getElementById("justificativa").textContent = d.candidato_recomendado || "";
+
+      const btnInsta = document.getElementById("btn-instagram");
+      if (instagramUrl) {
+        btnInsta.href = instagramUrl;
+        btnInsta.style.display = "inline-flex";
+      } else {
+        btnInsta.style.display = "none";
+      }
+
+      mostrar("resultado");
+
     } catch (e) {
-      console.warn("Erro ao buscar candidato:", e);
+      console.error(e);
+      mostrar("erro");
     }
-
-    // Renderizar
-    const score = d.pontuacao_afinidade ?? 0;
-
-    document.getElementById("foto").src = foto || "https://via.placeholder.com/120";
-    document.getElementById("score-badge").textContent = `⚡ ${score}% de afinidade`;
-    document.getElementById("nome").textContent        = d.nome_candidato;
-    document.getElementById("partido").textContent     = d.partido || "";
-    document.getElementById("justificativa").textContent = d.candidato_recomendado || "";
-
-    // Instagram: só mostra o botão se tiver link válido
-    const btnInsta = document.getElementById("btn-instagram");
-    if (instagram && instagram !== "#" && instagram.startsWith("http")) {
-      btnInsta.href = instagram;
-      btnInsta.style.display = "inline-flex";
-    } else {
-      btnInsta.style.display = "none";
-    }
-
-    mostrar("resultado");
   }
 
   function mostrar(estado) {
@@ -296,14 +294,9 @@
 
   function compartilhar() {
     if (navigator.share) {
-      navigator.share({
-        title: "Meu candidato no Quiz Eleitoral SP",
-        url: window.location.href,
-      });
+      navigator.share({ title: "Meu candidato no Quiz Eleitoral SP", url: window.location.href });
     } else {
-      navigator.clipboard.writeText(window.location.href).then(() => {
-        alert("Link copiado!");
-      });
+      navigator.clipboard.writeText(window.location.href).then(() => alert("Link copiado!"));
     }
   }
 
