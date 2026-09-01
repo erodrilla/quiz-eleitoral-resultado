@@ -99,9 +99,7 @@
       color: #fff;
       border: 1px solid rgba(255,255,255,0.2);
     }
-    #bloqueado {
-      display: none;
-    }
+    #bloqueado { display: none; }
     #bloqueado .aviso-bloqueio {
       font-size: 15px;
       line-height: 1.7;
@@ -120,159 +118,196 @@
       display: inline-block;
       margin: 6px;
     }
-    #erro {
-      display: none;
-      color: rgba(255,255,255,0.7);
-      font-size: 15px;
+    #erro { display: none; color: rgba(255,255,255,0.7); font-size: 15px; }
+    .tentando {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      margin-top: 8px;
     }
   </style>
 </head>
 <body>
-  <div id="conteudo">
-    <div id="carregando">
-      <p style="color:rgba(255,255,255,0.6)">Carregando seu resultado...</p>
-    </div>
+<div id="conteudo">
 
-    <div id="resultado" style="display:none">
-      <img id="foto" class="foto" src="" alt="Foto do candidato" />
-      <div id="score-badge" class="score-badge"></div>
-      <div id="nome" class="nome"></div>
-      <div id="partido" class="partido"></div>
-      <div id="justificativa" class="justificativa"></div>
-      <p class="aviso">⚠️ Indicação provisória. Este candidato foi selecionado por afinidade de propostas. Com o avanço das pesquisas eleitorais, a recomendação poderá ser atualizada para potencializar o seu voto.</p>
-      <div class="botoes">
-        <a id="btn-instagram" class="btn btn-instagram" href="#" target="_blank">🌐 Ver Instagram</a>
-        <button class="btn btn-compartilhar" onclick="compartilhar()">🔗 Compartilhar resultado</button>
-      </div>
-    </div>
+  <div id="carregando">
+    <p style="color:rgba(255,255,255,0.6)">Carregando seu resultado...</p>
+    <p class="tentando" id="msg-tentativa"></p>
+  </div>
 
-    <div id="bloqueado">
-      <p class="aviso-bloqueio">
-        Não encontramos candidatos alinhados com todas as suas posições na nossa base.<br><br>
-        Consulte outras ferramentas para explorar mais opções:
-      </p>
-      <div>
-        <a class="btn-alternativo" href="https://quemfoiquem.org.br/" target="_blank">🔍 Quem foi Quem</a>
-        <a class="btn-alternativo" href="https://www.agencialupa.org/deputometro/" target="_blank">📊 Deputômetro</a>
-      </div>
-    </div>
-
-    <div id="erro">
-      <p>Não foi possível carregar o resultado. Tente novamente.</p>
+  <div id="resultado" style="display:none">
+    <img id="foto" class="foto" src="" alt="Foto do candidato"
+         onerror="this.src='https://via.placeholder.com/120'" />
+    <div id="score-badge" class="score-badge"></div>
+    <div id="nome" class="nome"></div>
+    <div id="partido" class="partido"></div>
+    <div id="justificativa" class="justificativa"></div>
+    <p class="aviso">⚠️ Indicação provisória. Este candidato foi selecionado por afinidade de propostas. Com o avanço das pesquisas eleitorais, a recomendação poderá ser atualizada para potencializar o seu voto.</p>
+    <div class="botoes">
+      <a id="btn-instagram" class="btn btn-instagram" href="#" target="_blank" rel="noopener">🌐 Ver Instagram</a>
+      <button class="btn btn-compartilhar" onclick="compartilhar()">🔗 Compartilhar resultado</button>
     </div>
   </div>
 
-  <script>
-    const SUPABASE_URL = "https://hglifytalonmncphycfp.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ";
+  <div id="bloqueado">
+    <p class="aviso-bloqueio">
+      Não encontramos candidatos alinhados com todas as suas posições na nossa base.<br><br>
+      Consulte outras ferramentas para explorar mais opções:
+    </p>
+    <div>
+      <a class="btn-alternativo" href="https://quemfoiquem.org.br/" target="_blank">🔍 Quem foi Quem</a>
+      <a class="btn-alternativo" href="https://www.agencialupa.org.br/deputometro/" target="_blank">📊 Deputômetro</a>
+    </div>
+  </div>
 
-    async function carregarResultado() {
-      const params = new URLSearchParams(window.location.search);
-      const sessao = params.get("sessao");
+  <div id="erro">
+    <p>Não foi possível carregar o resultado. Tente novamente.</p>
+  </div>
 
-      console.log("Sessao capturada:", sessao);
+</div>
 
-      if (!sessao) {
-        mostrar("erro");
-        return;
+<script>
+  const SUPABASE_URL      = "https://hglifytalonmncphycfp.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ";
+
+  const MAX_TENTATIVAS = 6;
+  const DELAY_MS       = 1500; // 1.5s entre tentativas
+
+  function sleep(ms) {
+    return new Promise(r => setTimeout(r, ms));
+  }
+
+  async function buscarSessao(sessao) {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${encodeURIComponent(sessao)}&select=*&limit=1`,
+      {
+        headers: {
+          "apikey":        SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+        }
       }
+    );
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return await res.json();
+  }
 
+  async function carregarResultado() {
+    const params = new URLSearchParams(window.location.search);
+    const sessao = params.get("sessao");
+
+    console.log("Sessão capturada:", sessao);
+
+    if (!sessao) {
+      mostrar("erro");
+      return;
+    }
+
+    let dadosEleitor = [];
+
+    // Retry loop — aguarda a Edge Function gravar antes de desistir
+    for (let tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
       try {
-        const resEleitor = await fetch(
-          `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${encodeURIComponent(sessao)}&select=*&limit=1`,
-          {
-            headers: {
-              "apikey": SUPABASE_ANON_KEY,
-              "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-            }
-          }
-        );
-
-        if (!resEleitor.ok) throw new Error("Falha ao buscar sessão");
-
-        const dadosEleitor = await resEleitor.json();
-
-        if (!dadosEleitor.length) {
-          mostrar("erro");
-          return;
+        const msgEl = document.getElementById("msg-tentativa");
+        if (tentativa > 1 && msgEl) {
+          msgEl.textContent = `Aguardando processamento... (${tentativa}/${MAX_TENTATIVAS})`;
         }
 
-        const d = dadosEleitor[0];
+        dadosEleitor = await buscarSessao(sessao);
 
-        if (d.bloqueado === true) {
-          mostrar("bloqueado");
-          return;
-        }
+        // Só avança se o registro já tem nome_candidato preenchido
+        if (dadosEleitor.length && dadosEleitor[0].nome_candidato) break;
 
-        if (d.mulheres === "Contrário" || d.meio_ambiente === "Contrário") {
-          mostrar("bloqueado");
-          return;
-        }
+        if (tentativa < MAX_TENTATIVAS) await sleep(DELAY_MS);
 
-        if (!d.nome_candidato) {
-          mostrar("erro");
-          return;
-        }
-
-        const resCandidato = await fetch(
-          `${SUPABASE_URL}/rest/v1/candidatos?select=Foto,Instagram&Nome_Urna=eq.${encodeURIComponent(d.nome_candidato)}&limit=1`,
-          {
-            headers: {
-              "apikey": SUPABASE_ANON_KEY,
-              "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-            }
-          }
-        );
-
-        let foto = "";
-        let instagram = "#";
-
-        if (resCandidato.ok) {
-          const dadosCandidato = await resCandidato.json();
-          if (dadosCandidato.length) {
-            foto = dadosCandidato[0].Foto || "";
-            instagram = dadosCandidato[0].Instagram || "#";
-          }
-        }
-
-        const score = d.pontuacao_afinidade ?? 0;
-
-        document.getElementById("foto").src = foto || "https://via.placeholder.com/120";
-        document.getElementById("score-badge").textContent = `⚡ ${score}% de afinidade`;
-        document.getElementById("nome").textContent = d.nome_candidato;
-        document.getElementById("partido").textContent = d.partido || "";
-        document.getElementById("justificativa").textContent = d.candidato_recomendado || "";
-        document.getElementById("btn-instagram").href = instagram;
-
-        mostrar("resultado");
       } catch (e) {
-        console.error(e);
-        mostrar("erro");
+        console.warn(`Tentativa ${tentativa} falhou:`, e);
+        if (tentativa < MAX_TENTATIVAS) await sleep(DELAY_MS);
       }
     }
 
-    function mostrar(estado) {
-      document.getElementById("carregando").style.display = "none";
-      document.getElementById("resultado").style.display = "none";
-      document.getElementById("bloqueado").style.display = "none";
-      document.getElementById("erro").style.display = "none";
-      document.getElementById(estado).style.display = "block";
+    if (!dadosEleitor.length || !dadosEleitor[0].nome_candidato) {
+      mostrar("erro");
+      return;
     }
 
-    function compartilhar() {
-      if (navigator.share) {
-        navigator.share({
-          title: "Meu candidato no Quiz Eleitoral SP",
-          url: window.location.href,
-        });
-      } else {
-        navigator.clipboard.writeText(window.location.href).then(() => {
-          alert("Link copiado!");
-        });
+    const d = dadosEleitor[0];
+
+    // Bloqueio por flag explícita ou por respostas diretas
+    if (
+      d.bloqueado === true ||
+      d.mulheres === "Contrário" ||
+      d.meio_ambiente === "Contrário"
+    ) {
+      mostrar("bloqueado");
+      return;
+    }
+
+    // Buscar foto e instagram
+    let foto      = "";
+    let instagram = "";
+
+    try {
+      const resCandidato = await fetch(
+        `${SUPABASE_URL}/rest/v1/candidatos?select=Foto,Instagram&Nome_Urna=eq.${encodeURIComponent(d.nome_candidato)}&limit=1`,
+        {
+          headers: {
+            "apikey":        SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          }
+        }
+      );
+      if (resCandidato.ok) {
+        const dadosCandidato = await resCandidato.json();
+        if (dadosCandidato.length) {
+          foto      = dadosCandidato[0].Foto      || "";
+          instagram = dadosCandidato[0].Instagram || "";
+        }
       }
+    } catch (e) {
+      console.warn("Erro ao buscar candidato:", e);
     }
 
-    carregarResultado();
-  </script>
+    // Renderizar
+    const score = d.pontuacao_afinidade ?? 0;
+
+    document.getElementById("foto").src = foto || "https://via.placeholder.com/120";
+    document.getElementById("score-badge").textContent = `⚡ ${score}% de afinidade`;
+    document.getElementById("nome").textContent        = d.nome_candidato;
+    document.getElementById("partido").textContent     = d.partido || "";
+    document.getElementById("justificativa").textContent = d.candidato_recomendado || "";
+
+    // Instagram: só mostra o botão se tiver link válido
+    const btnInsta = document.getElementById("btn-instagram");
+    if (instagram && instagram !== "#" && instagram.startsWith("http")) {
+      btnInsta.href = instagram;
+      btnInsta.style.display = "inline-flex";
+    } else {
+      btnInsta.style.display = "none";
+    }
+
+    mostrar("resultado");
+  }
+
+  function mostrar(estado) {
+    ["carregando","resultado","bloqueado","erro"].forEach(id => {
+      document.getElementById(id).style.display = "none";
+    });
+    document.getElementById(estado).style.display = "block";
+  }
+
+  function compartilhar() {
+    if (navigator.share) {
+      navigator.share({
+        title: "Meu candidato no Quiz Eleitoral SP",
+        url: window.location.href,
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        alert("Link copiado!");
+      });
+    }
+  }
+
+  carregarResultado();
+</script>
 </body>
 </html>
