@@ -19,76 +19,17 @@
     #conteudo {
       max-width: 600px;
       width: 100%;
-      background: rgba(255,255,255,0.05);
+      background: rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(10px);
       border-radius: 24px;
       padding: 40px 30px;
       text-align: center;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
-
-    /* ── TELA DE APRESENTAÇÃO ── */
-    #apresentacao { display: none; }
-    .logo-quiz {
-      font-size: 40px;
-      margin-bottom: 16px;
-    }
-    .titulo-quiz {
-      font-size: 24px;
-      font-weight: 800;
-      margin-bottom: 8px;
-      line-height: 1.3;
-    }
-    .subtitulo-quiz {
-      font-size: 14px;
-      color: rgba(255,255,255,0.55);
-      margin-bottom: 24px;
-      line-height: 1.6;
-    }
-    .missao-box {
-      background: rgba(255,255,255,0.07);
-      border-left: 4px solid #3b82f6;
-      border-radius: 12px;
-      padding: 16px 20px;
-      font-size: 14px;
-      line-height: 1.7;
-      text-align: left;
-      margin-bottom: 28px;
-      color: rgba(255,255,255,0.85);
-    }
-    .missao-box strong { color: #fff; }
-    .btn-revelar {
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-      color: #fff;
-      font-size: 16px;
-      font-weight: 700;
-      padding: 14px 36px;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-      width: 100%;
-      max-width: 320px;
-      transition: opacity 0.2s;
-    }
-    .btn-revelar:hover { opacity: 0.88; }
-
-    /* ── CARREGANDO ── */
-    #carregando { display: block; }
-    .spinner {
-      width: 40px; height: 40px;
-      border: 3px solid rgba(255,255,255,0.15);
-      border-top-color: #22c55e;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 16px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── RESULTADO ── */
-    #resultado { display: none; }
     .foto {
-      width: 120px; height: 120px;
+      width: 120px;
+      height: 120px;
       border-radius: 50%;
       object-fit: cover;
       border: 3px solid rgba(255,255,255,0.3);
@@ -104,17 +45,15 @@
       border-radius: 999px;
       margin-bottom: 16px;
     }
-    .nome { font-size: 28px; font-weight: 800; letter-spacing: 1px; margin-bottom: 4px; }
-    .partido { font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 20px; }
-    .cargo-badge {
-      display: inline-block;
-      background: rgba(59,130,246,0.25);
-      border: 1px solid rgba(59,130,246,0.5);
-      color: #93c5fd;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 4px 12px;
-      border-radius: 999px;
+    .nome {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .partido {
+      font-size: 14px;
+      color: rgba(255,255,255,0.5);
       margin-bottom: 20px;
     }
     .justificativa {
@@ -151,13 +90,19 @@
       align-items: center;
       gap: 6px;
     }
-    .btn-instagram { background: linear-gradient(135deg, #f43f5e, #ec4899); color: #fff; }
-    .btn-compartilhar { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
-
-    /* ── BLOQUEADO ── */
+    .btn-instagram {
+      background: linear-gradient(135deg, #f43f5e, #ec4899);
+      color: #fff;
+    }
+    .btn-compartilhar {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
     #bloqueado { display: none; }
     #bloqueado .aviso-bloqueio {
-      font-size: 15px; line-height: 1.7;
+      font-size: 15px;
+      line-height: 1.7;
       color: rgba(255,255,255,0.85);
       margin-bottom: 24px;
     }
@@ -173,40 +118,30 @@
       display: inline-block;
       margin: 6px;
     }
-
-    /* ── ERRO ── */
-    #erro { display: none; color: rgba(255,255,255,0.7); font-size: 15px; }
+    #erro {
+      display: none;
+      color: rgba(255,255,255,0.7);
+      font-size: 15px;
+    }
+    .aguardando-msg {
+      font-size: 13px;
+      color: rgba(255,255,255,0.4);
+      margin-top: 12px;
+    }
   </style>
 </head>
 <body>
 <div id="conteudo">
 
   <div id="carregando">
-    <div class="spinner"></div>
-    <p style="color:rgba(255,255,255,0.6)">Processando seu resultado…</p>
+    <p style="color:rgba(255,255,255,0.6)">Carregando seu resultado...</p>
+    <p id="tentativa-msg" class="aguardando-msg"></p>
   </div>
 
-  <div id="apresentacao">
-    <div class="logo-quiz">🗳️</div>
-    <div class="titulo-quiz">Seu candidato a Deputado Federal por SP</div>
-    <p class="subtitulo-quiz">Eleições 2026 · Câmara dos Deputados</p>
-    <div class="missao-box">
-      <strong>Por que este projeto existe?</strong><br><br>
-      Nas eleições para Deputado Federal, a maioria dos eleitores vota sem conhecer as propostas dos candidatos — e muitos votos acabam em legendas, não em pessoas com quem realmente concordam.<br><br>
-      Este quiz cruza suas posições sobre temas como <strong>direitos das mulheres, educação, meio ambiente, impostos, segurança e transparência</strong> com o histórico público de cada candidato(a) ao cargo de Deputado Federal pelo estado de São Paulo.<br><br>
-      O resultado é uma <strong>indicação por afinidade programática</strong> — não uma ordem de voto, mas um ponto de partida para você conhecer quem defende o que você defende.
-    </div>
-    <button class="btn-revelar" onclick="revelarCandidato()">
-      ⚡ Ver meu candidato
-    </button>
-  </div>
-
-  <div id="resultado">
-    <img id="foto" class="foto" src="" alt="Foto do candidato"
-         onerror="this.src='https://placehold.co/120x120/1e3a5f/ffffff?text=👤'" />
+  <div id="resultado" style="display:none">
+    <img id="foto" class="foto" src="" alt="Foto do candidato" onerror="this.src='https://placehold.co/120x120/1e3a5f/white?text=📸'" />
     <div id="score-badge" class="score-badge"></div>
     <div id="nome" class="nome"></div>
-    <div class="cargo-badge">Deputado(a) Federal · SP</div>
     <div id="partido" class="partido"></div>
     <div id="justificativa" class="justificativa"></div>
     <p class="aviso">⚠️ Indicação provisória. Este candidato foi selecionado por afinidade de propostas. Com o avanço das pesquisas eleitorais, a recomendação poderá ser atualizada para potencializar o seu voto.</p>
@@ -237,28 +172,40 @@
   const SUPABASE_URL      = "https://hglifytalonmncphycfp.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ";
 
-  let dadosGlobais = null;
-
-  // normaliza handle/URL do Instagram → URL completa
+  // Normaliza qualquer valor de Instagram para URL https://
   function normalizarInstagram(valor) {
-    if (!valor || valor === "#" || valor.trim() === "") return null;
+    if (!valor || valor.trim() === "" || valor === "#") return null;
     const v = valor.trim();
-    if (v.startsWith("http")) return v;                        // já é URL
-    const handle = v.replace(/^@/, "");                        // remove @ inicial
+    // já é URL completa
+    if (v.startsWith("http://") || v.startsWith("https://")) return v;
+    // handle com ou sem @
+    const handle = v.replace(/^@/, "");
     return "https://www.instagram.com/" + handle + "/";
   }
 
-  // polling: tenta até maxTentativas vezes com intervalo de intervalMs ms
-  async function buscarComRetry(sessao, maxTentativas = 8, intervalMs = 1200) {
-    for (let i = 0; i < maxTentativas; i++) {
+  // Busca com retry: tenta até maxTentativas vezes com intervalo crescente
+  async function buscarComRetry(sessao, maxTentativas = 6, intervaloMs = 1200) {
+    for (let i = 1; i <= maxTentativas; i++) {
+      if (i > 1) {
+        document.getElementById("tentativa-msg").textContent =
+          `Aguardando resultado... (tentativa ${i}/${maxTentativas})`;
+        await new Promise(r => setTimeout(r, intervaloMs));
+      }
+
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${encodeURIComponent(sessao)}&select=*&limit=1`,
-        { headers: { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}` } }
+        {
+          headers: {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          }
+        }
       );
-      if (!res.ok) throw new Error("Falha HTTP ao buscar sessão");
+
+      if (!res.ok) continue;
+
       const dados = await res.json();
-      if (dados.length && dados[0].nome_candidato) return dados[0]; // registro completo
-      if (i < maxTentativas - 1) await new Promise(r => setTimeout(r, intervalMs));
+      if (dados.length && dados[0].nome_candidato) return dados[0];
     }
     return null;
   }
@@ -266,43 +213,71 @@
   async function carregarResultado() {
     const params = new URLSearchParams(window.location.search);
     const sessao = params.get("sessao");
-    console.log("Sessão capturada:", sessao);
 
-    if (!sessao) { mostrar("erro"); return; }
+    if (!sessao) {
+      mostrar("erro");
+      return;
+    }
 
     try {
       const d = await buscarComRetry(sessao);
 
-      if (!d) { mostrar("erro"); return; }
-
-      // bloqueio
-      if (d.bloqueado === true || d.mulheres === "Contrário" || d.meio_ambiente === "Contrário") {
-        mostrar("bloqueado"); return;
+      if (!d) {
+        mostrar("erro");
+        return;
       }
 
-      if (!d.nome_candidato) { mostrar("erro"); return; }
+      // Bloqueio
+      if (d.bloqueado === true || d.mulheres === "Contrário" || d.meio_ambiente === "Contrário") {
+        mostrar("bloqueado");
+        return;
+      }
 
-      // buscar foto e instagram
-      let foto      = "";
-      let instagram = null;
+      if (!d.nome_candidato) {
+        mostrar("erro");
+        return;
+      }
 
-      const resCand = await fetch(
+      // Buscar foto e instagram
+      let foto = "";
+      let instagramUrl = null;
+
+      const resCandidato = await fetch(
         `${SUPABASE_URL}/rest/v1/candidatos?select=Foto,Instagram&Nome_Urna=eq.${encodeURIComponent(d.nome_candidato)}&limit=1`,
-        { headers: { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}` } }
+        {
+          headers: {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          }
+        }
       );
-      if (resCand.ok) {
-        const cand = await resCand.json();
-        if (cand.length) {
-          foto      = cand[0].Foto      || "";
-          instagram = normalizarInstagram(cand[0].Instagram);
+
+      if (resCandidato.ok) {
+        const dadosCandidato = await resCandidato.json();
+        if (dadosCandidato.length) {
+          foto          = dadosCandidato[0].Foto || "";
+          instagramUrl  = normalizarInstagram(dadosCandidato[0].Instagram);
         }
       }
 
-      // guardar dados globais para revelar depois
-      dadosGlobais = { d, foto, instagram };
+      // Score: usar pontuacao_afinidade já gravada (já é %)
+      const score = Math.round(parseFloat(d.pontuacao_afinidade) || 0);
 
-      // mostrar tela de apresentação
-      mostrar("apresentacao");
+      document.getElementById("foto").src             = foto || "https://placehold.co/120x120/1e3a5f/white?text=📸";
+      document.getElementById("score-badge").textContent = `⚡ ${score}% de afinidade`;
+      document.getElementById("nome").textContent      = d.nome_candidato;
+      document.getElementById("partido").textContent   = d.partido || "";
+      document.getElementById("justificativa").textContent = d.candidato_recomendado || "";
+
+      const btnInsta = document.getElementById("btn-instagram");
+      if (instagramUrl) {
+        btnInsta.href = instagramUrl;
+        btnInsta.style.display = "inline-flex";
+      } else {
+        btnInsta.style.display = "none";
+      }
+
+      mostrar("resultado");
 
     } catch (e) {
       console.error(e);
@@ -310,30 +285,8 @@
     }
   }
 
-  function revelarCandidato() {
-    if (!dadosGlobais) { mostrar("erro"); return; }
-    const { d, foto, instagram } = dadosGlobais;
-    const score = d.pontuacao_afinidade ?? 0;
-
-    document.getElementById("foto").src                  = foto || "";
-    document.getElementById("score-badge").textContent   = `⚡ ${score}% de afinidade`;
-    document.getElementById("nome").textContent           = d.nome_candidato;
-    document.getElementById("partido").textContent        = d.partido || "";
-    document.getElementById("justificativa").textContent  = d.candidato_recomendado || "";
-
-    const btnInsta = document.getElementById("btn-instagram");
-    if (instagram) {
-      btnInsta.href = instagram;
-      btnInsta.style.display = "";
-    } else {
-      btnInsta.style.display = "none";
-    }
-
-    mostrar("resultado");
-  }
-
   function mostrar(estado) {
-    ["carregando","apresentacao","resultado","bloqueado","erro"].forEach(id => {
+    ["carregando","resultado","bloqueado","erro"].forEach(id => {
       document.getElementById(id).style.display = "none";
     });
     document.getElementById(estado).style.display = "block";
