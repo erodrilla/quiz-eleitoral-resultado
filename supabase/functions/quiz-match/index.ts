@@ -53,7 +53,7 @@ serve(async (req) => {
     }
 
     const candidato = match[0];
-    const scorePct = Math.round((candidato.score ?? 0) * 100);
+    const scorePct = Math.round(candidato.score ?? 0);
 
     const justificativa = `Candidato selecionado por afinidade programática.`;
 
