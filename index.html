@@ -54,7 +54,23 @@
     .partido {
       font-size: 14px;
       color: rgba(255,255,255,0.5);
+      margin-bottom: 8px;
+    }
+    .numero-candidato {
+      display: inline-block;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.9);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: 4px 14px;
+      border-radius: 999px;
       margin-bottom: 20px;
+    }
+    .numero-candidato span {
+      color: #22c55e;
+      margin-right: 4px;
     }
     .justificativa {
       background: rgba(255,255,255,0.07);
@@ -139,10 +155,14 @@
   </div>
 
   <div id="resultado" style="display:none">
-    <img id="foto" class="foto" src="" alt="Foto do candidato" onerror="this.src='https://placehold.co/120x120/1e3a5f/white?text=📸'" />
+    <img id="foto" class="foto" src="" alt="Foto do candidato"
+         onerror="this.src='https://placehold.co/120x120/1e3a5f/white?text=📸'" />
     <div id="score-badge" class="score-badge"></div>
     <div id="nome" class="nome"></div>
     <div id="partido" class="partido"></div>
+    <div id="numero-candidato" class="numero-candidato" style="display:none">
+      <span>№</span><span id="numero-valor"></span>
+    </div>
     <div id="justificativa" class="justificativa"></div>
     <p class="aviso">⚠️ Indicação provisória. Este candidato foi selecionado por afinidade de propostas. Com o avanço das pesquisas eleitorais, a recomendação poderá ser atualizada para potencializar o seu voto.</p>
     <div class="botoes">
@@ -172,18 +192,14 @@
   const SUPABASE_URL      = "https://hglifytalonmncphycfp.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ";
 
-  // Normaliza qualquer valor de Instagram para URL https://
   function normalizarInstagram(valor) {
     if (!valor || valor.trim() === "" || valor === "#") return null;
     const v = valor.trim();
-    // já é URL completa
     if (v.startsWith("http://") || v.startsWith("https://")) return v;
-    // handle com ou sem @
     const handle = v.replace(/^@/, "");
     return "https://www.instagram.com/" + handle + "/";
   }
 
-  // Busca com retry: tenta até maxTentativas vezes com intervalo crescente
   async function buscarComRetry(sessao, maxTentativas = 6, intervaloMs = 1200) {
     for (let i = 1; i <= maxTentativas; i++) {
       if (i > 1) {
@@ -203,7 +219,6 @@
       );
 
       if (!res.ok) continue;
-
       const dados = await res.json();
       if (dados.length && dados[0].nome_candidato) return dados[0];
     }
@@ -214,36 +229,26 @@
     const params = new URLSearchParams(window.location.search);
     const sessao = params.get("sessao");
 
-    if (!sessao) {
-      mostrar("erro");
-      return;
-    }
+    if (!sessao) { mostrar("erro"); return; }
 
     try {
       const d = await buscarComRetry(sessao);
+      if (!d) { mostrar("erro"); return; }
 
-      if (!d) {
-        mostrar("erro");
-        return;
-      }
-
-      // Bloqueio
       if (d.bloqueado === true || d.mulheres === "Contrário" || d.meio_ambiente === "Contrário") {
         mostrar("bloqueado");
         return;
       }
 
-      if (!d.nome_candidato) {
-        mostrar("erro");
-        return;
-      }
+      if (!d.nome_candidato) { mostrar("erro"); return; }
 
-      // Buscar foto e instagram
-      let foto = "";
+      // Buscar foto, instagram e número do candidato
+      let foto         = "";
       let instagramUrl = null;
+      let numeroCand   = null;
 
       const resCandidato = await fetch(
-        `${SUPABASE_URL}/rest/v1/candidatos?select=Foto,Instagram&Nome_Urna=eq.${encodeURIComponent(d.nome_candidato)}&limit=1`,
+        `${SUPABASE_URL}/rest/v1/candidatos?select=Foto,Instagram,"Número Candidato"&Nome_Urna=eq.${encodeURIComponent(d.nome_candidato)}&limit=1`,
         {
           headers: {
             "apikey": SUPABASE_ANON_KEY,
@@ -255,23 +260,33 @@
       if (resCandidato.ok) {
         const dadosCandidato = await resCandidato.json();
         if (dadosCandidato.length) {
-          foto          = dadosCandidato[0].Foto || "";
-          instagramUrl  = normalizarInstagram(dadosCandidato[0].Instagram);
+          foto         = dadosCandidato[0].Foto || "";
+          instagramUrl = normalizarInstagram(dadosCandidato[0].Instagram);
+          numeroCand   = dadosCandidato[0]["Número Candidato"] ?? null;
         }
       }
 
-      // Score: usar pontuacao_afinidade já gravada (já é %)
       const score = Math.round(parseFloat(d.pontuacao_afinidade) || 0);
 
-      document.getElementById("foto").src             = foto || "https://placehold.co/120x120/1e3a5f/white?text=📸";
-      document.getElementById("score-badge").textContent = `⚡ ${score}% de afinidade`;
-      document.getElementById("nome").textContent      = d.nome_candidato;
-      document.getElementById("partido").textContent   = d.partido || "";
-      document.getElementById("justificativa").textContent = d.candidato_recomendado || "";
+      document.getElementById("foto").src                    = foto || "https://placehold.co/120x120/1e3a5f/white?text=📸";
+      document.getElementById("score-badge").textContent     = `⚡ ${score}% de afinidade`;
+      document.getElementById("nome").textContent            = d.nome_candidato;
+      document.getElementById("partido").textContent         = d.partido || "";
+      document.getElementById("justificativa").textContent   = d.candidato_recomendado || "";
 
+      // Número do candidato
+      const elNumero = document.getElementById("numero-candidato");
+      if (numeroCand) {
+        document.getElementById("numero-valor").textContent = numeroCand;
+        elNumero.style.display = "inline-block";
+      } else {
+        elNumero.style.display = "none";
+      }
+
+      // Instagram
       const btnInsta = document.getElementById("btn-instagram");
       if (instagramUrl) {
-        btnInsta.href = instagramUrl;
+        btnInsta.href          = instagramUrl;
         btnInsta.style.display = "inline-flex";
       } else {
         btnInsta.style.display = "none";
