@@ -168,11 +168,16 @@
   const SUPABASE_URL = "https://hglifytalonmncphycfp.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ";
 
-  async function carregarResultado() {
+  const MAX_TENTATIVAS = 6;   // total ~9s de espera antes de desistir
+  const ESPERA_MS = 1500;
+
+  function dormir(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async function carregarResultado(tentativa = 1) {
     const params = new URLSearchParams(window.location.search);
     const sessao = params.get("sessao");
-
-    console.log("Sessao capturada:", sessao);
 
     if (!sessao) {
       mostrar("erro");
@@ -194,7 +199,12 @@
 
       const dadosEleitor = await resEleitor.json();
 
+      // A Edge Function pode ainda não ter terminado de gravar — tenta de novo
       if (!dadosEleitor.length) {
+        if (tentativa < MAX_TENTATIVAS) {
+          await dormir(ESPERA_MS);
+          return carregarResultado(tentativa + 1);
+        }
         mostrar("erro");
         return;
       }
@@ -211,7 +221,12 @@
         return;
       }
 
+      // Candidato ainda não processado pela RPC — tenta de novo
       if (!d.nome_candidato) {
+        if (tentativa < MAX_TENTATIVAS) {
+          await dormir(ESPERA_MS);
+          return carregarResultado(tentativa + 1);
+        }
         mostrar("erro");
         return;
       }
@@ -250,6 +265,10 @@
 
     } catch (e) {
       console.error(e);
+      if (tentativa < MAX_TENTATIVAS) {
+        await dormir(ESPERA_MS);
+        return carregarResultado(tentativa + 1);
+      }
       mostrar("erro");
     }
   }
