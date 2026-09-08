@@ -1,127 +1,297 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seu Candidato — Quiz Eleitoral SP</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0a1628 0%, #1e3a5f 100%);
+      min-height: 100vh;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #conteudo {
+      max-width: 600px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
+      padding: 40px 30px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .foto {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid rgba(255,255,255,0.3);
+      margin-bottom: 16px;
+    }
+    .score-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+    }
+    .nome {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .partido {
+      font-size: 14px;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 20px;
+    }
+    .justificativa {
+      background: rgba(255,255,255,0.07);
+      border-left: 4px solid #22c55e;
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 15px;
+      line-height: 1.6;
+      text-align: left;
+      margin-bottom: 24px;
+    }
+    .aviso {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .botoes {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-instagram {
+      background: linear-gradient(135deg, #f43f5e, #ec4899);
+      color: #fff;
+    }
+    .btn-compartilhar {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    #bloqueado { display: none; }
+    #bloqueado .aviso-bloqueio {
+      font-size: 15px;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 24px;
+    }
+    .btn-alternativo {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-block;
+      margin: 6px;
+    }
+    #erro {
+      display: none;
+      color: rgba(255,255,255,0.7);
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+<div id="conteudo">
 
-const SUPABASE_URL         = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  <div id="carregando">
+    <p style="color:rgba(255,255,255,0.6)">Carregando seu resultado...</p>
+  </div>
 
-const cors = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  <div id="resultado" style="display:none">
+    <img id="foto" class="foto" src="" alt="Foto do candidato" />
+    <div id="score-badge" class="score-badge"></div>
+    <div id="nome" class="nome"></div>
+    <div id="partido" class="partido"></div>
+    <div id="justificativa" class="justificativa"></div>
+    <p class="aviso">⚠️ Indicação provisória. Este candidato foi selecionado por afinidade de propostas. Com o avanço das pesquisas eleitorais, a recomendação poderá ser atualizada para potencializar o seu voto.</p>
+    <div class="botoes">
+      <a id="btn-instagram" class="btn btn-instagram" href="#" target="_blank">🌐 Ver Instagram</a>
+      <button class="btn btn-compartilhar" onclick="compartilhar()">🔗 Compartilhar resultado</button>
+    </div>
+  </div>
 
-function extrairResposta(fields: any[], prefixo: string): string {
-  const field = fields.find((f: any) => f.label?.includes(`[${prefixo}]`));
-  if (!field) return "Moderado";
-  const valueId = Array.isArray(field.value) ? field.value[0] : field.value;
-  const option  = field.options?.find((o: any) => o.id === valueId);
-  return option?.text ?? "Moderado";
-}
+  <div id="bloqueado">
+    <p class="aviso-bloqueio">
+      Não encontramos candidatos alinhados com todas as suas posições na nossa base.<br><br>
+      Consulte outras ferramentas para explorar mais opções:
+    </p>
+    <div>
+      <a class="btn-alternativo" href="https://quemfoiquem.org.br/" target="_blank">🔍 Quem foi Quem</a>
+      <a class="btn-alternativo" href="https://www.agencialupa.org/deputometro/" target="_blank">📊 Deputômetro</a>
+    </div>
+  </div>
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: cors });
+  <div id="erro">
+    <p>Não foi possível carregar o resultado. Tente novamente.</p>
+  </div>
+
+</div>
+
+<script>
+  const SUPABASE_URL = "https://hglifytalonmncphycfp.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ";
+
+  // quantas vezes tenta buscar antes de mostrar erro (cobre o delay do Tally -> Edge Function -> Supabase)
+  const MAX_TENTATIVAS = 6;
+  const INTERVALO_MS = 1500;
+
+  async function buscarSessao(sessao) {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${encodeURIComponent(sessao)}&select=*&limit=1`,
+      {
+        headers: {
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+        }
+      }
+    );
+    if (!res.ok) throw new Error("Falha ao buscar sessão");
+    return res.json();
   }
 
-  try {
-    const body      = await req.json();
-    const fields    = body?.data?.fields ?? [];
-    const id_sessao = body?.data?.submissionId ?? crypto.randomUUID();
+  function dormir(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 
-    const mulheres      = extrairResposta(fields, "Mulheres");
-    const educacao      = extrairResposta(fields, "Educação");
-    const meio_ambiente = extrairResposta(fields, "Meio Ambiente");
-    const impostos      = extrairResposta(fields, "Impostos");
-    const direitos      = extrairResposta(fields, "Direitos");
-    const seguranca     = extrairResposta(fields, "Segurança");
-    const transparencia = extrairResposta(fields, "Transparência");
+  async function carregarResultado() {
+    const params = new URLSearchParams(window.location.search);
+    const sessao = params.get("sessao");
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    console.log("Sessao capturada:", sessao);
 
-    // 1. match_quiz — candidato mais compatível
-    const { data: match, error: matchError } = await supabase.rpc("match_quiz", {
-      p_mulheres:      mulheres,
-      p_educacao:      educacao,
-      p_meio_ambiente: meio_ambiente,
-      p_impostos:      impostos,
-      p_direitos:      direitos,
-      p_seguranca:     seguranca,
-      p_transparencia: transparencia,
-    });
-
-    if (matchError || !match?.length) {
-      throw new Error("match_quiz falhou: " + JSON.stringify(matchError ?? match));
+    if (!sessao) {
+      mostrar("erro");
+      return;
     }
 
-    const candidato = match[0];
+    try {
+      let dadosEleitor = [];
 
-    // ⚠️ VERIFICAR: se o "score" do match_quiz já vem em escala 0-100
-    // (como visto no seu CSV: 78.57, 69.05...), NÃO multiplique por 100 de novo.
-    // Se vier em escala 0-1 (0.7857), mantenha o *100.
-    const scorePct  = Math.round(Number(candidato.score ?? 0) * 100);
-    const bloqueado = scorePct < 40;
+      // tenta várias vezes: o insert do Edge Function pode ainda não ter chegado ao Supabase
+      for (let tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
+        dadosEleitor = await buscarSessao(sessao);
+        if (dadosEleitor.length) break;
+        console.log(`Sessão ainda não encontrada (tentativa ${tentativa}/${MAX_TENTATIVAS}), tentando de novo...`);
+        await dormir(INTERVALO_MS);
+      }
 
-    // 2. justificativa via SQL
-    const { data: justData, error: justError } = await supabase.rpc("gerar_justificativa", {
-      p_nome:          candidato.nome_urna,
-      p_partido:       candidato.partido,
-      p_score:         scorePct,
-      p_mulheres:      mulheres,
-      p_educacao:      educacao,
-      p_meio_ambiente: meio_ambiente,
-      p_impostos:      impostos,
-      p_direitos:      direitos,
-      p_seguranca:     seguranca,
-      p_transparencia: transparencia,
-    });
+      if (!dadosEleitor.length) {
+        mostrar("erro");
+        return;
+      }
 
-    if (justError) {
-      console.error("gerar_justificativa erro:", JSON.stringify(justError));
+      const d = dadosEleitor[0];
+
+      if (d.bloqueado === true) {
+        mostrar("bloqueado");
+        return;
+      }
+
+      if (d.mulheres === "Contrário" || d.meio_ambiente === "Contrário") {
+        mostrar("bloqueado");
+        return;
+      }
+
+      if (!d.nome_candidato) {
+        mostrar("erro");
+        return;
+      }
+
+      const resCandidato = await fetch(
+        `${SUPABASE_URL}/rest/v1/candidatos?select=Foto,Instagram&Nome_Urna=eq.${encodeURIComponent(d.nome_candidato)}&limit=1`,
+        {
+          headers: {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          }
+        }
+      );
+
+      let foto = "";
+      let instagram = "#";
+
+      if (resCandidato.ok) {
+        const dadosCandidato = await resCandidato.json();
+        if (dadosCandidato.length) {
+          foto = dadosCandidato[0].Foto || "";
+          instagram = dadosCandidato[0].Instagram || "#";
+        }
+      }
+
+      const score = d.pontuacao_afinidade ?? 0;
+
+      document.getElementById("foto").src = foto || "https://via.placeholder.com/120";
+      document.getElementById("score-badge").textContent = `⚡ ${score}% de afinidade`;
+      document.getElementById("nome").textContent = d.nome_candidato;
+      document.getElementById("partido").textContent = d.partido || "";
+      document.getElementById("justificativa").textContent = d.candidato_recomendado || "";
+      document.getElementById("btn-instagram").href = instagram;
+
+      mostrar("resultado");
+
+    } catch (e) {
+      console.error(e);
+      mostrar("erro");
     }
+  }
 
-    const justificativa = justData ?? "Candidato selecionado por afinidade programática.";
+  function mostrar(estado) {
+    document.getElementById("carregando").style.display = "none";
+    document.getElementById("resultado").style.display  = "none";
+    document.getElementById("bloqueado").style.display  = "none";
+    document.getElementById("erro").style.display       = "none";
+    document.getElementById(estado).style.display       = "block";
+  }
 
-    // 3. gravar sempre — bloqueado ou não
-    const { error: insertError } = await supabase
-      .from("eleitores_respostas")
-      .insert({
-        id_sessao,
-        mulheres,
-        educacao,
-        meio_ambiente,
-        impostos,
-        direitos,
-        seguranca,
-        transparencia,
-        pontuacao_afinidade:   scorePct,
-        candidato_recomendado: justificativa,
-        nome_candidato:        candidato.nome_urna,
-        partido:               candidato.partido,
-        bloqueado,
+  function compartilhar() {
+    if (navigator.share) {
+      navigator.share({
+        title: "Meu candidato no Quiz Eleitoral SP",
+        url: window.location.href,
       });
-
-    if (insertError) {
-      throw new Error("Insert falhou: " + JSON.stringify(insertError));
+    } else {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        alert("Link copiado!");
+      });
     }
-
-    return new Response(
-      JSON.stringify({
-        success:       true,
-        bloqueado,
-        id_sessao,
-        candidato:     candidato.nome_urna,
-        partido:       candidato.partido,
-        score:         scorePct,
-        justificativa,
-      }),
-      { headers: { ...cors, "Content-Type": "application/json" }, status: 200 }
-    );
-
-  } catch (err) {
-    console.error("Erro geral:", String(err));
-    return new Response(
-      JSON.stringify({ error: String(err) }),
-      { headers: { ...cors, "Content-Type": "application/json" }, status: 500 }
-    );
   }
-});
+
+  carregarResultado();
+</script>
+</body>
+</html>
