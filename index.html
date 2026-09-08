@@ -54,23 +54,7 @@
     .partido {
       font-size: 14px;
       color: rgba(255,255,255,0.5);
-      margin-bottom: 8px;
-    }
-    .numero-candidato {
-      display: inline-block;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.2);
-      color: rgba(255,255,255,0.9);
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      padding: 4px 14px;
-      border-radius: 999px;
       margin-bottom: 20px;
-    }
-    .numero-candidato span {
-      color: #22c55e;
-      margin-right: 4px;
     }
     .justificativa {
       background: rgba(255,255,255,0.07);
@@ -115,7 +99,9 @@
       color: #fff;
       border: 1px solid rgba(255,255,255,0.2);
     }
-    #bloqueado { display: none; }
+    #bloqueado {
+      display: none;
+    }
     #bloqueado .aviso-bloqueio {
       font-size: 15px;
       line-height: 1.7;
@@ -139,11 +125,6 @@
       color: rgba(255,255,255,0.7);
       font-size: 15px;
     }
-    .aguardando-msg {
-      font-size: 13px;
-      color: rgba(255,255,255,0.4);
-      margin-top: 12px;
-    }
   </style>
 </head>
 <body>
@@ -151,22 +132,17 @@
 
   <div id="carregando">
     <p style="color:rgba(255,255,255,0.6)">Carregando seu resultado...</p>
-    <p id="tentativa-msg" class="aguardando-msg"></p>
   </div>
 
   <div id="resultado" style="display:none">
-    <img id="foto" class="foto" src="" alt="Foto do candidato"
-         onerror="this.src='https://placehold.co/120x120/1e3a5f/white?text=📸'" />
+    <img id="foto" class="foto" src="" alt="Foto do candidato" />
     <div id="score-badge" class="score-badge"></div>
     <div id="nome" class="nome"></div>
     <div id="partido" class="partido"></div>
-    <div id="numero-candidato" class="numero-candidato" style="display:none">
-      <span>№</span><span id="numero-valor"></span>
-    </div>
     <div id="justificativa" class="justificativa"></div>
     <p class="aviso">⚠️ Indicação provisória. Este candidato foi selecionado por afinidade de propostas. Com o avanço das pesquisas eleitorais, a recomendação poderá ser atualizada para potencializar o seu voto.</p>
     <div class="botoes">
-      <a id="btn-instagram" class="btn btn-instagram" href="#" target="_blank" rel="noopener noreferrer">🌐 Ver Instagram</a>
+      <a id="btn-instagram" class="btn btn-instagram" href="#" target="_blank">🌐 Ver Instagram</a>
       <button class="btn btn-compartilhar" onclick="compartilhar()">🔗 Compartilhar resultado</button>
     </div>
   </div>
@@ -177,8 +153,8 @@
       Consulte outras ferramentas para explorar mais opções:
     </p>
     <div>
-      <a class="btn-alternativo" href="https://quemfoiquem.org.br/" target="_blank" rel="noopener noreferrer">🔍 Quem foi Quem</a>
-      <a class="btn-alternativo" href="https://www.agencialupa.org/deputometro/" target="_blank" rel="noopener noreferrer">📊 Deputômetro</a>
+      <a class="btn-alternativo" href="https://quemfoiquem.org.br/" target="_blank">🔍 Quem foi Quem</a>
+      <a class="btn-alternativo" href="https://www.agencialupa.org/deputometro/" target="_blank">📊 Deputômetro</a>
     </div>
   </div>
 
@@ -189,26 +165,22 @@
 </div>
 
 <script>
-  const SUPABASE_URL      = "https://hglifytalonmncphycfp.supabase.co";
+  const SUPABASE_URL = "https://hglifytalonmncphycfp.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ";
 
-  function normalizarInstagram(valor) {
-    if (!valor || valor.trim() === "" || valor === "#") return null;
-    const v = valor.trim();
-    if (v.startsWith("http://") || v.startsWith("https://")) return v;
-    const handle = v.replace(/^@/, "");
-    return "https://www.instagram.com/" + handle + "/";
-  }
+  async function carregarResultado() {
+    const params = new URLSearchParams(window.location.search);
+    const sessao = params.get("sessao");
 
-  async function buscarComRetry(sessao, maxTentativas = 6, intervaloMs = 1200) {
-    for (let i = 1; i <= maxTentativas; i++) {
-      if (i > 1) {
-        document.getElementById("tentativa-msg").textContent =
-          `Aguardando resultado... (tentativa ${i}/${maxTentativas})`;
-        await new Promise(r => setTimeout(r, intervaloMs));
-      }
+    console.log("Sessao capturada:", sessao);
 
-      const res = await fetch(
+    if (!sessao) {
+      mostrar("erro");
+      return;
+    }
+
+    try {
+      const resEleitor = await fetch(
         `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${encodeURIComponent(sessao)}&select=*&limit=1`,
         {
           headers: {
@@ -218,37 +190,34 @@
         }
       );
 
-      if (!res.ok) continue;
-      const dados = await res.json();
-      if (dados.length && dados[0].nome_candidato) return dados[0];
-    }
-    return null;
-  }
+      if (!resEleitor.ok) throw new Error("Falha ao buscar sessão");
 
-  async function carregarResultado() {
-    const params = new URLSearchParams(window.location.search);
-    const sessao = params.get("sessao");
+      const dadosEleitor = await resEleitor.json();
 
-    if (!sessao) { mostrar("erro"); return; }
+      if (!dadosEleitor.length) {
+        mostrar("erro");
+        return;
+      }
 
-    try {
-      const d = await buscarComRetry(sessao);
-      if (!d) { mostrar("erro"); return; }
+      const d = dadosEleitor[0];
 
-      if (d.bloqueado === true || d.mulheres === "Contrário" || d.meio_ambiente === "Contrário") {
+      if (d.bloqueado === true) {
         mostrar("bloqueado");
         return;
       }
 
-      if (!d.nome_candidato) { mostrar("erro"); return; }
+      if (d.mulheres === "Contrário" || d.meio_ambiente === "Contrário") {
+        mostrar("bloqueado");
+        return;
+      }
 
-      // Buscar foto, instagram e número do candidato
-      let foto         = "";
-      let instagramUrl = null;
-      let numeroCand   = null;
+      if (!d.nome_candidato) {
+        mostrar("erro");
+        return;
+      }
 
       const resCandidato = await fetch(
-        `${SUPABASE_URL}/rest/v1/candidatos?select=Foto,Instagram,"Número Candidato"&Nome_Urna=eq.${encodeURIComponent(d.nome_candidato)}&limit=1`,
+        `${SUPABASE_URL}/rest/v1/candidatos?select=Foto,Instagram&Nome_Urna=eq.${encodeURIComponent(d.nome_candidato)}&limit=1`,
         {
           headers: {
             "apikey": SUPABASE_ANON_KEY,
@@ -257,40 +226,25 @@
         }
       );
 
+      let foto = "";
+      let instagram = "#";
+
       if (resCandidato.ok) {
         const dadosCandidato = await resCandidato.json();
         if (dadosCandidato.length) {
-          foto         = dadosCandidato[0].Foto || "";
-          instagramUrl = normalizarInstagram(dadosCandidato[0].Instagram);
-          numeroCand   = dadosCandidato[0]["Número Candidato"] ?? null;
+          foto = dadosCandidato[0].Foto || "";
+          instagram = dadosCandidato[0].Instagram || "#";
         }
       }
 
-      const score = Math.round(parseFloat(d.pontuacao_afinidade) || 0);
+      const score = d.pontuacao_afinidade ?? 0;
 
-      document.getElementById("foto").src                    = foto || "https://placehold.co/120x120/1e3a5f/white?text=📸";
-      document.getElementById("score-badge").textContent     = `⚡ ${score}% de afinidade`;
-      document.getElementById("nome").textContent            = d.nome_candidato;
-      document.getElementById("partido").textContent         = d.partido || "";
-      document.getElementById("justificativa").textContent   = d.candidato_recomendado || "";
-
-      // Número do candidato
-      const elNumero = document.getElementById("numero-candidato");
-      if (numeroCand) {
-        document.getElementById("numero-valor").textContent = numeroCand;
-        elNumero.style.display = "inline-block";
-      } else {
-        elNumero.style.display = "none";
-      }
-
-      // Instagram
-      const btnInsta = document.getElementById("btn-instagram");
-      if (instagramUrl) {
-        btnInsta.href          = instagramUrl;
-        btnInsta.style.display = "inline-flex";
-      } else {
-        btnInsta.style.display = "none";
-      }
+      document.getElementById("foto").src = foto || "https://via.placeholder.com/120";
+      document.getElementById("score-badge").textContent = `⚡ ${score}% de afinidade`;
+      document.getElementById("nome").textContent = d.nome_candidato;
+      document.getElementById("partido").textContent = d.partido || "";
+      document.getElementById("justificativa").textContent = d.candidato_recomendado || "";
+      document.getElementById("btn-instagram").href = instagram;
 
       mostrar("resultado");
 
@@ -301,17 +255,23 @@
   }
 
   function mostrar(estado) {
-    ["carregando","resultado","bloqueado","erro"].forEach(id => {
-      document.getElementById(id).style.display = "none";
-    });
-    document.getElementById(estado).style.display = "block";
+    document.getElementById("carregando").style.display = "none";
+    document.getElementById("resultado").style.display  = "none";
+    document.getElementById("bloqueado").style.display  = "none";
+    document.getElementById("erro").style.display       = "none";
+    document.getElementById(estado).style.display       = "block";
   }
 
   function compartilhar() {
     if (navigator.share) {
-      navigator.share({ title: "Meu candidato no Quiz Eleitoral SP", url: window.location.href });
+      navigator.share({
+        title: "Meu candidato no Quiz Eleitoral SP",
+        url: window.location.href,
+      });
     } else {
-      navigator.clipboard.writeText(window.location.href).then(() => alert("Link copiado!"));
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        alert("Link copiado!");
+      });
     }
   }
 
