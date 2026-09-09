@@ -545,16 +545,12 @@
 
         try {
           const insertResponse = await withRetry(() =>
-            supabaseClient
-              .from(SUPABASE_TABLE)
-              .insert(savePayload)
-              .select()
-              .single()
-          );
+  supabaseClient.from(SUPABASE_TABLE).insert(savePayload)
+);
 
-          if (insertResponse.error) throw insertResponse.error;
+if (insertResponse.error) throw insertResponse.error;
 
-          const savedRow = insertResponse.data || savePayload;
+const savedRow = savePayload;
           const finalRow = { ...payload, ...savedRow, ...savePayload, bloqueado: true, justificativa: deputometro.message };
 
           persistLastResult(finalRow);
@@ -603,16 +599,17 @@
         };
 
         const insertResponse = await withRetry(() =>
-          supabaseClient
-            .from(SUPABASE_TABLE)
-            .insert(savePayload)
-            .select()
-            .single()
-        );
+  supabaseClient.from(SUPABASE_TABLE).insert(savePayload)
+);
 
-        if (insertResponse.error) throw insertResponse.error;
+if (insertResponse.error) throw insertResponse.error;
 
-        const savedRow = insertResponse.data || savePayload;
+const finalRow = {
+  ...payload,
+  ...savePayload,
+  bloqueado: true,
+  justificativa: deputometro.message
+};;
 
         const finalRow = {
           ...payload,
