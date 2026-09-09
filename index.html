@@ -166,28 +166,6 @@
   const SUPABASE_URL = "https://hglifytalonmncphycfp.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ";
 
-  // quantas vezes tenta buscar antes de mostrar erro (cobre o delay do Tally -> Edge Function -> Supabase)
-  const MAX_TENTATIVAS = 6;
-  const INTERVALO_MS = 1500;
-
-  async function buscarSessao(sessao) {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${encodeURIComponent(sessao)}&select=*&limit=1`,
-      {
-        headers: {
-          "apikey": SUPABASE_ANON_KEY,
-          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-        }
-      }
-    );
-    if (!res.ok) throw new Error("Falha ao buscar sessão");
-    return res.json();
-  }
-
-  function dormir(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
   async function carregarResultado() {
     const params = new URLSearchParams(window.location.search);
     const sessao = params.get("sessao");
@@ -200,15 +178,19 @@
     }
 
     try {
-      let dadosEleitor = [];
+      const resEleitor = await fetch(
+        `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${encodeURIComponent(sessao)}&select=*&limit=1`,
+        {
+          headers: {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          }
+        }
+      );
 
-      // tenta várias vezes: o insert do Edge Function pode ainda não ter chegado ao Supabase
-      for (let tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
-        dadosEleitor = await buscarSessao(sessao);
-        if (dadosEleitor.length) break;
-        console.log(`Sessão ainda não encontrada (tentativa ${tentativa}/${MAX_TENTATIVAS}), tentando de novo...`);
-        await dormir(INTERVALO_MS);
-      }
+      if (!resEleitor.ok) throw new Error("Falha ao buscar sessão");
+
+      const dadosEleitor = await resEleitor.json();
 
       if (!dadosEleitor.length) {
         mostrar("erro");
