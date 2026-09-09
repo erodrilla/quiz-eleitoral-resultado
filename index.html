@@ -59,28 +59,6 @@
       max-width:78ch;
     }
 
-    .btn{
-      appearance:none;
-      border:0;
-      border-radius:14px;
-      padding:12px 16px;
-      font-weight:700;
-      cursor:pointer;
-      transition:transform .08s ease, opacity .2s ease, background .2s ease;
-      user-select:none;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    .btn:active{transform:translateY(1px)}
-    .btn.primary{background:var(--accent);color:#fff}
-    .btn.secondary{background:#eaf1fb;color:#18314d}
-    .btn.ghost{background:#fff;border:1px solid var(--line);color:#18314d}
-    .btn.warning{background:#fff6e5;color:var(--warning);border:1px solid #fed7aa}
-    .btn:hover{opacity:.96}
-
     .grid{
       display:grid;
       gap:14px;
@@ -152,6 +130,27 @@
       margin-top:18px;
       align-items:center;
     }
+
+    .btn{
+      appearance:none;
+      border:0;
+      border-radius:14px;
+      padding:12px 16px;
+      font-weight:700;
+      cursor:pointer;
+      transition:transform .08s ease, opacity .2s ease, background .2s ease;
+      user-select:none;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{background:var(--accent);color:#fff}
+    .btn.secondary{background:#eaf1fb;color:#18314d}
+    .btn.warning{background:#fff6e5;color:var(--warning);border:1px solid #fed7aa}
+    .btn:hover{opacity:.96}
 
     .status{
       margin-top:12px;
@@ -248,50 +247,16 @@
     .meta a:hover{text-decoration:underline}
 
     .blocked-body{
-      margin-top:8px;
+      margin-top:10px;
       color:#5b3b00;
       line-height:1.55;
       font-size:14px;
-    }
-
-    .blocked-list{
-      margin:10px 0 0;
-      padding-left:18px;
-    }
-
-    .blocked-list li{
-      margin-bottom:4px;
     }
 
     .footer-note{
       margin-top:10px;
       font-size:12px;
       color:var(--muted);
-    }
-
-    .debug{
-      display:none;
-      margin-top:16px;
-      background:#0d1424;
-      color:#d8e4ff;
-      border-radius:18px;
-      padding:16px;
-      border:1px solid rgba(255,255,255,.08);
-      overflow:auto;
-    }
-
-    .debug h3{
-      margin:0 0 10px;
-      font-size:16px;
-      color:#fff;
-    }
-
-    pre{
-      margin:0;
-      white-space:pre-wrap;
-      word-break:break-word;
-      font-size:12px;
-      line-height:1.5;
     }
 
     @media (max-width:720px){
@@ -352,20 +317,13 @@
         Se o candidato não mudar quando você altera os sliders, o problema está na função SQL de recomendação.
       </div>
     </section>
-
-    <section class="debug" id="debugBox">
-      <h3>Debug</h3>
-      <pre id="debugOutput"></pre>
-    </section>
   </div>
 
   <script>
-    const SHOW_DEBUG = new URLSearchParams(window.location.search).has('debug');
-
     const SUPABASE_URL = 'https://hglifytalonmncphycfp.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ';
     const SUPABASE_TABLE = 'eleitores_respostas';
-    const QUEM_FOI_QUEM_URL = 'COLE_AQUI_O_LINK_REAL_DO_QUEM_FOI_QUEM';
+    const QUEM_FOI_QUEM_URL = 'https://quemfoiquem.org.br/';
     const LAST_RESULT_KEY = 'quiz_eleitoral_last_result';
 
     const QUESTIONS = [
@@ -381,12 +339,11 @@
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const state = {
+      sessionId: generateSessionId(),
       values: {}
     };
 
     const questionsRoot = document.getElementById('questions');
-    const debugBox = document.getElementById('debugBox');
-    const debugOutput = document.getElementById('debugOutput');
     const statusEl = document.getElementById('status');
     const resultBox = document.getElementById('resultBox');
     const resultPill = document.getElementById('resultPill');
@@ -394,8 +351,6 @@
     const resultMeta = document.getElementById('resultMeta');
     const resultPhoto = document.getElementById('resultPhoto');
     const blockedBody = document.getElementById('blockedBody');
-
-    debugBox.style.display = SHOW_DEBUG ? 'block' : 'none';
 
     QUESTIONS.forEach((q, index) => {
       state.values[q.key] = 50;
@@ -438,7 +393,6 @@
         const label = sliderLabel(v);
         badge.textContent = label;
         badge.className = `badge ${badgeClass(v)}`;
-        renderDebug();
       };
 
       range.addEventListener('input', sync);
@@ -473,6 +427,14 @@
       if (v <= 33) return 'Contrário';
       if (v <= 66) return 'Moderado';
       return 'Favorável';
+    }
+
+    function labelToValue(label) {
+      const normalized = String(label || '').trim().toLowerCase();
+      if (normalized === 'contrário' || normalized === 'contrario') return 15;
+      if (normalized === 'moderado') return 50;
+      if (normalized === 'favorável' || normalized === 'favoravel') return 85;
+      return 50;
     }
 
     function badgeClass(v) {
@@ -510,36 +472,14 @@
         candidato_recomendado: 'Candidato selecionado por afinidade programática.',
         nome_candidato: null,
         partido: null,
-        foto: null,
-        instagram: null,
-        status_viabilidade: null,
         criado_em: new Date().toISOString(),
-        id_sessao: generateSessionId(),
+        id_sessao: state.sessionId,
         bloqueado: false
       };
     }
 
     function countContrarios() {
       return Object.values(state.values).filter(v => Number(v) <= 33).length;
-    }
-
-    function labelFromKey(key) {
-      const map = {
-        mulheres: 'Mulheres & Gênero',
-        educacao: 'Educação & Serv. Público',
-        meio_ambiente: 'Meio Ambiente',
-        impostos: 'Taxação sobre Renda/Fortunas',
-        direitos: 'Direitos Sociais',
-        seguranca: 'Segurança Pública',
-        transparencia: 'Transparência'
-      };
-      return map[key] || key;
-    }
-
-    function getContraryLabels() {
-      return Object.entries(state.values)
-        .filter(([, value]) => Number(value) <= 33)
-        .map(([key]) => labelFromKey(key));
     }
 
     function mustBlockCandidate() {
@@ -551,17 +491,11 @@
     function buildDeputometroMessage() {
       const reasons = [];
 
-      if (Number(state.values.mulheres) <= 33) {
-        reasons.push('Mulheres & Gênero em Contrário');
-      }
-      if (Number(state.values.meio_ambiente) <= 33) {
-        reasons.push('Meio Ambiente em Contrário');
-      }
+      if (Number(state.values.mulheres) <= 33) reasons.push('Mulheres & Gênero em Contrário');
+      if (Number(state.values.meio_ambiente) <= 33) reasons.push('Meio Ambiente em Contrário');
 
       const contraryCount = countContrarios();
-      if (contraryCount >= 2) {
-        reasons.push(`${contraryCount} respostas em Contrário`);
-      }
+      if (contraryCount >= 2) reasons.push(`${contraryCount} respostas em Contrário`);
 
       const uniqueReasons = [...new Set(reasons)];
       const list = uniqueReasons.length
@@ -591,9 +525,8 @@
           candidato_recomendado: deputometro.message,
           nome_candidato: null,
           partido: null,
-          foto: null,
-          instagram: null,
-          status_viabilidade: 'Deputômetro',
+          criado_em: new Date().toISOString(),
+          id_sessao: state.sessionId,
           bloqueado: true
         };
 
@@ -607,18 +540,12 @@
           if (saveError) throw saveError;
 
           const finalRow = savedRow || savePayload;
-          showDeputometro(finalRow);
           persistLastResult(finalRow);
+          showDeputometro(finalRow);
           setStatus('Deputômetro exibido e salvo.', 'warn');
-          renderDebug({
-            payload,
-            blocked: true,
-            savedRow
-          });
         } catch (err) {
           console.error(err);
           setStatus('Erro ao salvar o deputômetro.', 'err');
-          renderDebug({ payload, error: serializeError(err) });
         }
 
         return;
@@ -627,22 +554,20 @@
       setStatus('Calculando recomendação...', '');
 
       try {
-        const { data: recomendacao, error: rpcError } = await supabaseClient
-          .rpc('calcular_recomendacao', {
-            p_sessao: generateSessionId(),
-            p_mulheres: payload.mulheres,
-            p_educacao: payload.educacao,
-            p_meio_ambiente: payload.meio_ambiente,
-            p_impostos: payload.impostos,
-            p_direitos: payload.direitos,
-            p_seguranca: payload.seguranca,
-            p_transparencia: payload.transparencia
-          })
-          .single();
+        const { data, error: rpcError } = await supabaseClient.rpc('calcular_recomendacao', {
+          p_sessao: state.sessionId,
+          p_mulheres: payload.mulheres,
+          p_educacao: payload.educacao,
+          p_meio_ambiente: payload.meio_ambiente,
+          p_impostos: payload.impostos,
+          p_direitos: payload.direitos,
+          p_seguranca: payload.seguranca,
+          p_transparencia: payload.transparencia
+        });
 
         if (rpcError) throw rpcError;
 
-        const recomendacaoFinal = recomendacao || {};
+        const recomendacaoFinal = Array.isArray(data) ? (data[0] || {}) : (data || {});
 
         const savePayload = {
           mulheres: payload.mulheres,
@@ -656,9 +581,8 @@
           candidato_recomendado: recomendacaoFinal.candidato_recomendado || payload.candidato_recomendado,
           nome_candidato: recomendacaoFinal.nome_candidato || null,
           partido: recomendacaoFinal.partido || null,
-          foto: recomendacaoFinal.foto || null,
-          instagram: recomendacaoFinal.instagram || null,
-          status_viabilidade: recomendacaoFinal.status_viabilidade || viabilidadeLabel(recomendacaoFinal.pontuacao_afinidade ?? payload.pontuacao_afinidade),
+          criado_em: new Date().toISOString(),
+          id_sessao: state.sessionId,
           bloqueado: recomendacaoFinal.bloqueado ?? false
         };
 
@@ -670,30 +594,27 @@
 
         if (saveError) throw saveError;
 
-        const finalRow = savedRow || { ...recomendacaoFinal, ...savePayload };
+        const finalRow = {
+          ...(savedRow || {}),
+          ...savePayload,
+          ...recomendacaoFinal
+        };
 
-        showResult(finalRow);
         persistLastResult(finalRow);
+        showResult(finalRow);
         setStatus('Recomendação salva e exibida.', 'ok');
-        renderDebug({
-          payload,
-          recomendacao: recomendacaoFinal,
-          savedRow,
-          finalRow
-        });
       } catch (err) {
         console.error(err);
         setStatus('Erro ao gerar ou salvar a recomendação.', 'err');
-        renderDebug({ payload, error: serializeError(err) });
       }
     }
 
     async function loadLatestRecommendation() {
       const cached = loadLastResult();
       if (cached) {
+        applyRowToSliders(cached);
         showResult(cached);
         setStatus('Última recomendação carregada.', 'ok');
-        renderDebug({ cached });
         return;
       }
 
@@ -707,21 +628,13 @@
         if (error) throw error;
 
         const row = Array.isArray(data) && data.length ? data[0] : null;
-        if (!row) {
-          setStatus('Ainda não há recomendação salva.', 'warn');
-          return null;
-        }
+        if (!row) return;
 
+        applyRowToSliders(row);
         showResult(row);
-        setStatus('Última recomendação carregada.', 'ok');
-        renderDebug({ loadedRow: row });
         persistLastResult(row);
-        return row;
       } catch (err) {
         console.error(err);
-        setStatus('Erro ao carregar a última recomendação.', 'err');
-        renderDebug({ loadError: serializeError(err) });
-        return null;
       }
     }
 
@@ -739,6 +652,29 @@
       } catch (e) {
         return null;
       }
+    }
+
+    function applyRowToSliders(row) {
+      const map = {
+        mulheres: row?.mulheres,
+        educacao: row?.educacao,
+        meio_ambiente: row?.meio_ambiente,
+        impostos: row?.impostos,
+        direitos: row?.direitos,
+        seguranca: row?.seguranca,
+        transparencia: row?.transparencia
+      };
+
+      Object.entries(map).forEach(([key, label]) => {
+        if (!label) return;
+        const input = document.getElementById(`${key}-range`);
+        const value = labelToValue(label);
+        state.values[key] = value;
+        if (input) {
+          input.value = value;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
     }
 
     function showResult(row) {
@@ -814,17 +750,6 @@
       `;
     }
 
-    function renderDebug(extra = null) {
-      if (!SHOW_DEBUG) return;
-      debugOutput.textContent = JSON.stringify({
-        values: state.values,
-        payload: buildPayload(),
-        contraryCount: countContrarios(),
-        blocked: mustBlockCandidate(),
-        extra
-      }, null, 2);
-    }
-
     function setStatus(text, kind) {
       statusEl.textContent = text;
       statusEl.className = 'status' + (kind ? ' ' + kind : '');
@@ -832,16 +757,6 @@
 
     function generateSessionId() {
       return Math.random().toString(36).slice(2, 9);
-    }
-
-    function serializeError(err) {
-      if (!err) return null;
-      return {
-        message: err.message || String(err),
-        code: err.code || null,
-        details: err.details || null,
-        hint: err.hint || null
-      };
     }
 
     function escapeHtml(str) {
