@@ -1,271 +1,495 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seu Candidato — Quiz Eleitoral SP</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recomendação de Candidato</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --brand: #0f766e;
+      --brand2: #2563eb;
+      --brand3: #7c3aed;
+      --danger: #b91c1c;
+      --shadow: 0 10px 30px rgba(0,0,0,.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #0a1628 0%, #1e3a5f 100%);
-      min-height: 100vh;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #f8fafc 0%, var(--bg) 100%);
+      color: var(--text);
     }
-    #conteudo {
-      max-width: 600px;
-      width: 100%;
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(10px);
+
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 16px 48px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #0f766e 0%, #155e75 100%);
+      color: #fff;
       border-radius: 24px;
-      padding: 40px 30px;
-      text-align: center;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .foto {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 3px solid rgba(255,255,255,0.3);
-      margin-bottom: 16px;
-    }
-    .score-badge {
-      display: inline-block;
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-      color: #fff;
-      font-weight: 700;
-      font-size: 14px;
-      padding: 6px 16px;
-      border-radius: 999px;
-      margin-bottom: 16px;
-    }
-    .nome {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      margin-bottom: 4px;
-    }
-    .partido {
-      font-size: 14px;
-      color: rgba(255,255,255,0.5);
+      padding: 28px;
+      box-shadow: var(--shadow);
       margin-bottom: 20px;
     }
-    .justificativa {
-      background: rgba(255,255,255,0.07);
-      border-left: 4px solid #22c55e;
-      border-radius: 12px;
-      padding: 16px 20px;
-      font-size: 15px;
-      line-height: 1.6;
-      text-align: left;
-      margin-bottom: 24px;
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(26px, 3vw, 40px);
+      line-height: 1.1;
     }
-    .aviso {
-      font-size: 12px;
-      color: rgba(255,255,255,0.4);
-      margin-bottom: 24px;
+
+    .hero p {
+      margin: 0;
+      max-width: 760px;
+      color: rgba(255,255,255,.9);
       line-height: 1.5;
     }
-    .botoes {
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .sliderBox {
+      background: #f9fafb;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .sliderHead {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .sliderVal {
+      font-weight: 700;
+      color: var(--brand);
+      min-width: 28px;
+      text-align: right;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--brand);
+    }
+
+    .actions {
       display: flex;
       gap: 12px;
-      justify-content: center;
       flex-wrap: wrap;
-    }
-    .btn {
-      padding: 12px 24px;
-      border-radius: 999px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      text-decoration: none;
-      display: inline-flex;
+      margin-top: 18px;
       align-items: center;
-      gap: 6px;
     }
-    .btn-instagram {
-      background: linear-gradient(135deg, #f43f5e, #ec4899);
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 13px 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .08s ease, opacity .2s ease, box-shadow .2s ease;
+      box-shadow: 0 8px 20px rgba(15,118,110,.18);
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: .65; cursor: not-allowed; transform: none; }
+
+    .btnPrimary {
+      background: var(--brand);
       color: #fff;
     }
-    .btn-compartilhar {
-      background: rgba(255,255,255,0.1);
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.2);
+
+    .btnSecondary {
+      background: #e5e7eb;
+      color: #111827;
+      box-shadow: none;
     }
-    #bloqueado { display: none; }
-    #bloqueado .aviso-bloqueio {
-      font-size: 15px;
-      line-height: 1.7;
-      color: rgba(255,255,255,0.85);
-      margin-bottom: 24px;
-    }
-    .btn-alternativo {
-      background: rgba(255,255,255,0.1);
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: 12px 24px;
-      border-radius: 999px;
+
+    #status {
+      margin-top: 14px;
+      color: var(--muted);
       font-size: 14px;
-      font-weight: 600;
-      text-decoration: none;
-      display: inline-block;
-      margin: 6px;
     }
-    #erro { display: none; color: rgba(255,255,255,0.7); font-size: 15px; }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .cardTop {
+      position: relative;
+      height: 240px;
+      background: #f3f4f6;
+    }
+
+    .cardTop img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .badge {
+      position: absolute;
+      left: 14px;
+      top: 14px;
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
+
+    .cardBody {
+      padding: 16px;
+    }
+
+    .name {
+      margin: 0 0 6px;
+      font-size: 20px;
+      line-height: 1.15;
+    }
+
+    .meta {
+      color: var(--muted);
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+
+    .stats {
+      display: grid;
+      gap: 7px;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .stats strong {
+      color: #111827;
+    }
+
+    .link {
+      display: inline-block;
+      margin-top: 12px;
+      color: var(--brand);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .gravame {
+      margin-top: 12px;
+      background: #fef2f2;
+      color: var(--danger);
+      border: 1px solid #fecaca;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .empty {
+      padding: 20px;
+      color: var(--muted);
+    }
+
+    .footerNote {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 640px) {
+      .hero, .panel { padding: 16px; }
+      .cardTop { height: 210px; }
+    }
   </style>
 </head>
 <body>
-<div id="conteudo">
+  <div class="wrap">
+    <section class="hero">
+      <h1>Encontre o candidato mais compatível</h1>
+      <p>
+        O eleitor responde ao questionário, o sistema calcula o match de perfil,
+        filtra integridade e retorna o melhor candidato com 2 alternativas.
+      </p>
+    </section>
 
-  <div id="carregando">
-    <p id="msg-carregando" style="color:rgba(255,255,255,0.6)">Processando seu resultado...</p>
+    <section class="panel">
+      <div class="grid">
+        <div class="sliderBox">
+          <div class="sliderHead">
+            <label for="mulheres">Mulheres & Gênero</label>
+            <span class="sliderVal" id="valMulheres">5</span>
+          </div>
+          <input id="mulheres" type="range" min="0" max="10" value="5" />
+        </div>
+
+        <div class="sliderBox">
+          <div class="sliderHead">
+            <label for="educacao">Educação & Serv. Público</label>
+            <span class="sliderVal" id="valEducacao">5</span>
+          </div>
+          <input id="educacao" type="range" min="0" max="10" value="5" />
+        </div>
+
+        <div class="sliderBox">
+          <div class="sliderHead">
+            <label for="meioAmbiente">Meio Ambiente</label>
+            <span class="sliderVal" id="valMeioAmbiente">5</span>
+          </div>
+          <input id="meioAmbiente" type="range" min="0" max="10" value="5" />
+        </div>
+
+        <div class="sliderBox">
+          <div class="sliderHead">
+            <label for="impostos">Taxação sobre Renda/Fortunas</label>
+            <span class="sliderVal" id="valImpostos">5</span>
+          </div>
+          <input id="impostos" type="range" min="0" max="10" value="5" />
+        </div>
+
+        <div class="sliderBox">
+          <div class="sliderHead">
+            <label for="direitos">Direitos Sociais</label>
+            <span class="sliderVal" id="valDireitos">5</span>
+          </div>
+          <input id="direitos" type="range" min="0" max="10" value="5" />
+        </div>
+
+        <div class="sliderBox">
+          <div class="sliderHead">
+            <label for="seguranca">Segurança Pública</label>
+            <span class="sliderVal" id="valSeguranca">5</span>
+          </div>
+          <input id="seguranca" type="range" min="0" max="10" value="5" />
+        </div>
+
+        <div class="sliderBox">
+          <div class="sliderHead">
+            <label for="transparencia">Transparência</label>
+            <span class="sliderVal" id="valTransparencia">5</span>
+          </div>
+          <input id="transparencia" type="range" min="0" max="10" value="5" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnBuscar" class="btnPrimary">Encontrar top 3</button>
+        <button id="btnResetar" class="btnSecondary" type="button">Resetar pesos</button>
+      </div>
+
+      <div id="status">Pronto para buscar.</div>
+      <div class="footerNote">
+        A ordem é: match de perfil → integridade → viabilidade → top 3.
+      </div>
+    </section>
+
+    <section id="resultado" class="cards"></section>
   </div>
 
-  <div id="resultado" style="display:none">
-    <img id="foto" class="foto" src="" alt="Foto do candidato" />
-    <div id="score-badge" class="score-badge"></div>
-    <div id="nome" class="nome"></div>
-    <div id="partido" class="partido"></div>
-    <div id="justificativa" class="justificativa"></div>
-    <p class="aviso">⚠️ Indicação provisória. Este candidato foi selecionado por afinidade de propostas. Com o avanço das pesquisas eleitorais, a recomendação poderá ser atualizada para potencializar o seu voto.</p>
-    <div class="botoes">
-      <a id="btn-instagram" class="btn btn-instagram" href="#" target="_blank">🌐 Ver Instagram</a>
-      <button class="btn btn-compartilhar" onclick="compartilhar()">🔗 Compartilhar resultado</button>
-    </div>
-  </div>
+  <script>
+    const SUPABASE_URL = "https://hglifytalonmncphycfp.supabase.co";
+    const SUPABASE_ANON_KEY = "COLE_AQUI_SUA_ANON_KEY_REAL";
 
-  <div id="bloqueado">
-    <p class="aviso-bloqueio">
-      Não encontramos candidatos alinhados com todas as suas posições na nossa base.<br><br>
-      Consulte outras ferramentas para explorar mais opções:
-    </p>
-    <div>
-      <a class="btn-alternativo" href="https://quemfoiquem.org.br/" target="_blank">🔍 Quem foi Quem</a>
-      <a class="btn-alternativo" href="https://www.agencialupa.org/deputometro/" target="_blank">📊 Deputômetro</a>
-    </div>
-  </div>
+    const statusEl = document.getElementById("status");
+    const resultadoEl = document.getElementById("resultado");
+    const btnBuscar = document.getElementById("btnBuscar");
+    const btnResetar = document.getElementById("btnResetar");
 
-  <div id="erro">
-    <p>Não foi possível carregar o resultado. Tente novamente em alguns instantes.</p>
-  </div>
+    const sliders = [
+      ["mulheres", "valMulheres"],
+      ["educacao", "valEducacao"],
+      ["meioAmbiente", "valMeioAmbiente"],
+      ["impostos", "valImpostos"],
+      ["direitos", "valDireitos"],
+      ["seguranca", "valSeguranca"],
+      ["transparencia", "valTransparencia"]
+    ];
 
-</div>
+    function fmtNumero(n) {
+      if (n === null || n === undefined || n === "") return "-";
+      return new Intl.NumberFormat("pt-BR").format(Number(n));
+    }
 
-<script>
-  const SUPABASE_URL = "https://hglifytalonmncphycfp.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ";
+    function fmtPct(n) {
+      if (n === null || n === undefined || n === "") return "-";
+      return `${(Number(n) * 100).toFixed(1)}%`;
+    }
 
-  const MAX_TENTATIVAS = 8;
-  const INTERVALO_MS = 1500;
+    function safeFoto(url) {
+      if (url && String(url).trim()) return url;
+      return "https://placehold.co/400x400/1e3a5f/ffffff?text=📸";
+    }
 
-  async function buscarSessao(sessao) {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${encodeURIComponent(sessao)}&select=*&limit=1`,
-      { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
-    );
-    if (!res.ok) throw new Error("Falha ao buscar sessão");
-    return res.json();
-  }
+    function syncLabels() {
+      sliders.forEach(([id, labelId]) => {
+        document.getElementById(labelId).textContent = document.getElementById(id).value;
+      });
+    }
 
-  async function carregarResultado() {
-    const params = new URLSearchParams(window.location.search);
-    const sessao = params.get("sessao");
+    function getPesos() {
+      return {
+        p_mulheres: Number(document.getElementById("mulheres").value),
+        p_educacao: Number(document.getElementById("educacao").value),
+        p_meio_ambiente: Number(document.getElementById("meioAmbiente").value),
+        p_impostos: Number(document.getElementById("impostos").value),
+        p_direitos: Number(document.getElementById("direitos").value),
+        p_seguranca: Number(document.getElementById("seguranca").value),
+        p_transparencia: Number(document.getElementById("transparencia").value)
+      };
+    }
 
-    if (!sessao) { mostrar("erro"); return; }
+    function renderCards(dados) {
+      if (!dados.length) {
+        resultadoEl.innerHTML = `<div class="empty">Nenhum candidato encontrado com os pesos atuais.</div>`;
+        return;
+      }
 
-    for (let tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
+      resultadoEl.innerHTML = dados.map(item => {
+        const tipo = item.tipo || "Recomendado";
+        const cor = tipo === "Principal" ? "var(--brand)" : tipo === "Alternativa 1" ? "var(--brand2)" : "var(--brand3)";
+        const titulo = item.nome_urna || item.nome_candidato || "-";
+        const partido = item.partido || "-";
+        const numero = item.numero_candidato || "-";
+
+        return `
+          <article class="card">
+            <div class="cardTop">
+              <img
+                src="${safeFoto(item.foto)}"
+                alt="${titulo}"
+                onerror="this.src='https://placehold.co/400x400/1e3a5f/ffffff?text=📸'"
+              />
+              <div class="badge" style="background:${cor};">${tipo}</div>
+            </div>
+
+            <div class="cardBody">
+              <h3 class="name">${titulo}</h3>
+              <div class="meta">${partido} · Nº ${numero}</div>
+
+              <div class="stats">
+                <div><strong>Match de perfil:</strong> ${fmtPct(item.score_perfil)}</div>
+                <div><strong>Integridade:</strong> ${item.status_integridade || "-"}</div>
+                <div><strong>Viabilidade:</strong> ${item.status_viabilidade || "-"}</div>
+                <div><strong>Votos:</strong> ${fmtNumero(item.total_votos)}</div>
+                <div><strong>Seções:</strong> ${fmtNumero(item.secoes_com_voto)}</div>
+                <div><strong>Zonas:</strong> ${fmtNumero(item.zonas_com_voto)}</div>
+              </div>
+
+              ${item.instagram ? `
+                <a class="link" href="${item.instagram}" target="_blank" rel="noopener noreferrer">
+                  Abrir Instagram
+                </a>
+              ` : ""}
+
+              ${item.descricao_gravame ? `
+                <div class="gravame">${item.descricao_gravame}</div>
+              ` : ""}
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    async function buscarTop3() {
       try {
-        const dadosEleitor = await buscarSessao(sessao);
+        btnBuscar.disabled = true;
+        statusEl.textContent = "Buscando candidatos...";
+        resultadoEl.innerHTML = "";
 
-        if (dadosEleitor.length) {
-          const d = dadosEleitor[0];
+        const payload = getPesos();
 
-          if (d.bloqueado === true || d.mulheres === "Contrário" || d.meio_ambiente === "Contrário") {
-            mostrar("bloqueado");
-            return;
-          }
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/recomendar_top3_sp`, {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
 
-          if (d.nome_candidato) {
-            await renderizarResultado(d);
-            return;
-          }
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(txt || `HTTP ${res.status}`);
         }
-      } catch (e) {
-        console.error("Tentativa " + tentativa + ":", e);
+
+        const dados = await res.json();
+        statusEl.textContent = `Encontrados ${dados.length} candidatos.`;
+        renderCards(dados);
+
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = "Erro ao buscar candidatos.";
+        resultadoEl.innerHTML = `<div class="empty" style="color:#b91c1c;">Não foi possível carregar o top 3.</div>`;
+      } finally {
+        btnBuscar.disabled = false;
       }
-
-      const msg = document.getElementById("msg-carregando");
-      if (msg) msg.textContent = tentativa < 3
-        ? "Processando seu resultado..."
-        : "Quase lá, finalizando seu resultado...";
-
-      await new Promise(r => setTimeout(r, INTERVALO_MS));
     }
 
-    mostrar("erro");
-  }
-
-  async function renderizarResultado(d) {
-    let foto = "";
-    let instagram = "#";
-
-    try {
-      const resCandidato = await fetch(
-        `${SUPABASE_URL}/rest/v1/candidatos?select=Foto,Instagram&Nome_Urna=eq.${encodeURIComponent(d.nome_candidato)}&limit=1`,
-        { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
-      );
-      if (resCandidato.ok) {
-        const dadosCandidato = await resCandidato.json();
-        if (dadosCandidato.length) {
-          foto = dadosCandidato[0].Foto || "";
-          instagram = dadosCandidato[0].Instagram || "#";
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
-
-    const score = d.pontuacao_afinidade ?? 0;
-
-    document.getElementById("foto").src = foto || "https://via.placeholder.com/120";
-    document.getElementById("score-badge").textContent = `⚡ ${score}% de afinidade`;
-    document.getElementById("nome").textContent = d.nome_candidato;
-    document.getElementById("partido").textContent = d.partido || "";
-    document.getElementById("justificativa").textContent = d.candidato_recomendado || "";
-    document.getElementById("btn-instagram").href = instagram;
-
-    mostrar("resultado");
-  }
-
-  function mostrar(estado) {
-    document.getElementById("carregando").style.display = "none";
-    document.getElementById("resultado").style.display  = "none";
-    document.getElementById("bloqueado").style.display  = "none";
-    document.getElementById("erro").style.display       = "none";
-    document.getElementById(estado).style.display       = "block";
-  }
-
-  function compartilhar() {
-    if (navigator.share) {
-      navigator.share({
-        title: "Meu candidato no Quiz Eleitoral SP",
-        url: window.location.href,
+    function resetarPesos() {
+      sliders.forEach(([id, labelId]) => {
+        const el = document.getElementById(id);
+        el.value = 5;
+        document.getElementById(labelId).textContent = "5";
       });
-    } else {
-      navigator.clipboard.writeText(window.location.href).then(() => {
-        alert("Link copiado!");
-      });
+      statusEl.textContent = "Pesos resetados. Pronto para buscar.";
+      resultadoEl.innerHTML = "";
     }
-  }
 
-  carregarResultado();
-</script>
+    sliders.forEach(([id, labelId]) => {
+      const el = document.getElementById(id);
+      el.addEventListener("input", () => {
+        document.getElementById(labelId).textContent = el.value;
+      });
+    });
+
+    btnBuscar.addEventListener("click", buscarTop3);
+    btnResetar.addEventListener("click", resetarPesos);
+
+    syncLabels();
+  </script>
 </body>
 </html>
