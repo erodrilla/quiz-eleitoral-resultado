@@ -1,13 +1,10 @@
-<!-- Index completo com a última recomendação -->
 <!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Quiz Eleitoral SP</title>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
     :root{
       --bg1:#f5f8fc;
@@ -22,7 +19,6 @@
       --shadow:0 10px 30px rgba(16,32,56,.08);
       --radius:18px;
     }
-
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
@@ -31,13 +27,11 @@
       color:var(--text);
       background:linear-gradient(180deg,var(--bg1) 0%, var(--bg2) 100%);
     }
-
     .wrap{
       max-width:980px;
       margin:0 auto;
       padding:28px 16px 56px;
     }
-
     .hero{
       background:linear-gradient(135deg,#fff 0%, #f7fbff 100%);
       border:1px solid var(--line);
@@ -46,40 +40,18 @@
       box-shadow:var(--shadow);
       margin-bottom:16px;
     }
-
     h1{
       margin:0 0 8px;
       font-size:clamp(28px, 4vw, 40px);
       line-height:1.05;
       letter-spacing:-.03em;
     }
-
     .lead{
       margin:0;
       color:var(--muted);
       line-height:1.55;
       max-width:78ch;
     }
-
-    .chips{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:14px;
-    }
-
-    .chip{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:8px 10px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:#fff;
-      font-size:13px;
-      color:#31415a;
-    }
-
     .session-row{
       display:flex;
       flex-wrap:wrap;
@@ -89,7 +61,6 @@
       color:var(--muted);
       font-size:13px;
     }
-
     .session-row code{
       background:#eef4ff;
       border:1px solid var(--line);
@@ -98,7 +69,6 @@
       color:#223049;
       font-weight:700;
     }
-
     .btn{
       appearance:none;
       border:0;
@@ -109,18 +79,15 @@
       transition:transform .08s ease, opacity .2s ease, background .2s ease;
       user-select:none;
     }
-
     .btn:active{transform:translateY(1px)}
     .btn.primary{background:var(--accent);color:#fff}
     .btn.secondary{background:#eaf1fb;color:#18314d}
     .btn.ghost{background:#fff;border:1px solid var(--line);color:#18314d}
     .btn:hover{opacity:.96}
-
     .grid{
       display:grid;
       gap:14px;
     }
-
     .card{
       background:var(--card);
       border:1px solid var(--line);
@@ -128,7 +95,6 @@
       box-shadow:var(--shadow);
       padding:18px;
     }
-
     .qhead{
       display:flex;
       justify-content:space-between;
@@ -136,20 +102,17 @@
       align-items:flex-start;
       margin-bottom:12px;
     }
-
     .qtitle{
       margin:0;
       font-size:18px;
       line-height:1.25;
     }
-
     .qdesc{
       margin:6px 0 0;
       color:var(--muted);
       font-size:14px;
       line-height:1.45;
     }
-
     .badge{
       min-width:110px;
       text-align:center;
@@ -160,17 +123,14 @@
       border:1px solid var(--line);
       background:#f8fbff;
     }
-
     .badge.contrario{background:#fff5f5;color:#b91c1c;border-color:#fecaca}
     .badge.moderado{background:#fffaf0;color:#b45309;border-color:#fde68a}
     .badge.favoravel{background:#effdf3;color:#15803d;border-color:#bbf7d0}
-
     input[type="range"]{
       width:100%;
       accent-color:var(--accent);
       cursor:pointer;
     }
-
     .scale{
       display:flex;
       justify-content:space-between;
@@ -179,7 +139,6 @@
       color:var(--muted);
       margin-top:8px;
     }
-
     .actions{
       display:flex;
       flex-wrap:wrap;
@@ -187,17 +146,14 @@
       margin-top:18px;
       align-items:center;
     }
-
     .status{
       margin-top:12px;
       font-size:14px;
       color:var(--muted);
       line-height:1.45;
     }
-
     .status.ok{color:var(--accent2)}
     .status.err{color:var(--danger)}
-
     .result{
       display:none;
       margin-top:18px;
@@ -206,14 +162,12 @@
       border-radius:20px;
       overflow:hidden;
     }
-
     .result-top{
       display:grid;
       grid-template-columns:160px 1fr;
       gap:0;
       align-items:stretch;
     }
-
     .photo-box{
       min-height:190px;
       background:#f5f8fb;
@@ -223,7 +177,6 @@
       border-right:1px solid #e4f2e8;
       overflow:hidden;
     }
-
     .photo-box img{
       width:100%;
       height:100%;
@@ -231,11 +184,9 @@
       display:block;
       max-height:260px;
     }
-
     .result-body{
       padding:18px;
     }
-
     .pill{
       display:inline-flex;
       align-items:center;
@@ -248,51 +199,43 @@
       font-weight:800;
       margin-bottom:10px;
     }
-
     .candidate{
       margin:0 0 6px;
       font-size:24px;
       line-height:1.1;
       letter-spacing:-.02em;
     }
-
     .meta{
       margin:0;
       font-size:14px;
       line-height:1.55;
       color:#25415e;
     }
-
     .meta strong{color:#102038}
     .meta a{color:var(--accent);text-decoration:none;font-weight:700}
     .meta a:hover{text-decoration:underline}
-
     .result-grid{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
       gap:10px;
       padding:0 18px 18px;
     }
-
     .box{
       background:#fff;
       border:1px solid #dcebe2;
       border-radius:14px;
       padding:12px;
     }
-
     .label{
       font-size:12px;
       color:var(--muted);
       margin-bottom:4px;
     }
-
     .value{
       font-size:14px;
       font-weight:800;
       word-break:break-word;
     }
-
     .debug{
       display:none;
       margin-top:16px;
@@ -303,13 +246,11 @@
       border:1px solid rgba(255,255,255,.08);
       overflow:auto;
     }
-
     .debug h3{
       margin:0 0 10px;
       font-size:16px;
       color:#fff;
     }
-
     pre{
       margin:0;
       white-space:pre-wrap;
@@ -317,20 +258,11 @@
       font-size:12px;
       line-height:1.5;
     }
-
-    .tiny{
-      margin-top:10px;
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.45;
-    }
-
     .footer-note{
       margin-top:10px;
       font-size:12px;
       color:var(--muted);
     }
-
     @media (max-width:720px){
       .result-top{grid-template-columns:1fr}
       .photo-box{border-right:0;border-bottom:1px solid #e4f2e8}
@@ -344,22 +276,13 @@
     <section class="hero">
       <h1>Encontre o candidato mais compatível</h1>
       <p class="lead">
-        O eleitor responde ao questionário, a tela calcula o match de perfil, filtra integridade e mostra a última recomendação salva para a sessão.
-        No modo de teste, você vê exatamente o que foi enviado e o retorno do banco.
+        Responda às perguntas abaixo e veja qual candidato melhor combina com seu posicionamento.
+        O resultado considera afinidade programática e integridade.
       </p>
-
-      <div class="chips">
-        <div class="chip">Debug com <strong>?debug=1</strong></div>
-        <div class="chip">Sessão salva no navegador</div>
-        <div class="chip">Envio para Supabase</div>
-        <div class="chip">Slider de 0 a 100</div>
-      </div>
 
       <div class="session-row">
         <div>Sessão atual: <code id="sessionIdLabel">-</code></div>
-        <button class="btn ghost" id="copySessionBtn" type="button">Copiar sessão</button>
         <button class="btn ghost" id="newSessionBtn" type="button">Nova sessão</button>
-        <button class="btn ghost" id="loadLatestBtn" type="button">Carregar última recomendação</button>
       </div>
     </section>
 
@@ -370,7 +293,7 @@
         <div>
           <h2 class="qtitle">Teste do questionário</h2>
           <p class="qdesc">
-            Clique em enviar para gravar as respostas. Depois o sistema carrega a última recomendação salva para esta sessão.
+            Clique em enviar para calcular a recomendação, salvar o resultado e mostrar a última recomendação da sessão.
           </p>
         </div>
       </div>
@@ -399,7 +322,7 @@
       </div>
 
       <div class="footer-note">
-        Se o candidato não mudar quando você altera o slider, o problema está no backend ou na regra de match.
+        Se o candidato não mudar quando você altera os sliders, o problema está na função SQL de recomendação.
       </div>
     </section>
 
@@ -496,15 +419,6 @@
       sync();
     });
 
-    document.getElementById('copySessionBtn').addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(state.sessionId);
-        setStatus('Sessão copiada.', 'ok');
-      } catch (e) {
-        setStatus('Não foi possível copiar a sessão.', 'err');
-      }
-    });
-
     document.getElementById('newSessionBtn').addEventListener('click', () => {
       state.sessionId = generateSessionId();
       localStorage.setItem('quiz_session_id', state.sessionId);
@@ -512,10 +426,6 @@
       setStatus('Nova sessão criada.', 'ok');
       resultBox.style.display = 'none';
       renderDebug();
-    });
-
-    document.getElementById('loadLatestBtn').addEventListener('click', async () => {
-      await loadLatestRecommendation();
     });
 
     document.getElementById('fillFavBtn').addEventListener('click', () => {
@@ -584,45 +494,71 @@
 
     async function submitQuiz() {
       const payload = buildPayload();
-      setStatus('Enviando respostas...', '');
-
-      console.log('payload enviado:', payload);
+      setStatus('Calculando recomendação...', '');
 
       try {
-        const { data, error } = await supabaseClient
+        const { data: recomendacao, error: rpcError } = await supabaseClient
+          .rpc('calcular_recomendacao', {
+            p_sessao: state.sessionId,
+            p_mulheres: payload.mulheres,
+            p_educacao: payload.educacao,
+            p_meio_ambiente: payload.meio_ambiente,
+            p_impostos: payload.impostos,
+            p_direitos: payload.direitos,
+            p_seguranca: payload.seguranca,
+            p_transparencia: payload.transparencia
+          })
+          .single();
+
+        if (rpcError) throw rpcError;
+
+        const savePayload = {
+          mulheres: payload.mulheres,
+          educacao: payload.educacao,
+          meio_ambiente: payload.meio_ambiente,
+          impostos: payload.impostos,
+          direitos: payload.direitos,
+          seguranca: payload.seguranca,
+          transparencia: payload.transparencia,
+          pontuacao_afinidade: recomendacao?.pontuacao_afinidade ?? payload.pontuacao_afinidade,
+          candidato_recomendado: recomendacao?.candidato_recomendado ?? payload.candidato_recomendado,
+          nome_candidato: recomendacao?.nome_candidato ?? null,
+          partido: recomendacao?.partido ?? null,
+          criado_em: new Date().toISOString(),
+          id_sessao: state.sessionId,
+          bloqueado: recomendacao?.bloqueado ?? false
+        };
+
+        const { data: savedRow, error: saveError } = await supabaseClient
           .from(SUPABASE_TABLE)
-          .insert(payload)
+          .insert(savePayload)
           .select()
           .single();
 
-        console.log('retorno supabase:', { data, error });
+        if (saveError) throw saveError;
 
-        if (error) throw error;
+        const finalRow = {
+          ...recomendacao,
+          ...savedRow
+        };
 
-        setStatus('Salvo no Supabase. Carregando última recomendação...', 'ok');
-        renderDebug({ payload, row: data });
-
-        await loadLatestRecommendation(data?.id_sessao || state.sessionId);
+        showResult(finalRow);
+        setStatus('Recomendação salva e exibida.', 'ok');
+        renderDebug({ payload, recomendacao, savedRow, finalRow });
       } catch (err) {
-        console.error('erro ao salvar:', err);
-        setStatus('Erro ao salvar no Supabase.', 'err');
-        showResult(payload, err);
+        console.error(err);
+        setStatus('Erro ao gerar ou salvar a recomendação.', 'err');
         renderDebug({ payload, error: serializeError(err) });
       }
     }
 
     async function loadLatestRecommendation(idSessao = state.sessionId) {
-      setStatus('Buscando última recomendação...', '');
-
       try {
-        let row = await fetchLastRowBySession(idSessao);
+        const bySession = await fetchLastRowBySession(idSessao);
+        const row = bySession || await fetchLastRowOverall();
 
         if (!row) {
-          row = await fetchLastRowOverall();
-        }
-
-        if (!row) {
-          setStatus('Nenhuma recomendação encontrada ainda.', 'err');
+          setStatus('Ainda não há recomendação salva.', 'err');
           return null;
         }
 
@@ -631,8 +567,8 @@
         renderDebug({ loadedRow: row });
         return row;
       } catch (err) {
-        console.error('erro ao carregar última recomendação:', err);
-        setStatus('Erro ao carregar última recomendação.', 'err');
+        console.error(err);
+        setStatus('Erro ao carregar a última recomendação.', 'err');
         renderDebug({ loadError: serializeError(err) });
         return null;
       }
@@ -661,10 +597,10 @@
       return Array.isArray(data) && data.length ? data[0] : null;
     }
 
-    function showResult(row, err = null) {
+    function showResult(row) {
       resultBox.style.display = 'block';
 
-      const nome = row?.nome_candidato || '—';
+      const nome = row?.nome_candidato || row?.nome_urna || '—';
       const partido = row?.partido || '—';
       const foto = row?.foto || '';
       const instagram = row?.instagram || '';
@@ -673,13 +609,15 @@
       const bloqueado = String(row?.bloqueado ?? false);
       const sessao = row?.id_sessao || state.sessionId;
       const criadoEm = row?.criado_em || '—';
+      const statusViabilidade = row?.status_viabilidade || viabilidadeLabel(afinidade);
 
-      resultPill.textContent = err ? 'Resultado de teste com erro' : 'Última recomendação';
+      resultPill.textContent = 'Última recomendação';
       resultName.textContent = nome;
 
       resultMeta.innerHTML = `
         <strong>Partido:</strong> ${escapeHtml(partido)}<br>
-        <strong>Pontuação de afinidade:</strong> ${escapeHtml(String(afinidade))}<br>
+        <strong>Score:</strong> ${escapeHtml(String(afinidade))}<br>
+        <strong>Status:</strong> ${escapeHtml(statusViabilidade)}<br>
         <strong>Justificativa:</strong> ${escapeHtml(justificativa)}<br>
         <strong>Bloqueado:</strong> ${escapeHtml(bloqueado)}<br>
         <strong>Sessão:</strong> ${escapeHtml(sessao)}<br>
@@ -704,9 +642,15 @@
       }
 
       if (instagram) {
-        const current = resultMeta.innerHTML;
-        resultMeta.innerHTML = current + `<br><strong>Instagram:</strong> <a href="${escapeAttr(instagram)}" target="_blank" rel="noopener noreferrer">Abrir Instagram</a>`;
+        resultMeta.innerHTML += `<br><strong>Instagram:</strong> <a href="${escapeAttr(instagram)}" target="_blank" rel="noopener noreferrer">Abrir Instagram</a>`;
       }
+    }
+
+    function viabilidadeLabel(score) {
+      if (score >= 90) return 'Muito alta';
+      if (score >= 75) return 'Alta';
+      if (score >= 60) return 'Média';
+      return 'Baixa';
     }
 
     function addBox(label, value) {
@@ -777,7 +721,6 @@
       return escapeHtml(String(str)).replace(/`/g, '&#96;');
     }
 
-    renderDebug();
     loadLatestRecommendation();
   </script>
 </body>
