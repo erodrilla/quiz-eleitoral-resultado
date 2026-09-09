@@ -118,18 +118,14 @@
       display: inline-block;
       margin: 6px;
     }
-    #erro {
-      display: none;
-      color: rgba(255,255,255,0.7);
-      font-size: 15px;
-    }
+    #erro { display: none; color: rgba(255,255,255,0.7); font-size: 15px; }
   </style>
 </head>
 <body>
 <div id="conteudo">
 
   <div id="carregando">
-    <p style="color:rgba(255,255,255,0.6)">Carregando seu resultado...</p>
+    <p id="msg-carregando" style="color:rgba(255,255,255,0.6)">Processando seu resultado...</p>
   </div>
 
   <div id="resultado" style="display:none">
@@ -157,7 +153,7 @@
   </div>
 
   <div id="erro">
-    <p>Não foi possível carregar o resultado. Tente novamente.</p>
+    <p>Não foi possível carregar o resultado. Tente novamente em alguns instantes.</p>
   </div>
 
 </div>
@@ -166,67 +162,65 @@
   const SUPABASE_URL = "https://hglifytalonmncphycfp.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ";
 
+  const MAX_TENTATIVAS = 8;
+  const INTERVALO_MS = 1500;
+
+  async function buscarSessao(sessao) {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${encodeURIComponent(sessao)}&select=*&limit=1`,
+      { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+    );
+    if (!res.ok) throw new Error("Falha ao buscar sessão");
+    return res.json();
+  }
+
   async function carregarResultado() {
     const params = new URLSearchParams(window.location.search);
     const sessao = params.get("sessao");
 
-    console.log("Sessao capturada:", sessao);
+    if (!sessao) { mostrar("erro"); return; }
 
-    if (!sessao) {
-      mostrar("erro");
-      return;
+    for (let tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
+      try {
+        const dadosEleitor = await buscarSessao(sessao);
+
+        if (dadosEleitor.length) {
+          const d = dadosEleitor[0];
+
+          if (d.bloqueado === true || d.mulheres === "Contrário" || d.meio_ambiente === "Contrário") {
+            mostrar("bloqueado");
+            return;
+          }
+
+          if (d.nome_candidato) {
+            await renderizarResultado(d);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error("Tentativa " + tentativa + ":", e);
+      }
+
+      const msg = document.getElementById("msg-carregando");
+      if (msg) msg.textContent = tentativa < 3
+        ? "Processando seu resultado..."
+        : "Quase lá, finalizando seu resultado...";
+
+      await new Promise(r => setTimeout(r, INTERVALO_MS));
     }
 
+    mostrar("erro");
+  }
+
+  async function renderizarResultado(d) {
+    let foto = "";
+    let instagram = "#";
+
     try {
-      const resEleitor = await fetch(
-        `${SUPABASE_URL}/rest/v1/eleitores_respostas?id_sessao=eq.${encodeURIComponent(sessao)}&select=*&limit=1`,
-        {
-          headers: {
-            "apikey": SUPABASE_ANON_KEY,
-            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-          }
-        }
-      );
-
-      if (!resEleitor.ok) throw new Error("Falha ao buscar sessão");
-
-      const dadosEleitor = await resEleitor.json();
-
-      if (!dadosEleitor.length) {
-        mostrar("erro");
-        return;
-      }
-
-      const d = dadosEleitor[0];
-
-      if (d.bloqueado === true) {
-        mostrar("bloqueado");
-        return;
-      }
-
-      if (d.mulheres === "Contrário" || d.meio_ambiente === "Contrário") {
-        mostrar("bloqueado");
-        return;
-      }
-
-      if (!d.nome_candidato) {
-        mostrar("erro");
-        return;
-      }
-
       const resCandidato = await fetch(
         `${SUPABASE_URL}/rest/v1/candidatos?select=Foto,Instagram&Nome_Urna=eq.${encodeURIComponent(d.nome_candidato)}&limit=1`,
-        {
-          headers: {
-            "apikey": SUPABASE_ANON_KEY,
-            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-          }
-        }
+        { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
       );
-
-      let foto = "";
-      let instagram = "#";
-
       if (resCandidato.ok) {
         const dadosCandidato = await resCandidato.json();
         if (dadosCandidato.length) {
@@ -234,22 +228,20 @@
           instagram = dadosCandidato[0].Instagram || "#";
         }
       }
-
-      const score = d.pontuacao_afinidade ?? 0;
-
-      document.getElementById("foto").src = foto || "https://via.placeholder.com/120";
-      document.getElementById("score-badge").textContent = `⚡ ${score}% de afinidade`;
-      document.getElementById("nome").textContent = d.nome_candidato;
-      document.getElementById("partido").textContent = d.partido || "";
-      document.getElementById("justificativa").textContent = d.candidato_recomendado || "";
-      document.getElementById("btn-instagram").href = instagram;
-
-      mostrar("resultado");
-
     } catch (e) {
       console.error(e);
-      mostrar("erro");
     }
+
+    const score = d.pontuacao_afinidade ?? 0;
+
+    document.getElementById("foto").src = foto || "https://via.placeholder.com/120";
+    document.getElementById("score-badge").textContent = `⚡ ${score}% de afinidade`;
+    document.getElementById("nome").textContent = d.nome_candidato;
+    document.getElementById("partido").textContent = d.partido || "";
+    document.getElementById("justificativa").textContent = d.candidato_recomendado || "";
+    document.getElementById("btn-instagram").href = instagram;
+
+    mostrar("resultado");
   }
 
   function mostrar(estado) {
