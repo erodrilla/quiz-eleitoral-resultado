@@ -324,6 +324,7 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ';
     const SUPABASE_TABLE = 'eleitores_respostas';
     const QUEM_FOI_QUEM_URL = 'https://quemfoiquem.org.br/';
+    const DEPUTOMETRO_URL = 'https://www.agencialupa.org/institucional/2026/07/31/deputometro-conheca-o-painel-de-monitoramento-da-lupa/';
     const LAST_RESULT_KEY = 'quiz_eleitoral_last_result';
 
     const QUESTIONS = [
@@ -416,6 +417,30 @@
 
     document.getElementById('submitBtn').addEventListener('click', submitQuiz);
 
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function withRetry(fn, attempts = 3, delayMs = 350) {
+      let lastError;
+
+      for (let i = 1; i <= attempts; i++) {
+        try {
+          return await fn();
+        } catch (err) {
+          lastError = err;
+
+          const code = Number(err?.code || err?.status || err?.statusCode);
+          const retryable = ![400, 401, 403, 404, 409, 422, 42702, 42703, 42712].includes(code);
+
+          if (i === attempts || !retryable) throw err;
+          await sleep(delayMs * i);
+        }
+      }
+
+      throw lastError;
+    }
+
     function setAll(value) {
       document.querySelectorAll('input[type="range"]').forEach(input => {
         input.value = value;
@@ -472,8 +497,6 @@
         candidato_recomendado: 'Candidato selecionado por afinidade programática.',
         nome_candidato: null,
         partido: null,
-        criado_em: new Date().toISOString(),
-        id_sessao: state.sessionId,
         bloqueado: false
       };
     }
@@ -503,7 +526,7 @@
         : '• Nenhuma razão específica informada';
 
       return {
-        message: 'Com esse perfil, o sistema não exibe candidato e direciona para o Quem Foi Quem.',
+        message: 'Com esse perfil, o sistema não exibe candidato e direciona para os links de acompanhamento.',
         reasons: list
       };
     }
@@ -513,33 +536,27 @@
 
       if (mustBlockCandidate()) {
         const deputometro = buildDeputometroMessage();
+
         const savePayload = {
-          mulheres: payload.mulheres,
-          educacao: payload.educacao,
-          meio_ambiente: payload.meio_ambiente,
-          impostos: payload.impostos,
-          direitos: payload.direitos,
-          seguranca: payload.seguranca,
-          transparencia: payload.transparencia,
-          pontuacao_afinidade: payload.pontuacao_afinidade,
-          candidato_recomendado: deputometro.message,
-          nome_candidato: null,
-          partido: null,
-          criado_em: new Date().toISOString(),
           id_sessao: state.sessionId,
-          bloqueado: true
+          justificativa: deputometro.message,
+          bloquear_candidatos: true
         };
 
         try {
-          const { data: savedRow, error: saveError } = await supabaseClient
-            .from(SUPABASE_TABLE)
-            .insert(savePayload)
-            .select()
-            .single();
+          const insertResponse = await withRetry(() =>
+            supabaseClient
+              .from(SUPABASE_TABLE)
+              .insert(savePayload)
+              .select()
+              .single()
+          );
 
-          if (saveError) throw saveError;
+          if (insertResponse.error) throw insertResponse.error;
 
-          const finalRow = savedRow || savePayload;
+          const savedRow = insertResponse.data || savePayload;
+          const finalRow = { ...payload, ...savedRow, ...savePayload, bloqueado: true, justificativa: deputometro.message };
+
           persistLastResult(finalRow);
           showDeputometro(finalRow);
           setStatus('Deputômetro exibido e salvo.', 'warn');
@@ -554,50 +571,59 @@
       setStatus('Calculando recomendação...', '');
 
       try {
-        const { data, error: rpcError } = await supabaseClient.rpc('calcular_recomendacao', {
-          p_sessao: state.sessionId,
-          p_mulheres: payload.mulheres,
-          p_educacao: payload.educacao,
-          p_meio_ambiente: payload.meio_ambiente,
-          p_impostos: payload.impostos,
-          p_direitos: payload.direitos,
-          p_seguranca: payload.seguranca,
-          p_transparencia: payload.transparencia
-        });
+        const rpcResponse = await withRetry(() =>
+          supabaseClient.rpc('calcular_recomendacao', {
+            p_sessao: state.sessionId,
+            p_mulheres: payload.mulheres,
+            p_educacao: payload.educacao,
+            p_meio_ambiente: payload.meio_ambiente,
+            p_impostos: payload.impostos,
+            p_direitos: payload.direitos,
+            p_seguranca: payload.seguranca,
+            p_transparencia: payload.transparencia
+          })
+        );
 
-        if (rpcError) throw rpcError;
+        if (rpcResponse.error) throw rpcResponse.error;
 
-        const recomendacaoFinal = Array.isArray(data) ? (data[0] || {}) : (data || {});
+        const recomendacaoFinal = Array.isArray(rpcResponse.data)
+          ? (rpcResponse.data[0] || {})
+          : (rpcResponse.data || {});
 
         const savePayload = {
-          mulheres: payload.mulheres,
-          educacao: payload.educacao,
-          meio_ambiente: payload.meio_ambiente,
-          impostos: payload.impostos,
-          direitos: payload.direitos,
-          seguranca: payload.seguranca,
-          transparencia: payload.transparencia,
-          pontuacao_afinidade: recomendacaoFinal.pontuacao_afinidade ?? payload.pontuacao_afinidade,
-          candidato_recomendado: recomendacaoFinal.candidato_recomendado || payload.candidato_recomendado,
-          nome_candidato: recomendacaoFinal.nome_candidato || null,
-          partido: recomendacaoFinal.partido || null,
-          criado_em: new Date().toISOString(),
           id_sessao: state.sessionId,
-          bloqueado: recomendacaoFinal.bloqueado ?? false
+          id_candidato: recomendacaoFinal.id_candidato ?? null,
+          nome_candidato: recomendacaoFinal.nome_candidato || recomendacaoFinal.nome_urna || null,
+          partido: recomendacaoFinal.partido || null,
+          numero_candidato: recomendacaoFinal.numero_candidato ?? null,
+          justificativa: recomendacaoFinal.justificativa || recomendacaoFinal.candidato_recomendado || 'Candidato selecionado por afinidade programática.',
+          foto: recomendacaoFinal.foto || null,
+          instagram: recomendacaoFinal.instagram || null,
+          bloquear_candidatos: recomendacaoFinal.bloqueado ?? false
         };
 
-        const { data: savedRow, error: saveError } = await supabaseClient
-          .from(SUPABASE_TABLE)
-          .insert(savePayload)
-          .select()
-          .single();
+        const insertResponse = await withRetry(() =>
+          supabaseClient
+            .from(SUPABASE_TABLE)
+            .insert(savePayload)
+            .select()
+            .single()
+        );
 
-        if (saveError) throw saveError;
+        if (insertResponse.error) throw insertResponse.error;
+
+        const savedRow = insertResponse.data || savePayload;
 
         const finalRow = {
-          ...(savedRow || {}),
-          ...savePayload,
-          ...recomendacaoFinal
+          ...payload,
+          ...recomendacaoFinal,
+          ...savedRow,
+          foto: recomendacaoFinal.foto || savedRow.foto || null,
+          instagram: recomendacaoFinal.instagram || savedRow.instagram || null,
+          bloqueado: recomendacaoFinal.bloqueado ?? savedRow.bloquear_candidatos ?? false,
+          pontuacao_afinidade: recomendacaoFinal.pontuacao_afinidade ?? payload.pontuacao_afinidade,
+          status_viabilidade: recomendacaoFinal.status_viabilidade || viabilidadeLabel(recomendacaoFinal.pontuacao_afinidade ?? payload.pontuacao_afinidade),
+          justificativa: recomendacaoFinal.justificativa || recomendacaoFinal.candidato_recomendado || payload.candidato_recomendado
         };
 
         persistLastResult(finalRow);
@@ -619,18 +645,19 @@
       }
 
       try {
-        const { data, error } = await supabaseClient
-          .from(SUPABASE_TABLE)
-          .select('*')
-          .order('id', { ascending: false })
-          .limit(1);
+        const selectResponse = await withRetry(() =>
+          supabaseClient
+            .from(SUPABASE_TABLE)
+            .select('*')
+            .order('id', { ascending: false })
+            .limit(1)
+        );
 
-        if (error) throw error;
+        if (selectResponse.error) throw selectResponse.error;
 
-        const row = Array.isArray(data) && data.length ? data[0] : null;
+        const row = Array.isArray(selectResponse.data) && selectResponse.data.length ? selectResponse.data[0] : null;
         if (!row) return;
 
-        applyRowToSliders(row);
         showResult(row);
         persistLastResult(row);
       } catch (err) {
@@ -678,7 +705,7 @@
     }
 
     function showResult(row) {
-      if (row?.bloqueado || row?.status_viabilidade === 'Deputômetro') {
+      if (row?.bloqueado || row?.bloquear_candidatos || row?.status_viabilidade === 'Deputômetro') {
         showDeputometro(row);
         return;
       }
@@ -692,7 +719,7 @@
       const foto = row?.foto || '';
       const instagram = row?.instagram || '';
       const afinidade = row?.pontuacao_afinidade ?? computeAfinidade(state.values);
-      const justificativa = row?.candidato_recomendado || 'Candidato selecionado por afinidade programática.';
+      const justificativa = row?.justificativa || row?.candidato_recomendado || 'Candidato selecionado por afinidade programática.';
       const statusViabilidade = row?.status_viabilidade || viabilidadeLabel(afinidade);
 
       resultPill.textContent = 'Última recomendação';
@@ -728,16 +755,18 @@
       resultPhoto.removeAttribute('src');
       resultPhoto.style.display = 'none';
 
-      const info = rowOrInfo?.candidato_recomendado
+      const info = rowOrInfo?.justificativa
         ? {
-            message: rowOrInfo.candidato_recomendado,
+            message: rowOrInfo.justificativa,
             reasons: buildDeputometroMessage().reasons
           }
         : buildDeputometroMessage();
 
       resultMeta.innerHTML = `
-        <strong>Mensagem:</strong> ${escapeHtml(info.message)}<br>
-        <strong>Quem Foi Quem:</strong> <a href="${escapeAttr(QUEM_FOI_QUEM_URL)}" target="_blank" rel="noopener noreferrer">Abrir link</a>
+        <strong>Status:</strong> Deputômetro<br>
+        <strong>Quem Foi Quem:</strong> <a href="${escapeAttr(QUEM_FOI_QUEM_URL)}" target="_blank" rel="noopener noreferrer">Abrir Quem Foi Quem</a><br>
+        <strong>Deputômetro / Agência Lupa:</strong> <a href="${escapeAttr(DEPUTOMETRO_URL)}" target="_blank" rel="noopener noreferrer">Abrir painel</a><br>
+        <strong>Mensagem:</strong> ${escapeHtml(info.message)}
       `;
 
       blockedBody.style.display = 'block';
