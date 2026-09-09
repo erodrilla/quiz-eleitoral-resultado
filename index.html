@@ -59,25 +59,6 @@
       max-width:78ch;
     }
 
-    .session-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      align-items:center;
-      margin-top:14px;
-      color:var(--muted);
-      font-size:13px;
-    }
-
-    .session-row code{
-      background:#eef4ff;
-      border:1px solid var(--line);
-      padding:2px 8px;
-      border-radius:8px;
-      color:#223049;
-      font-weight:700;
-    }
-
     .btn{
       appearance:none;
       border:0;
@@ -330,11 +311,6 @@
         Responda às perguntas abaixo e veja qual candidato melhor combina com seu posicionamento.
         O resultado considera afinidade programática e integridade.
       </p>
-
-      <div class="session-row">
-        <div>Sessão atual: <code id="sessionIdLabel">-</code></div>
-        <button class="btn ghost" id="newSessionBtn" type="button">Nova sessão</button>
-      </div>
     </section>
 
     <section class="grid" id="questions"></section>
@@ -344,7 +320,7 @@
         <div>
           <h2 class="qtitle">Teste do questionário</h2>
           <p class="qdesc">
-            Clique em enviar para calcular a recomendação, salvar o resultado e mostrar a última recomendação da sessão.
+            Clique em enviar para calcular a recomendação, salvar o resultado e mostrar a última recomendação salva.
           </p>
         </div>
       </div>
@@ -387,9 +363,10 @@
     const SHOW_DEBUG = new URLSearchParams(window.location.search).has('debug');
 
     const SUPABASE_URL = 'https://hglifytalonmncphycfp.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ';
+    const SUPABASE_ANON_KEY = 'SUA_ANON_KEY_AQUI';
     const SUPABASE_TABLE = 'eleitores_respostas';
     const QUEM_FOI_QUEM_URL = 'COLE_AQUI_O_LINK_REAL_DO_QUEM_FOI_QUEM';
+    const LAST_RESULT_KEY = 'quiz_eleitoral_last_result';
 
     const QUESTIONS = [
       { key: 'mulheres', label: 'Mulheres & Gênero', desc: 'Como você quer que o tema de mulheres e igualdade de gênero seja tratado?' },
@@ -404,17 +381,10 @@
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const state = {
-      sessionId: getOrCreateSessionId(),
       values: {}
     };
 
     const questionsRoot = document.getElementById('questions');
-    const sessionIdLabel = document.getElementById('sessionIdLabel');
-    const newSessionBtn = document.getElementById('newSessionBtn');
-    const submitBtn = document.getElementById('submitBtn');
-    const fillFavBtn = document.getElementById('fillFavBtn');
-    const fillModBtn = document.getElementById('fillModBtn');
-    const fillContBtn = document.getElementById('fillContBtn');
     const debugBox = document.getElementById('debugBox');
     const debugOutput = document.getElementById('debugOutput');
     const statusEl = document.getElementById('status');
@@ -425,7 +395,6 @@
     const resultPhoto = document.getElementById('resultPhoto');
     const blockedBody = document.getElementById('blockedBody');
 
-    sessionIdLabel.textContent = state.sessionId;
     debugBox.style.display = SHOW_DEBUG ? 'block' : 'none';
 
     QUESTIONS.forEach((q, index) => {
@@ -476,31 +445,22 @@
       sync();
     });
 
-    newSessionBtn.addEventListener('click', () => {
-      state.sessionId = generateSessionId();
-      localStorage.setItem('quiz_session_id', state.sessionId);
-      sessionIdLabel.textContent = state.sessionId;
-      setStatus('Nova sessão criada.', 'ok');
-      resultBox.style.display = 'none';
-      renderDebug();
-    });
-
-    fillFavBtn.addEventListener('click', () => {
+    document.getElementById('fillFavBtn').addEventListener('click', () => {
       setAll(85);
       setStatus('Questionário preenchido como Favorável.', 'ok');
     });
 
-    fillModBtn.addEventListener('click', () => {
+    document.getElementById('fillModBtn').addEventListener('click', () => {
       setAll(50);
       setStatus('Questionário preenchido como Moderado.', 'ok');
     });
 
-    fillContBtn.addEventListener('click', () => {
+    document.getElementById('fillContBtn').addEventListener('click', () => {
       setAll(15);
       setStatus('Questionário preenchido como Contrário.', 'ok');
     });
 
-    submitBtn.addEventListener('click', submitQuiz);
+    document.getElementById('submitBtn').addEventListener('click', submitQuiz);
 
     function setAll(value) {
       document.querySelectorAll('input[type="range"]').forEach(input => {
@@ -554,25 +514,13 @@
         instagram: null,
         status_viabilidade: null,
         criado_em: new Date().toISOString(),
-        id_sessao: state.sessionId,
+        id_sessao: generateSessionId(),
         bloqueado: false
       };
     }
 
     function countContrarios() {
       return Object.values(state.values).filter(v => Number(v) <= 33).length;
-    }
-
-    function getContraryLabels() {
-      return Object.entries(state.values)
-        .filter(([, value]) => Number(value) <= 33)
-        .map(([key]) => labelFromKey(key));
-    }
-
-    function mustBlockCandidate() {
-      return Number(state.values.mulheres) <= 33
-        || Number(state.values.meio_ambiente) <= 33
-        || countContrarios() >= 2;
     }
 
     function labelFromKey(key) {
@@ -586,6 +534,18 @@
         transparencia: 'Transparência'
       };
       return map[key] || key;
+    }
+
+    function getContraryLabels() {
+      return Object.entries(state.values)
+        .filter(([, value]) => Number(value) <= 33)
+        .map(([key]) => labelFromKey(key));
+    }
+
+    function mustBlockCandidate() {
+      return Number(state.values.mulheres) <= 33
+        || Number(state.values.meio_ambiente) <= 33
+        || countContrarios() >= 2;
     }
 
     function buildDeputometroMessage() {
@@ -609,7 +569,6 @@
         : '• Nenhuma razão específica informada';
 
       return {
-        title: 'Deputômetro',
         message: 'Com esse perfil, o sistema não exibe candidato e direciona para o Quem Foi Quem.',
         reasons: list
       };
@@ -621,7 +580,13 @@
       if (mustBlockCandidate()) {
         const deputometro = buildDeputometroMessage();
         const savePayload = {
-          ...payload,
+          mulheres: payload.mulheres,
+          educacao: payload.educacao,
+          meio_ambiente: payload.meio_ambiente,
+          impostos: payload.impostos,
+          direitos: payload.direitos,
+          seguranca: payload.seguranca,
+          transparencia: payload.transparencia,
           pontuacao_afinidade: payload.pontuacao_afinidade,
           candidato_recomendado: deputometro.message,
           nome_candidato: null,
@@ -641,7 +606,9 @@
 
           if (saveError) throw saveError;
 
-          showDeputometro(savedRow || savePayload);
+          const finalRow = savedRow || savePayload;
+          showDeputometro(finalRow);
+          persistLastResult(finalRow);
           setStatus('Deputômetro exibido e salvo.', 'warn');
           renderDebug({
             payload,
@@ -662,7 +629,7 @@
       try {
         const { data: recomendacao, error: rpcError } = await supabaseClient
           .rpc('calcular_recomendacao', {
-            p_sessao: state.sessionId,
+            p_sessao: generateSessionId(),
             p_mulheres: payload.mulheres,
             p_educacao: payload.educacao,
             p_meio_ambiente: payload.meio_ambiente,
@@ -678,7 +645,13 @@
         const recomendacaoFinal = recomendacao || {};
 
         const savePayload = {
-          ...payload,
+          mulheres: payload.mulheres,
+          educacao: payload.educacao,
+          meio_ambiente: payload.meio_ambiente,
+          impostos: payload.impostos,
+          direitos: payload.direitos,
+          seguranca: payload.seguranca,
+          transparencia: payload.transparencia,
           pontuacao_afinidade: recomendacaoFinal.pontuacao_afinidade ?? payload.pontuacao_afinidade,
           candidato_recomendado: recomendacaoFinal.candidato_recomendado || payload.candidato_recomendado,
           nome_candidato: recomendacaoFinal.nome_candidato || null,
@@ -700,6 +673,7 @@
         const finalRow = savedRow || { ...recomendacaoFinal, ...savePayload };
 
         showResult(finalRow);
+        persistLastResult(finalRow);
         setStatus('Recomendação salva e exibida.', 'ok');
         renderDebug({
           payload,
@@ -714,19 +688,34 @@
       }
     }
 
-    async function loadLatestRecommendation(idSessao = state.sessionId) {
-      try {
-        const bySession = await fetchLastRowBySession(idSessao);
-        const row = bySession || await fetchLastRowOverall();
+    async function loadLatestRecommendation() {
+      const cached = loadLastResult();
+      if (cached) {
+        showResult(cached);
+        setStatus('Última recomendação carregada.', 'ok');
+        renderDebug({ cached });
+        return;
+      }
 
+      try {
+        const { data, error } = await supabaseClient
+          .from(SUPABASE_TABLE)
+          .select('*')
+          .order('id', { ascending: false })
+          .limit(1);
+
+        if (error) throw error;
+
+        const row = Array.isArray(data) && data.length ? data[0] : null;
         if (!row) {
-          setStatus('Ainda não há recomendação salva.', 'err');
+          setStatus('Ainda não há recomendação salva.', 'warn');
           return null;
         }
 
         showResult(row);
         setStatus('Última recomendação carregada.', 'ok');
         renderDebug({ loadedRow: row });
+        persistLastResult(row);
         return row;
       } catch (err) {
         console.error(err);
@@ -736,27 +725,20 @@
       }
     }
 
-    async function fetchLastRowBySession(idSessao) {
-      const { data, error } = await supabaseClient
-        .from(SUPABASE_TABLE)
-        .select('*')
-        .eq('id_sessao', idSessao)
-        .order('id', { ascending: false })
-        .limit(1);
-
-      if (error) throw error;
-      return Array.isArray(data) && data.length ? data[0] : null;
+    function persistLastResult(row) {
+      try {
+        localStorage.setItem(LAST_RESULT_KEY, JSON.stringify(row));
+      } catch (e) {}
     }
 
-    async function fetchLastRowOverall() {
-      const { data, error } = await supabaseClient
-        .from(SUPABASE_TABLE)
-        .select('*')
-        .order('id', { ascending: false })
-        .limit(1);
-
-      if (error) throw error;
-      return Array.isArray(data) && data.length ? data[0] : null;
+    function loadLastResult() {
+      try {
+        const raw = localStorage.getItem(LAST_RESULT_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch (e) {
+        return null;
+      }
     }
 
     function showResult(row) {
@@ -830,15 +812,11 @@
           o sistema não apresenta candidato.
         </div>
       `;
-
-      resultBox.classList.remove('blocked');
-      resultBox.classList.add('blocked');
     }
 
     function renderDebug(extra = null) {
       if (!SHOW_DEBUG) return;
       debugOutput.textContent = JSON.stringify({
-        sessionId: state.sessionId,
         values: state.values,
         payload: buildPayload(),
         contraryCount: countContrarios(),
@@ -850,22 +828,6 @@
     function setStatus(text, kind) {
       statusEl.textContent = text;
       statusEl.className = 'status' + (kind ? ' ' + kind : '');
-    }
-
-    function getOrCreateSessionId() {
-      const params = new URLSearchParams(window.location.search);
-      const fromUrl = params.get('sessao');
-      if (fromUrl) {
-        localStorage.setItem('quiz_session_id', fromUrl);
-        return fromUrl;
-      }
-
-      const saved = localStorage.getItem('quiz_session_id');
-      if (saved) return saved;
-
-      const id = generateSessionId();
-      localStorage.setItem('quiz_session_id', id);
-      return id;
     }
 
     function generateSessionId() {
