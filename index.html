@@ -16,9 +16,11 @@
       --accent:#167a7a;
       --accent2:#0f8b57;
       --danger:#b42318;
+      --warning:#a16207;
       --shadow:0 10px 30px rgba(16,32,56,.08);
       --radius:18px;
     }
+
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
@@ -27,11 +29,13 @@
       color:var(--text);
       background:linear-gradient(180deg,var(--bg1) 0%, var(--bg2) 100%);
     }
+
     .wrap{
       max-width:980px;
       margin:0 auto;
       padding:28px 16px 56px;
     }
+
     .hero{
       background:linear-gradient(135deg,#fff 0%, #f7fbff 100%);
       border:1px solid var(--line);
@@ -40,18 +44,21 @@
       box-shadow:var(--shadow);
       margin-bottom:16px;
     }
+
     h1{
       margin:0 0 8px;
       font-size:clamp(28px, 4vw, 40px);
       line-height:1.05;
       letter-spacing:-.03em;
     }
+
     .lead{
       margin:0;
       color:var(--muted);
       line-height:1.55;
       max-width:78ch;
     }
+
     .session-row{
       display:flex;
       flex-wrap:wrap;
@@ -61,6 +68,7 @@
       color:var(--muted);
       font-size:13px;
     }
+
     .session-row code{
       background:#eef4ff;
       border:1px solid var(--line);
@@ -69,6 +77,7 @@
       color:#223049;
       font-weight:700;
     }
+
     .btn{
       appearance:none;
       border:0;
@@ -78,16 +87,24 @@
       cursor:pointer;
       transition:transform .08s ease, opacity .2s ease, background .2s ease;
       user-select:none;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
     }
+
     .btn:active{transform:translateY(1px)}
     .btn.primary{background:var(--accent);color:#fff}
     .btn.secondary{background:#eaf1fb;color:#18314d}
     .btn.ghost{background:#fff;border:1px solid var(--line);color:#18314d}
+    .btn.warning{background:#fff6e5;color:var(--warning);border:1px solid #fed7aa}
     .btn:hover{opacity:.96}
+
     .grid{
       display:grid;
       gap:14px;
     }
+
     .card{
       background:var(--card);
       border:1px solid var(--line);
@@ -95,6 +112,7 @@
       box-shadow:var(--shadow);
       padding:18px;
     }
+
     .qhead{
       display:flex;
       justify-content:space-between;
@@ -102,17 +120,20 @@
       align-items:flex-start;
       margin-bottom:12px;
     }
+
     .qtitle{
       margin:0;
       font-size:18px;
       line-height:1.25;
     }
+
     .qdesc{
       margin:6px 0 0;
       color:var(--muted);
       font-size:14px;
       line-height:1.45;
     }
+
     .badge{
       min-width:110px;
       text-align:center;
@@ -123,14 +144,17 @@
       border:1px solid var(--line);
       background:#f8fbff;
     }
+
     .badge.contrario{background:#fff5f5;color:#b91c1c;border-color:#fecaca}
     .badge.moderado{background:#fffaf0;color:#b45309;border-color:#fde68a}
     .badge.favoravel{background:#effdf3;color:#15803d;border-color:#bbf7d0}
+
     input[type="range"]{
       width:100%;
       accent-color:var(--accent);
       cursor:pointer;
     }
+
     .scale{
       display:flex;
       justify-content:space-between;
@@ -139,6 +163,7 @@
       color:var(--muted);
       margin-top:8px;
     }
+
     .actions{
       display:flex;
       flex-wrap:wrap;
@@ -146,14 +171,18 @@
       margin-top:18px;
       align-items:center;
     }
+
     .status{
       margin-top:12px;
       font-size:14px;
       color:var(--muted);
       line-height:1.45;
     }
+
     .status.ok{color:var(--accent2)}
     .status.err{color:var(--danger)}
+    .status.warn{color:var(--warning)}
+
     .result{
       display:none;
       margin-top:18px;
@@ -162,14 +191,21 @@
       border-radius:20px;
       overflow:hidden;
     }
+
+    .result.blocked{
+      border-color:#fed7aa;
+      background:linear-gradient(180deg,#fff8ed 0%, #fff 100%);
+    }
+
     .result-top{
       display:grid;
-      grid-template-columns:160px 1fr;
+      grid-template-columns:180px 1fr;
       gap:0;
       align-items:stretch;
     }
+
     .photo-box{
-      min-height:190px;
+      min-height:210px;
       background:#f5f8fb;
       display:flex;
       align-items:center;
@@ -177,16 +213,24 @@
       border-right:1px solid #e4f2e8;
       overflow:hidden;
     }
+
+    .result.blocked .photo-box{
+      border-right:1px solid #f5d0a0;
+      background:#fff6e8;
+    }
+
     .photo-box img{
       width:100%;
       height:100%;
       object-fit:cover;
       display:block;
-      max-height:260px;
+      max-height:280px;
     }
+
     .result-body{
       padding:18px;
     }
+
     .pill{
       display:inline-flex;
       align-items:center;
@@ -199,43 +243,51 @@
       font-weight:800;
       margin-bottom:10px;
     }
+
+    .pill.blocked{
+      background:#b45309;
+    }
+
     .candidate{
       margin:0 0 6px;
       font-size:24px;
       line-height:1.1;
       letter-spacing:-.02em;
     }
+
     .meta{
       margin:0;
       font-size:14px;
       line-height:1.55;
       color:#25415e;
     }
+
     .meta strong{color:#102038}
     .meta a{color:var(--accent);text-decoration:none;font-weight:700}
     .meta a:hover{text-decoration:underline}
-    .result-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
-      gap:10px;
-      padding:0 18px 18px;
+
+    .blocked-body{
+      margin-top:8px;
+      color:#5b3b00;
+      line-height:1.55;
+      font-size:14px;
     }
-    .box{
-      background:#fff;
-      border:1px solid #dcebe2;
-      border-radius:14px;
-      padding:12px;
+
+    .blocked-list{
+      margin:10px 0 0;
+      padding-left:18px;
     }
-    .label{
-      font-size:12px;
-      color:var(--muted);
+
+    .blocked-list li{
       margin-bottom:4px;
     }
-    .value{
-      font-size:14px;
-      font-weight:800;
-      word-break:break-word;
+
+    .footer-note{
+      margin-top:10px;
+      font-size:12px;
+      color:var(--muted);
     }
+
     .debug{
       display:none;
       margin-top:16px;
@@ -246,11 +298,13 @@
       border:1px solid rgba(255,255,255,.08);
       overflow:auto;
     }
+
     .debug h3{
       margin:0 0 10px;
       font-size:16px;
       color:#fff;
     }
+
     pre{
       margin:0;
       white-space:pre-wrap;
@@ -258,14 +312,11 @@
       font-size:12px;
       line-height:1.5;
     }
-    .footer-note{
-      margin-top:10px;
-      font-size:12px;
-      color:var(--muted);
-    }
+
     @media (max-width:720px){
       .result-top{grid-template-columns:1fr}
       .photo-box{border-right:0;border-bottom:1px solid #e4f2e8}
+      .result.blocked .photo-box{border-bottom:1px solid #f5d0a0}
       .qhead{flex-direction:column}
       .badge{min-width:auto}
     }
@@ -316,9 +367,9 @@
             <div class="pill" id="resultPill">Última recomendação</div>
             <h2 class="candidate" id="resultName">—</h2>
             <p class="meta" id="resultMeta">—</p>
+            <div class="blocked-body" id="blockedBody" style="display:none"></div>
           </div>
         </div>
-        <div class="result-grid" id="resultGrid"></div>
       </div>
 
       <div class="footer-note">
@@ -338,6 +389,7 @@
     const SUPABASE_URL = 'https://hglifytalonmncphycfp.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ';
     const SUPABASE_TABLE = 'eleitores_respostas';
+    const QUEM_FOI_QUEM_URL = 'COLE_AQUI_O_LINK_REAL_DO_QUEM_FOI_QUEM';
 
     const QUESTIONS = [
       { key: 'mulheres', label: 'Mulheres & Gênero', desc: 'Como você quer que o tema de mulheres e igualdade de gênero seja tratado?' },
@@ -346,7 +398,7 @@
       { key: 'impostos', label: 'Taxação sobre Renda/Fortunas', desc: 'Você quer aumentar ou reduzir a taxação sobre renda e fortunas?' },
       { key: 'direitos', label: 'Direitos Sociais', desc: 'Como você enxerga direitos sociais e políticas de proteção?' },
       { key: 'seguranca', label: 'Segurança Pública', desc: 'Qual a sua visão sobre segurança, prevenção e combate ao crime?' },
-      { key: 'transparencia', label: 'Transparência', desc: 'Como você avalia transparência, controle público e fiscalização?' },
+      { key: 'transparencia', label: 'Transparência', desc: 'Como você avalia transparência, controle público e fiscalização?' }
     ];
 
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -358,6 +410,11 @@
 
     const questionsRoot = document.getElementById('questions');
     const sessionIdLabel = document.getElementById('sessionIdLabel');
+    const newSessionBtn = document.getElementById('newSessionBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const fillFavBtn = document.getElementById('fillFavBtn');
+    const fillModBtn = document.getElementById('fillModBtn');
+    const fillContBtn = document.getElementById('fillContBtn');
     const debugBox = document.getElementById('debugBox');
     const debugOutput = document.getElementById('debugOutput');
     const statusEl = document.getElementById('status');
@@ -365,8 +422,8 @@
     const resultPill = document.getElementById('resultPill');
     const resultName = document.getElementById('resultName');
     const resultMeta = document.getElementById('resultMeta');
-    const resultGrid = document.getElementById('resultGrid');
     const resultPhoto = document.getElementById('resultPhoto');
+    const blockedBody = document.getElementById('blockedBody');
 
     sessionIdLabel.textContent = state.sessionId;
     debugBox.style.display = SHOW_DEBUG ? 'block' : 'none';
@@ -419,7 +476,7 @@
       sync();
     });
 
-    document.getElementById('newSessionBtn').addEventListener('click', () => {
+    newSessionBtn.addEventListener('click', () => {
       state.sessionId = generateSessionId();
       localStorage.setItem('quiz_session_id', state.sessionId);
       sessionIdLabel.textContent = state.sessionId;
@@ -428,22 +485,22 @@
       renderDebug();
     });
 
-    document.getElementById('fillFavBtn').addEventListener('click', () => {
+    fillFavBtn.addEventListener('click', () => {
       setAll(85);
       setStatus('Questionário preenchido como Favorável.', 'ok');
     });
 
-    document.getElementById('fillModBtn').addEventListener('click', () => {
+    fillModBtn.addEventListener('click', () => {
       setAll(50);
       setStatus('Questionário preenchido como Moderado.', 'ok');
     });
 
-    document.getElementById('fillContBtn').addEventListener('click', () => {
+    fillContBtn.addEventListener('click', () => {
       setAll(15);
       setStatus('Questionário preenchido como Contrário.', 'ok');
     });
 
-    document.getElementById('submitBtn').addEventListener('click', submitQuiz);
+    submitBtn.addEventListener('click', submitQuiz);
 
     function setAll(value) {
       document.querySelectorAll('input[type="range"]').forEach(input => {
@@ -473,6 +530,13 @@
       return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
     }
 
+    function viabilidadeLabel(score) {
+      if (score >= 90) return 'Muito alta';
+      if (score >= 75) return 'Alta';
+      if (score >= 60) return 'Média';
+      return 'Baixa';
+    }
+
     function buildPayload() {
       return {
         mulheres: valueToDbLabel(state.values.mulheres),
@@ -486,14 +550,113 @@
         candidato_recomendado: 'Candidato selecionado por afinidade programática.',
         nome_candidato: null,
         partido: null,
+        foto: null,
+        instagram: null,
+        status_viabilidade: null,
         criado_em: new Date().toISOString(),
         id_sessao: state.sessionId,
         bloqueado: false
       };
     }
 
+    function countContrarios() {
+      return Object.values(state.values).filter(v => Number(v) <= 33).length;
+    }
+
+    function getContraryLabels() {
+      return Object.entries(state.values)
+        .filter(([, value]) => Number(value) <= 33)
+        .map(([key]) => labelFromKey(key));
+    }
+
+    function mustBlockCandidate() {
+      return Number(state.values.mulheres) <= 33
+        || Number(state.values.meio_ambiente) <= 33
+        || countContrarios() >= 2;
+    }
+
+    function labelFromKey(key) {
+      const map = {
+        mulheres: 'Mulheres & Gênero',
+        educacao: 'Educação & Serv. Público',
+        meio_ambiente: 'Meio Ambiente',
+        impostos: 'Taxação sobre Renda/Fortunas',
+        direitos: 'Direitos Sociais',
+        seguranca: 'Segurança Pública',
+        transparencia: 'Transparência'
+      };
+      return map[key] || key;
+    }
+
+    function buildDeputometroMessage() {
+      const reasons = [];
+
+      if (Number(state.values.mulheres) <= 33) {
+        reasons.push('Mulheres & Gênero em Contrário');
+      }
+      if (Number(state.values.meio_ambiente) <= 33) {
+        reasons.push('Meio Ambiente em Contrário');
+      }
+
+      const contraryCount = countContrarios();
+      if (contraryCount >= 2) {
+        reasons.push(`${contraryCount} respostas em Contrário`);
+      }
+
+      const uniqueReasons = [...new Set(reasons)];
+      const list = uniqueReasons.length
+        ? uniqueReasons.map(item => `• ${item}`).join('<br>')
+        : '• Nenhuma razão específica informada';
+
+      return {
+        title: 'Deputômetro',
+        message: 'Com esse perfil, o sistema não exibe candidato e direciona para o Quem Foi Quem.',
+        reasons: list
+      };
+    }
+
     async function submitQuiz() {
       const payload = buildPayload();
+
+      if (mustBlockCandidate()) {
+        const deputometro = buildDeputometroMessage();
+        const savePayload = {
+          ...payload,
+          pontuacao_afinidade: payload.pontuacao_afinidade,
+          candidato_recomendado: deputometro.message,
+          nome_candidato: null,
+          partido: null,
+          foto: null,
+          instagram: null,
+          status_viabilidade: 'Deputômetro',
+          bloqueado: true
+        };
+
+        try {
+          const { data: savedRow, error: saveError } = await supabaseClient
+            .from(SUPABASE_TABLE)
+            .insert(savePayload)
+            .select()
+            .single();
+
+          if (saveError) throw saveError;
+
+          showDeputometro(savedRow || savePayload);
+          setStatus('Deputômetro exibido e salvo.', 'warn');
+          renderDebug({
+            payload,
+            blocked: true,
+            savedRow
+          });
+        } catch (err) {
+          console.error(err);
+          setStatus('Erro ao salvar o deputômetro.', 'err');
+          renderDebug({ payload, error: serializeError(err) });
+        }
+
+        return;
+      }
+
       setStatus('Calculando recomendação...', '');
 
       try {
@@ -512,21 +675,18 @@
 
         if (rpcError) throw rpcError;
 
+        const recomendacaoFinal = recomendacao || {};
+
         const savePayload = {
-          mulheres: payload.mulheres,
-          educacao: payload.educacao,
-          meio_ambiente: payload.meio_ambiente,
-          impostos: payload.impostos,
-          direitos: payload.direitos,
-          seguranca: payload.seguranca,
-          transparencia: payload.transparencia,
-          pontuacao_afinidade: recomendacao?.pontuacao_afinidade ?? payload.pontuacao_afinidade,
-          candidato_recomendado: recomendacao?.candidato_recomendado ?? payload.candidato_recomendado,
-          nome_candidato: recomendacao?.nome_candidato ?? null,
-          partido: recomendacao?.partido ?? null,
-          criado_em: new Date().toISOString(),
-          id_sessao: state.sessionId,
-          bloqueado: recomendacao?.bloqueado ?? false
+          ...payload,
+          pontuacao_afinidade: recomendacaoFinal.pontuacao_afinidade ?? payload.pontuacao_afinidade,
+          candidato_recomendado: recomendacaoFinal.candidato_recomendado || payload.candidato_recomendado,
+          nome_candidato: recomendacaoFinal.nome_candidato || null,
+          partido: recomendacaoFinal.partido || null,
+          foto: recomendacaoFinal.foto || null,
+          instagram: recomendacaoFinal.instagram || null,
+          status_viabilidade: recomendacaoFinal.status_viabilidade || viabilidadeLabel(recomendacaoFinal.pontuacao_afinidade ?? payload.pontuacao_afinidade),
+          bloqueado: recomendacaoFinal.bloqueado ?? false
         };
 
         const { data: savedRow, error: saveError } = await supabaseClient
@@ -537,14 +697,16 @@
 
         if (saveError) throw saveError;
 
-        const finalRow = {
-          ...recomendacao,
-          ...savedRow
-        };
+        const finalRow = savedRow || { ...recomendacaoFinal, ...savePayload };
 
         showResult(finalRow);
         setStatus('Recomendação salva e exibida.', 'ok');
-        renderDebug({ payload, recomendacao, savedRow, finalRow });
+        renderDebug({
+          payload,
+          recomendacao: recomendacaoFinal,
+          savedRow,
+          finalRow
+        });
       } catch (err) {
         console.error(err);
         setStatus('Erro ao gerar ou salvar a recomendação.', 'err');
@@ -598,7 +760,14 @@
     }
 
     function showResult(row) {
+      if (row?.bloqueado || row?.status_viabilidade === 'Deputômetro') {
+        showDeputometro(row);
+        return;
+      }
+
+      resultBox.classList.remove('blocked');
       resultBox.style.display = 'block';
+      blockedBody.style.display = 'none';
 
       const nome = row?.nome_candidato || row?.nome_urna || '—';
       const partido = row?.partido || '—';
@@ -606,32 +775,18 @@
       const instagram = row?.instagram || '';
       const afinidade = row?.pontuacao_afinidade ?? computeAfinidade(state.values);
       const justificativa = row?.candidato_recomendado || 'Candidato selecionado por afinidade programática.';
-      const bloqueado = String(row?.bloqueado ?? false);
-      const sessao = row?.id_sessao || state.sessionId;
-      const criadoEm = row?.criado_em || '—';
       const statusViabilidade = row?.status_viabilidade || viabilidadeLabel(afinidade);
 
       resultPill.textContent = 'Última recomendação';
+      resultPill.classList.remove('blocked');
       resultName.textContent = nome;
 
       resultMeta.innerHTML = `
         <strong>Partido:</strong> ${escapeHtml(partido)}<br>
         <strong>Score:</strong> ${escapeHtml(String(afinidade))}<br>
         <strong>Status:</strong> ${escapeHtml(statusViabilidade)}<br>
-        <strong>Justificativa:</strong> ${escapeHtml(justificativa)}<br>
-        <strong>Bloqueado:</strong> ${escapeHtml(bloqueado)}<br>
-        <strong>Sessão:</strong> ${escapeHtml(sessao)}<br>
-        <strong>Criado em:</strong> ${escapeHtml(String(criadoEm))}
+        <strong>Justificativa:</strong> ${escapeHtml(justificativa)}
       `;
-
-      resultGrid.innerHTML = '';
-      addBox('Mulheres', row?.mulheres ?? valueToDbLabel(state.values.mulheres));
-      addBox('Educação', row?.educacao ?? valueToDbLabel(state.values.educacao));
-      addBox('Meio Ambiente', row?.meio_ambiente ?? valueToDbLabel(state.values.meio_ambiente));
-      addBox('Impostos', row?.impostos ?? valueToDbLabel(state.values.impostos));
-      addBox('Direitos', row?.direitos ?? valueToDbLabel(state.values.direitos));
-      addBox('Segurança', row?.seguranca ?? valueToDbLabel(state.values.seguranca));
-      addBox('Transparência', row?.transparencia ?? valueToDbLabel(state.values.transparencia));
 
       if (foto) {
         resultPhoto.src = foto;
@@ -646,21 +801,38 @@
       }
     }
 
-    function viabilidadeLabel(score) {
-      if (score >= 90) return 'Muito alta';
-      if (score >= 75) return 'Alta';
-      if (score >= 60) return 'Média';
-      return 'Baixa';
-    }
+    function showDeputometro(rowOrInfo) {
+      resultBox.classList.add('blocked');
+      resultBox.style.display = 'block';
+      resultPill.textContent = 'Deputômetro';
+      resultPill.classList.add('blocked');
+      resultName.textContent = 'Sem candidato exibido';
+      resultPhoto.removeAttribute('src');
+      resultPhoto.style.display = 'none';
 
-    function addBox(label, value) {
-      const div = document.createElement('div');
-      div.className = 'box';
-      div.innerHTML = `
-        <div class="label">${escapeHtml(label)}</div>
-        <div class="value">${escapeHtml(String(value ?? ''))}</div>
+      const info = rowOrInfo?.candidato_recomendado
+        ? {
+            message: rowOrInfo.candidato_recomendado,
+            reasons: buildDeputometroMessage().reasons
+          }
+        : buildDeputometroMessage();
+
+      resultMeta.innerHTML = `
+        <strong>Mensagem:</strong> ${escapeHtml(info.message)}<br>
+        <strong>Quem Foi Quem:</strong> <a href="${escapeAttr(QUEM_FOI_QUEM_URL)}" target="_blank" rel="noopener noreferrer">Abrir link</a>
       `;
-      resultGrid.appendChild(div);
+
+      blockedBody.style.display = 'block';
+      blockedBody.innerHTML = `
+        ${info.reasons ? `<div><strong>Motivos:</strong></div><div>${info.reasons}</div>` : ''}
+        <div style="margin-top:10px;">
+          Com 2 ou mais respostas em Contrário, ou com <strong>Mulheres & Gênero</strong> / <strong>Meio Ambiente</strong> em Contrário,
+          o sistema não apresenta candidato.
+        </div>
+      `;
+
+      resultBox.classList.remove('blocked');
+      resultBox.classList.add('blocked');
     }
 
     function renderDebug(extra = null) {
@@ -669,6 +841,8 @@
         sessionId: state.sessionId,
         values: state.values,
         payload: buildPayload(),
+        contraryCount: countContrarios(),
+        blocked: mustBlockCandidate(),
         extra
       }, null, 2);
     }
