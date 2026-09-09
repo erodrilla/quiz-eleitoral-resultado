@@ -2,656 +2,623 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Quiz Eleitoral</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quiz Eleitoral - Teste</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root {
-      --bg: #f4f7fb;
-      --panel: rgba(255,255,255,.88);
-      --card: #ffffff;
-      --text: #0f172a;
-      --muted: #64748b;
-      --line: #e2e8f0;
-      --brand: #0f766e;
-      --brand-2: #2563eb;
-      --brand-3: #7c3aed;
-      --danger: #b91c1c;
-      --shadow: 0 16px 40px rgba(15, 23, 42, .10);
-      --radius: 22px;
+    :root{
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --text:#112033;
+      --muted:#61708a;
+      --line:#e6ebf2;
+      --accent:#2563eb;
+      --accent2:#16a34a;
+      --danger:#dc2626;
+      --shadow: 0 10px 30px rgba(15,23,42,.08);
+      --radius:18px;
     }
-
-    * { box-sizing: border-box; }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at top left, rgba(15,118,110,.10), transparent 28%),
-        radial-gradient(circle at top right, rgba(37,99,235,.08), transparent 24%),
-        linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:linear-gradient(180deg,#f7f9fc 0%, #eef4ff 100%);
+      color:var(--text);
     }
-
-    .wrap {
-      width: min(1180px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 28px 0 42px;
+    .wrap{
+      max-width:980px;
+      margin:0 auto;
+      padding:28px 18px 48px;
     }
-
-    .hero {
-      background: linear-gradient(135deg, #0f766e 0%, #0e7490 100%);
-      color: #fff;
-      border-radius: 28px;
-      box-shadow: var(--shadow);
-      padding: 30px;
-      margin-bottom: 18px;
-      position: relative;
-      overflow: hidden;
+    .hero{
+      background:linear-gradient(135deg,#ffffff 0%, #f7fbff 100%);
+      border:1px solid var(--line);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      padding:24px;
+      margin-bottom:18px;
     }
-
-    .hero::after {
-      content: "";
-      position: absolute;
-      inset: auto -120px -120px auto;
-      width: 260px;
-      height: 260px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.08);
-      filter: blur(2px);
+    .topline{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      align-items:flex-start;
     }
-
-    .hero h1 {
-      margin: 0 0 10px;
-      font-size: clamp(28px, 3.2vw, 44px);
-      line-height: 1.05;
-      letter-spacing: -.03em;
-      position: relative;
-      z-index: 1;
+    h1{
+      margin:0 0 8px;
+      font-size:clamp(28px, 4vw, 40px);
+      line-height:1.05;
+      letter-spacing:-.03em;
     }
-
-    .hero p {
-      margin: 0;
-      max-width: 820px;
-      line-height: 1.55;
-      color: rgba(255,255,255,.92);
-      position: relative;
-      z-index: 1;
+    .lead{
+      margin:0;
+      color:var(--muted);
+      max-width:70ch;
+      line-height:1.55;
     }
-
-    .hero .chips {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 18px;
-      position: relative;
-      z-index: 1;
+    .pillrow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:14px;
     }
-
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.12);
-      border: 1px solid rgba(255,255,255,.18);
-      font-size: 13px;
-      color: #fff;
-      backdrop-filter: blur(6px);
+    .pill{
+      font-size:13px;
+      border:1px solid var(--line);
+      background:#fff;
+      padding:8px 10px;
+      border-radius:999px;
+      color:#324155;
     }
-
-    .panel {
-      background: var(--panel);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(226,232,240,.9);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 20px;
-      margin-bottom: 18px;
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:14px;
     }
-
-    .questionList {
-      display: grid;
-      gap: 14px;
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
     }
-
-    .questionBox {
-      background: linear-gradient(180deg, #fbfdff 0%, #f8fafc 100%);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 14px;
-      box-shadow: 0 6px 18px rgba(15,23,42,.04);
+    .qhead{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      margin-bottom:12px;
     }
-
-    .questionHead {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: flex-start;
-      margin-bottom: 8px;
+    .qtitle{
+      margin:0;
+      font-size:18px;
+      line-height:1.25;
     }
-
-    .questionTitle {
-      display: block;
-      font-weight: 800;
-      font-size: 14px;
-      line-height: 1.25;
-      margin: 0;
+    .qdesc{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.45;
     }
-
-    .questionHelp {
-      margin-top: 4px;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.35;
+    .badge{
+      min-width:112px;
+      text-align:center;
+      border-radius:999px;
+      padding:8px 10px;
+      font-size:13px;
+      font-weight:700;
+      border:1px solid var(--line);
+      background:#f8fbff;
     }
-
-    .questionValue {
-      font-weight: 900;
-      color: var(--brand);
-      min-width: 30px;
-      text-align: right;
-      font-size: 15px;
-      flex: 0 0 auto;
+    .badge.contrario{background:#fff5f5;color:#b91c1c;border-color:#fecaca}
+    .badge.moderado{background:#fffaf0;color:#b45309;border-color:#fde68a}
+    .badge.favoravel{background:#effdf3;color:#15803d;border-color:#bbf7d0}
+    input[type="range"]{
+      width:100%;
+      accent-color:var(--accent);
+      cursor:pointer;
     }
-
-    input[type="range"] {
-      width: 100%;
-      accent-color: var(--brand);
+    .scale{
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      font-size:12px;
+      color:var(--muted);
+      margin-top:8px;
     }
-
-    .actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 18px;
-      align-items: center;
+    .controls{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:18px;
     }
-
-    button {
-      border: 0;
-      border-radius: 14px;
-      padding: 13px 18px;
-      font-weight: 800;
-      cursor: pointer;
-      transition: transform .08s ease, opacity .2s ease, box-shadow .2s ease, background .2s ease;
-      box-shadow: 0 10px 24px rgba(15,118,110,.16);
+    button{
+      appearance:none;
+      border:0;
+      border-radius:14px;
+      padding:14px 18px;
+      font-weight:700;
+      cursor:pointer;
+      transition:transform .08s ease, opacity .2s ease, background .2s ease;
     }
-
-    button:hover { transform: translateY(-1px); }
-    button:disabled { opacity: .66; cursor: not-allowed; transform: none; }
-
-    .btnPrimary {
-      background: linear-gradient(135deg, #0f766e 0%, #0e7490 100%);
-      color: #fff;
+    button:active{transform:translateY(1px)}
+    .primary{background:var(--accent);color:#fff}
+    .secondary{background:#e8eef7;color:#17314f}
+    .ghost{background:#fff;border:1px solid var(--line);color:#17314f}
+    .primary:hover{opacity:.95}
+    .secondary:hover,.ghost:hover{background:#f7f9fd}
+    .result{
+      display:none;
+      margin-top:18px;
+      border:1px solid #c7ebd2;
+      background:linear-gradient(180deg,#f0fff4, #fff);
+      border-radius:20px;
+      padding:18px;
     }
-
-    .btnSecondary {
-      background: #e5e7eb;
-      color: #0f172a;
-      box-shadow: none;
+    .result h2{
+      margin:0 0 6px;
+      font-size:22px;
     }
-
-    #status {
-      margin-top: 14px;
-      color: var(--muted);
-      font-size: 14px;
+    .result p{
+      margin:0;
+      color:#335;
+      line-height:1.5;
     }
-
-    .summaryRow {
-      margin-top: 12px;
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
+    .result-meta{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      gap:10px;
     }
-
-    .summaryNote {
-      font-size: 13px;
-      color: var(--muted);
+    .meta{
+      background:#fff;
+      border:1px solid #e4f2e8;
+      border-radius:14px;
+      padding:12px;
     }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 16px;
-      margin-top: 18px;
+    .meta .label{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:4px;
     }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      overflow: hidden;
-      box-shadow: var(--shadow);
-      transition: transform .18s ease, box-shadow .18s ease;
+    .meta .value{
+      font-weight:700;
+      word-break:break-word;
     }
-
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 18px 44px rgba(15,23,42,.12);
+    .debug{
+      display:none;
+      margin-top:18px;
+      background:#0b1220;
+      color:#d7e3ff;
+      border-radius:18px;
+      padding:16px;
+      overflow:auto;
+      border:1px solid rgba(255,255,255,.08);
     }
-
-    .cardTop {
-      position: relative;
-      height: 300px;
-      background: linear-gradient(180deg, #eef2f7 0%, #f8fafc 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 12px;
+    .debug h3{
+      margin:0 0 10px;
+      color:#fff;
+      font-size:16px;
     }
-
-    .cardTop img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      object-position: center center;
-      display: block;
-      border-radius: 12px;
-      background: #f8fafc;
+    pre{
+      margin:0;
+      white-space:pre-wrap;
+      word-break:break-word;
+      font-size:12px;
+      line-height:1.5;
     }
-
-    .badge {
-      position: absolute;
-      left: 14px;
-      top: 14px;
-      z-index: 2;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 7px 11px;
-      border-radius: 999px;
-      color: #fff;
-      font-size: 12px;
-      font-weight: 900;
-      letter-spacing: .2px;
-      box-shadow: 0 8px 18px rgba(0,0,0,.12);
+    .hint{
+      margin-top:12px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.45;
     }
-
-    .cardBody {
-      padding: 16px 16px 18px;
+    .small{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:10px;
     }
-
-    .name {
-      margin: 0 0 6px;
-      font-size: 20px;
-      line-height: 1.15;
-      letter-spacing: -.02em;
+    .status{
+      margin-top:10px;
+      font-size:14px;
+      color:var(--muted);
     }
-
-    .meta {
-      color: var(--muted);
-      margin-bottom: 12px;
-      font-size: 14px;
+    .status.ok{color:#15803d}
+    .status.err{color:var(--danger)}
+    .session{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:12px;
+      color:var(--muted);
+      font-size:13px;
     }
-
-    .stats {
-      display: grid;
-      gap: 8px;
-      font-size: 14px;
-      line-height: 1.35;
-    }
-
-    .stats strong {
-      color: #0f172a;
-    }
-
-    .link {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 14px;
-      color: var(--brand);
-      text-decoration: none;
-      font-weight: 800;
-    }
-
-    .link:hover { text-decoration: underline; }
-
-    .gravame {
-      margin-top: 12px;
-      background: #fef2f2;
-      color: var(--danger);
-      border: 1px solid #fecaca;
-      border-radius: 14px;
-      padding: 10px 12px;
-      font-size: 13px;
-      line-height: 1.4;
-    }
-
-    .empty {
-      padding: 20px;
-      color: var(--muted);
-    }
-
-    .errorBox {
-      margin-top: 14px;
-      padding: 14px;
-      border-radius: 14px;
-      border: 1px solid #fecaca;
-      background: #fff1f2;
-      color: #991b1b;
-      white-space: pre-wrap;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 12px;
-      line-height: 1.5;
-    }
-
-    .footerNote {
-      margin-top: 14px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    @media (max-width: 640px) {
-      .wrap { width: min(100% - 20px, 1180px); padding-top: 20px; }
-      .hero, .panel { padding: 16px; }
-      .cardTop { height: 240px; }
-      .name { font-size: 18px; }
+    code.inline{
+      background:#eef4ff;
+      border:1px solid var(--line);
+      padding:2px 6px;
+      border-radius:8px;
+      color:#23334d;
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <section class="hero">
-      <h1>Encontre o candidato mais compatível</h1>
-      <p>
-        O eleitor responde ao questionário, o sistema calcula o match de perfil,
-        filtra integridade e retorna o melhor candidato com 2 alternativas.
-      </p>
+      <div class="topline">
+        <div>
+          <h1>Quiz Eleitoral</h1>
+          <p class="lead">
+            Arraste a barra de cada tema para indicar sua posição. No modo de teste, a página mostra
+            exatamente o que foi enviado e o que voltou do Supabase, para você validar o fluxo antes de publicar.
+          </p>
+        </div>
+      </div>
 
-      <div class="chips">
-        <span class="chip">Perfil</span>
-        <span class="chip">Integridade</span>
-        <span class="chip">Viabilidade</span>
-        <span class="chip">Top 3</span>
+      <div class="pillrow">
+        <div class="pill">Questionário com barra deslizante</div>
+        <div class="pill">Debug opcional com ?debug=1</div>
+        <div class="pill">Envio direto para Supabase</div>
+        <div class="pill">Sessão salva no navegador</div>
+      </div>
+
+      <div class="session">
+        <div>Sessão atual: <code class="inline" id="sessionIdLabel">-</code></div>
+        <button class="ghost" id="copySessionBtn" type="button">Copiar sessão</button>
+        <button class="ghost" id="resetBtn" type="button">Nova sessão</button>
       </div>
     </section>
 
-    <section class="panel">
-      <div class="questionList">
-        <div class="questionBox">
-          <div class="questionHead">
-            <div>
-              <label class="questionTitle" for="mulheres">Mulheres & Gênero</label>
-              <div class="questionHelp">A criação de políticas públicas específicas e orçamento garantido para o combate à violência contra a mulher e apoio à igualdade de gênero deve ser prioridade no mandato? Dê peso de 0 a 10.</div>
-            </div>
-            <span class="questionValue" id="valMulheres">5</span>
-          </div>
-          <input id="mulheres" type="range" min="0" max="10" value="5" />
-        </div>
+    <section class="grid" id="questions"></section>
 
-        <div class="questionBox">
-          <div class="questionHead">
-            <div>
-              <label class="questionTitle" for="educacao">Educação & Serv. Público</label>
-              <div class="questionHelp">O foco principal dos investimentos em educação deve ser o fortalecimento e expansão do ensino público e gratuito? Dê peso de 0 a 10.</div>
-            </div>
-            <span class="questionValue" id="valEducacao">5</span>
-          </div>
-          <input id="educacao" type="range" min="0" max="10" value="5" />
-        </div>
-
-        <div class="questionBox">
-          <div class="questionHead">
-            <div>
-              <label class="questionTitle" for="meioAmbiente">Meio Ambiente</label>
-              <div class="questionHelp">A fiscalização ambiental deve ser mais rigorosa, restringindo empreendimentos que impactem áreas de preservação? Dê peso de 0 a 10.</div>
-            </div>
-            <span class="questionValue" id="valMeioAmbiente">5</span>
-          </div>
-          <input id="meioAmbiente" type="range" min="0" max="10" value="5" />
-        </div>
-
-        <div class="questionBox">
-          <div class="questionHead">
-            <div>
-              <label class="questionTitle" for="impostos">Taxação sobre Renda/Fortunas</label>
-              <div class="questionHelp">Você apoia o aumento da taxação sobre grandes fortunas e rendas mais altas para financiar serviços públicos? Dê peso de 0 a 10.</div>
-            </div>
-            <span class="questionValue" id="valImpostos">5</span>
-          </div>
-          <input id="impostos" type="range" min="0" max="10" value="5" />
-        </div>
-
-        <div class="questionBox">
-          <div class="questionHead">
-            <div>
-              <label class="questionTitle" for="direitos">Direitos Sociais</label>
-              <div class="questionHelp">A defesa dos direitos de pessoas negras, povos indígenas e da comunidade LGBTQIA+, com foco no combate ao racismo e à discriminação, deve ser pauta prioritária do candidato Dê peso de 0 a 10.</div>
-            </div>
-            <span class="questionValue" id="valDireitos">5</span>
-          </div>
-          <input id="direitos" type="range" min="0" max="10" value="5" />
-        </div>
-
-        <div class="questionBox">
-          <div class="questionHead">
-            <div>
-              <label class="questionTitle" for="seguranca">Segurança Pública</label>
-              <div class="questionHelp">A atuação na segurança pública deve focar prioritariamente em prevenção, inteligência e direitos humanos, em vez de apenas no endurecimento de penas Dê peso de 0 a 10.</div>
-            </div>
-            <span class="questionValue" id="valSeguranca">5</span>
-          </div>
-          <input id="seguranca" type="range" min="0" max="10" value="5" />
-        </div>
-
-        <div class="questionBox">
-          <div class="questionHead">
-            <div>
-              <label class="questionTitle" for="transparencia">Transparência</label>
-              <div class="questionHelp">Candidatos devem ter o compromisso explícito de combater mecanismos opacos como o orçamento secreto/emendas de relator? Dê peso de 0 a 10.</div>
-            </div>
-            <span class="questionValue" id="valTransparencia">5</span>
-          </div>
-          <input id="transparencia" type="range" min="0" max="10" value="5" />
+    <section class="card">
+      <div class="qhead">
+        <div>
+          <h2 class="qtitle">Finalizar teste</h2>
+          <p class="qdesc">
+            Quando você clicar em enviar, a página grava as respostas e mostra o retorno.
+            Se o banco estiver com trigger/função, o candidato recomendado volta na mesma hora.
+          </p>
         </div>
       </div>
 
-      <div class="actions">
-        <button id="btnBuscar" class="btnPrimary">Encontrar top 3</button>
-        <button id="btnResetar" class="btnSecondary" type="button">Resetar pesos</button>
+      <div class="controls">
+        <button class="primary" id="submitBtn" type="button">Enviar respostas</button>
+        <button class="secondary" id="fillFavoravelBtn" type="button">Preencher Favorável</button>
+        <button class="secondary" id="fillModeradoBtn" type="button">Preencher Moderado</button>
+        <button class="secondary" id="fillContrarioBtn" type="button">Preencher Contrário</button>
       </div>
 
-      <div id="status">Pronto para buscar.</div>
-      <div class="summaryRow">
-        <div class="summaryNote">A ordem é: match de perfil → integridade → viabilidade → top 3.</div>
+      <div class="status" id="status">Pronto para testar.</div>
+
+      <div class="result" id="resultBox">
+        <h2 id="resultTitle">Resultado</h2>
+        <p id="resultText"></p>
+
+        <div class="result-meta" id="resultMeta"></div>
       </div>
 
-      <div id="erro" class="errorBox" style="display:none;"></div>
+      <div class="hint">
+        Se a recomendação não mudar quando você altera os sliders, o problema está na lógica do backend.
+        Se mudar aqui mas não mudar no site publicado, o problema está no `index` ou na chamada ao Supabase.
+      </div>
     </section>
 
-    <section id="resultado" class="cards"></section>
+    <section class="debug card" id="debugBox">
+      <h3>Debug</h3>
+      <pre id="debugOutput"></pre>
+    </section>
   </div>
 
   <script>
-    const SUPABASE_URL = "https://hglifytalonmncphycfp.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ";
+    const SHOW_DEBUG = new URLSearchParams(window.location.search).has('debug');
 
-    const SCORE_MAX_POR_TEMA = 7;
+    // Troque pelos seus dados do projeto.
+    const SUPABASE_URL = 'https://SEU-PROJETO.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ';
+    const SUPABASE_TABLE = 'eleitores_respostas';
 
-    const statusEl = document.getElementById("status");
-    const erroEl = document.getElementById("erro");
-    const resultadoEl = document.getElementById("resultado");
-    const btnBuscar = document.getElementById("btnBuscar");
-    const btnResetar = document.getElementById("btnResetar");
-
-    const sliders = [
-      ["mulheres", "valMulheres"],
-      ["educacao", "valEducacao"],
-      ["meioAmbiente", "valMeioAmbiente"],
-      ["impostos", "valImpostos"],
-      ["direitos", "valDireitos"],
-      ["seguranca", "valSeguranca"],
-      ["transparencia", "valTransparencia"]
+    const QUESTIONS = [
+      { key: 'mulheres', label: 'Mulheres & Gênero', help: 'Como você quer tratar políticas para mulheres e diversidade?' },
+      { key: 'educacao', label: 'Educação & Serviço Público', help: 'Qual a sua posição sobre educação e valorização do serviço público?' },
+      { key: 'meio_ambiente', label: 'Meio Ambiente', help: 'Como você enxerga políticas ambientais?' },
+      { key: 'impostos', label: 'Taxação sobre Renda/Fortunas', help: 'O que pensa sobre taxar mais quem tem mais renda e patrimônio?' },
+      { key: 'direitos', label: 'Direitos Sociais', help: 'Qual a sua visão sobre direitos sociais?' },
+      { key: 'seguranca', label: 'Segurança Pública', help: 'Como você quer tratar segurança pública?' },
+      { key: 'transparencia', label: 'Transparência', help: 'Como você avalia transparência e controle público?' }
     ];
 
-    function totalPesos() {
-      return sliders.reduce((acc, [id]) => acc + Number(document.getElementById(id).value || 0), 0);
+    const state = {
+      sessionId: getOrCreateSessionId(),
+      values: {}
+    };
+
+    let supabaseClient = null;
+    if (window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_URL.includes('SEU-PROJETO')) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
 
-    function fmtPercentualPerfil(score) {
-      const maxPossivel = totalPesos() * SCORE_MAX_POR_TEMA;
-      if (!maxPossivel) return "0.0%";
-      return `${((Number(score) / maxPossivel) * 100).toFixed(1)}%`;
-    }
+    const questionsRoot = document.getElementById('questions');
+    const sessionIdLabel = document.getElementById('sessionIdLabel');
+    const debugBox = document.getElementById('debugBox');
+    const debugOutput = document.getElementById('debugOutput');
+    const statusEl = document.getElementById('status');
+    const resultBox = document.getElementById('resultBox');
+    const resultTitle = document.getElementById('resultTitle');
+    const resultText = document.getElementById('resultText');
+    const resultMeta = document.getElementById('resultMeta');
 
-    function safeFoto(url) {
-      if (url && String(url).trim()) return url;
-      return "https://placehold.co/900x900/eff6ff/0f172a?text=📸";
-    }
+    sessionIdLabel.textContent = state.sessionId;
+    debugBox.style.display = SHOW_DEBUG ? 'block' : 'none';
 
-    function syncLabels() {
-      sliders.forEach(([id, labelId]) => {
-        document.getElementById(labelId).textContent = document.getElementById(id).value;
+    QUESTIONS.forEach((q, index) => {
+      const value = 50;
+      state.values[q.key] = value;
+
+      const card = document.createElement('article');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="qhead">
+          <div>
+            <h2 class="qtitle">${index + 1}. ${q.label}</h2>
+            <p class="qdesc">${q.help}</p>
+          </div>
+          <div class="badge moderado" id="${q.key}-badge">Moderado</div>
+        </div>
+
+        <input
+          id="${q.key}-range"
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          value="${value}"
+          aria-label="${q.label}"
+        />
+
+        <div class="scale">
+          <span>Contrário</span>
+          <span>Moderado</span>
+          <span>Favorável</span>
+        </div>
+      `;
+      questionsRoot.appendChild(card);
+
+      const range = card.querySelector(`#${q.key}-range`);
+      const badge = card.querySelector(`#${q.key}-badge`);
+
+      const sync = () => {
+        const v = Number(range.value);
+        state.values[q.key] = v;
+        const label = sliderLabel(v);
+        badge.textContent = label;
+        badge.className = `badge ${badgeClass(v)}`;
+        renderDebug();
+      };
+
+      range.addEventListener('input', sync);
+      sync();
+    });
+
+    document.getElementById('copySessionBtn').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(state.sessionId);
+        setStatus('Sessão copiada.', 'ok');
+      } catch (e) {
+        setStatus('Não foi possível copiar a sessão.', 'err');
+      }
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      state.sessionId = generateSessionId();
+      localStorage.setItem('quiz_session_id', state.sessionId);
+      sessionIdLabel.textContent = state.sessionId;
+
+      document.querySelectorAll('input[type="range"]').forEach(input => {
+        input.value = 50;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+
+      resultBox.style.display = 'none';
+      setStatus('Nova sessão criada.', 'ok');
+      renderDebug();
+    });
+
+    document.getElementById('fillFavoravelBtn').addEventListener('click', () => {
+      setAll(85);
+      setStatus('Preenchido como Favorável.', 'ok');
+    });
+
+    document.getElementById('fillModeradoBtn').addEventListener('click', () => {
+      setAll(50);
+      setStatus('Preenchido como Moderado.', 'ok');
+    });
+
+    document.getElementById('fillContrarioBtn').addEventListener('click', () => {
+      setAll(15);
+      setStatus('Preenchido como Contrário.', 'ok');
+    });
+
+    document.getElementById('submitBtn').addEventListener('click', submitQuiz);
+
+    function setAll(value) {
+      document.querySelectorAll('input[type="range"]').forEach(input => {
+        input.value = value;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
       });
     }
 
-    function getPesos() {
+    function sliderLabel(v) {
+      if (v <= 33) return 'Contrário';
+      if (v <= 66) return 'Moderado';
+      return 'Favorável';
+    }
+
+    function badgeClass(v) {
+      if (v <= 33) return 'contrario';
+      if (v <= 66) return 'moderado';
+      return 'favoravel';
+    }
+
+    function valueToDbLabel(v) {
+      return sliderLabel(v);
+    }
+
+    function computeAfinidade(values) {
+      const nums = Object.values(values);
+      const avg = nums.reduce((a,b) => a + b, 0) / nums.length;
+      return Math.round(avg);
+    }
+
+    function buildPayload() {
+      const values = {};
+      for (const q of QUESTIONS) {
+        values[q.key] = valueToDbLabel(state.values[q.key]);
+      }
+
+      const pontuacao = computeAfinidade(state.values);
+
       return {
-        p_mulheres: Number(document.getElementById("mulheres").value),
-        p_educacao: Number(document.getElementById("educacao").value),
-        p_meio_ambiente: Number(document.getElementById("meioAmbiente").value),
-        p_impostos: Number(document.getElementById("impostos").value),
-        p_direitos: Number(document.getElementById("direitos").value),
-        p_seguranca: Number(document.getElementById("seguranca").value),
-        p_transparencia: Number(document.getElementById("transparencia").value)
+        ...values,
+        pontuacao_afinidade: pontuacao,
+        candidato_recomendado: 'Candidato selecionado por afinidade programática.',
+        nome_candidato: null,
+        partido: null,
+        criado_em: new Date().toISOString(),
+        id_sessao: state.sessionId,
+        bloqueado: false
       };
     }
 
-    function showError(message) {
-      erroEl.style.display = "block";
-      erroEl.textContent = message;
-    }
+    async function submitQuiz() {
+      const payload = buildPayload();
+      setStatus('Enviando respostas...', '');
 
-    function clearError() {
-      erroEl.style.display = "none";
-      erroEl.textContent = "";
-    }
-
-    function renderCards(dados) {
-      if (!dados.length) {
-        resultadoEl.innerHTML = `<div class="empty">Nenhum candidato encontrado com os pesos atuais.</div>`;
+      if (!supabaseClient) {
+        showResult({
+          ok: false,
+          message: 'Supabase não configurado. Preencha SUPABASE_URL e SUPABASE_ANON_KEY no index.',
+          payload
+        });
+        setStatus('Supabase não configurado.', 'err');
         return;
       }
 
-      resultadoEl.innerHTML = dados.map(item => {
-        const tipo = item.tipo || "Recomendado";
-        const cor =
-          tipo === "Principal" ? "var(--brand)" :
-          tipo === "Alternativa 1" ? "var(--brand-2)" :
-          "var(--brand-3)";
-
-        const titulo = item.nome_urna || item.nome_candidato || "-";
-        const partido = item.partido || "-";
-        const numero = item.numero_candidato || "-";
-
-        return `
-          <article class="card">
-            <div class="cardTop">
-              <img
-                src="${safeFoto(item.foto)}"
-                alt="${titulo}"
-                onerror="this.src='https://placehold.co/900x900/eff6ff/0f172a?text=📸'"
-              />
-              <div class="badge" style="background:${cor};">${tipo}</div>
-            </div>
-
-            <div class="cardBody">
-              <h3 class="name">${titulo}</h3>
-              <div class="meta">${partido} · Nº ${numero}</div>
-
-              <div class="stats">
-                <div><strong>Pontuação de perfil:</strong> ${fmtPercentualPerfil(item.score_perfil)}</div>
-                <div><strong>Integridade:</strong> ${item.status_integridade || "-"}</div>
-                <div><strong>Viabilidade:</strong> ${item.status_viabilidade || "-"}</div>
-              </div>
-
-              ${item.instagram ? `
-                <a class="link" href="${item.instagram}" target="_blank" rel="noopener noreferrer">
-                  Abrir Instagram
-                </a>
-              ` : ""}
-
-              ${item.descricao_gravame ? `
-                <div class="gravame">${item.descricao_gravame}</div>
-              ` : ""}
-            </div>
-          </article>
-        `;
-      }).join("");
-    }
-
-    async function buscarTop3() {
       try {
-        btnBuscar.disabled = true;
-        statusEl.textContent = "Buscando candidatos...";
-        clearError();
-        resultadoEl.innerHTML = "";
+        const { data, error } = await supabaseClient
+          .from(SUPABASE_TABLE)
+          .insert(payload)
+          .select()
+          .single();
 
-        const payload = getPesos();
+        if (error) throw error;
 
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/recomendar_top3_sp`, {
-          method: "POST",
-          headers: {
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
+        showResult({
+          ok: true,
+          message: 'Respostas enviadas com sucesso.',
+          payload,
+          row: data
         });
 
-        const rawText = await res.text();
-
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}\n\n${rawText}`);
-        }
-
-        let dados;
-        try {
-          dados = JSON.parse(rawText);
-        } catch (e) {
-          throw new Error(`Resposta não veio em JSON válido:\n\n${rawText}`);
-        }
-
-        statusEl.textContent = `Encontrados ${dados.length} candidatos.`;
-        renderCards(dados);
-
+        setStatus('Salvo no Supabase.', 'ok');
+        renderDebug({ payload, row: data });
       } catch (err) {
-        console.error(err);
-        statusEl.textContent = "Erro ao buscar candidatos.";
-        resultadoEl.innerHTML = `<div class="empty" style="color:#b91c1c;">Não foi possível carregar o top 3.</div>`;
-        showError(String(err.message || err));
-      } finally {
-        btnBuscar.disabled = false;
+        showResult({
+          ok: false,
+          message: 'Falha ao gravar no Supabase.',
+          payload,
+          error: serializeError(err)
+        });
+        setStatus('Erro ao salvar.', 'err');
+        renderDebug({ payload, error: serializeError(err) });
       }
     }
 
-    function resetarPesos() {
-      sliders.forEach(([id, labelId]) => {
-        const el = document.getElementById(id);
-        el.value = 5;
-        document.getElementById(labelId).textContent = "5";
-      });
-      clearError();
-      statusEl.textContent = "Pesos resetados. Pronto para buscar.";
-      resultadoEl.innerHTML = "";
+    function showResult(obj) {
+      resultBox.style.display = 'block';
+
+      if (obj.ok) {
+        resultTitle.textContent = 'Resultado salvo';
+        const row = obj.row || {};
+        resultText.textContent = obj.message;
+
+        resultMeta.innerHTML = '';
+        addMeta('Sessão', row.id_sessao || state.sessionId);
+        addMeta('Pontuação afinidade', row.pontuacao_afinidade ?? obj.payload.pontuacao_afinidade);
+        addMeta('Candidato', row.nome_candidato ?? '—');
+        addMeta('Partido', row.partido ?? '—');
+        addMeta('Bloqueado', String(row.bloqueado ?? false));
+        addMeta('ID', row.id ?? '—');
+      } else {
+        resultTitle.textContent = 'Resultado de teste';
+        resultText.textContent = obj.message;
+        resultMeta.innerHTML = '';
+        addMeta('Sessão', state.sessionId);
+        addMeta('Pontuação afinidade', obj.payload.pontuacao_afinidade);
+        addMeta('Candidato recomendado', obj.payload.candidato_recomendado);
+        addMeta('Nome candidato', obj.payload.nome_candidato ?? '—');
+        addMeta('Partido', obj.payload.partido ?? '—');
+      }
     }
 
-    sliders.forEach(([id, labelId]) => {
-      const el = document.getElementById(id);
-      el.addEventListener("input", () => {
-        document.getElementById(labelId).textContent = el.value;
-      });
-    });
+    function addMeta(label, value) {
+      const box = document.createElement('div');
+      box.className = 'meta';
+      box.innerHTML = `<div class="label">${label}</div><div class="value">${escapeHtml(String(value ?? ''))}</div>`;
+      resultMeta.appendChild(box);
+    }
 
-    btnBuscar.addEventListener("click", buscarTop3);
-    btnResetar.addEventListener("click", resetarPesos);
+    function renderDebug(extra = null) {
+      if (!SHOW_DEBUG) return;
+      const payload = buildPayload();
+      const debugObj = {
+        sessionId: state.sessionId,
+        values: state.values,
+        payload,
+        extra
+      };
+      debugOutput.textContent = JSON.stringify(debugObj, null, 2);
+    }
 
-    syncLabels();
+    function setStatus(text, kind) {
+      statusEl.textContent = text;
+      statusEl.className = 'status' + (kind ? ' ' + kind : '');
+    }
+
+    function getOrCreateSessionId() {
+      const saved = localStorage.getItem('quiz_session_id');
+      if (saved) return saved;
+      const id = generateSessionId();
+      localStorage.setItem('quiz_session_id', id);
+      return id;
+    }
+
+    function generateSessionId() {
+      return Math.random().toString(36).slice(2, 9);
+    }
+
+    function serializeError(err) {
+      if (!err) return null;
+      return {
+        message: err.message || String(err),
+        code: err.code || null,
+        details: err.details || null,
+        hint: err.hint || null
+      };
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    renderDebug();
   </script>
 </body>
 </html>
