@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Viabilidade — Deputado Federal SP</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --card: rgba(255,255,255,0.06);
+      --card-2: rgba(255,255,255,0.09);
+      --line: rgba(255,255,255,0.12);
+      --text: #f7fbff;
+      --muted: rgba(255,255,255,0.68);
+      --muted2: rgba(255,255,255,0.45);
+      --green: #22c55e;
+      --blue: #60a5fa;
+      --yellow: #fbbf24;
+      --red: #fb7185;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(96,165,250,0.14), transparent 28%),
+        linear-gradient(180deg, #091424 0%, #07111f 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 16px 40px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(96,165,250,0.18), rgba(34,197,94,0.12));
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.25);
+      margin-bottom: 18px;
+    }
+
+    .hero-top {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(24px, 3vw, 36px);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+    }
+
+    .sub {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      max-width: 760px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1.4fr 0.9fr auto;
+      gap: 10px;
+      margin: 18px 0;
+    }
+
+    .input, .select, .btn {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      padding: 13px 14px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .input::placeholder { color: rgba(255,255,255,0.38); }
+    .btn {
+      cursor: pointer;
+      font-weight: 700;
+      background: linear-gradient(135deg, rgba(96,165,250,0.9), rgba(34,197,94,0.85));
+      border: none;
+    }
+    .btn:active { transform: translateY(1px); }
+
+    .meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 0 0 16px;
+      color: var(--muted2);
+      font-size: 13px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+    }
+
+    .card-head {
+      display: flex;
+      gap: 14px;
+      padding: 16px;
+      align-items: center;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), transparent);
+    }
+
+    .foto {
+      width: 74px;
+      height: 74px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex: 0 0 auto;
+      border: 2px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .who {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .rank {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      color: var(--muted2);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .name {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+      word-break: break-word;
+    }
+
+    .party {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .score-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(34,197,94,0.15);
+      color: #bbf7d0;
+      border: 1px solid rgba(34,197,94,0.25);
+    }
+
+    .bar-wrap {
+      padding: 0 16px 16px;
+    }
+
+    .bar-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .bar {
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .bar > span {
+      display: block;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #60a5fa, #22c55e);
+      width: 0%;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 0 16px 16px;
+    }
+
+    .stat {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 10px;
+    }
+
+    .stat .k {
+      display: block;
+      color: var(--muted2);
+      font-size: 11px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .stat .v {
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 0 16px 16px;
+    }
+
+    .link {
+      text-decoration: none;
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .empty, .error {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .foot {
+      margin-top: 18px;
+      color: var(--muted2);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      .controls { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="hero-top">
+        <div>
+          <h1>Viabilidade — Deputado Federal SP</h1>
+          <p class="sub">
+            Ranking em tempo real com base na view <code>viabilidade_deputado_federal_sp</code>.
+            Mostra voto total, seções, zonas e o status de viabilidade.
+          </p>
+        </div>
+        <div class="badge" id="status-badge">Carregando...</div>
+      </div>
+
+      <div class="controls">
+        <input id="busca" class="input" type="text" placeholder="Buscar candidato..." />
+        <select id="filtro" class="select">
+          <option value="todos">Todos os status</option>
+          <option value="Muito alta">Muito alta</option>
+          <option value="Alta">Alta</option>
+          <option value="Média">Média</option>
+          <option value="Baixa">Baixa</option>
+        </select>
+        <button class="btn" id="btnAtualizar">Atualizar</button>
+      </div>
+
+      <div class="meta" id="meta"></div>
+    </div>
+
+    <div id="conteudo"></div>
+
+    <div class="foot">
+      Dica: se quiser, esta página pode ficar em uma rota própria, por exemplo <code>/viabilidade/</code>.
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://hglifytalonmncphycfp.supabase.co";
+    const SUPABASE_ANON_KEY = "COLE_AQUI_SUA_ANON_KEY_SE_QUISER_TROCAR";
+
+    const elConteudo = document.getElementById("conteudo");
+    const elMeta = document.getElementById("meta");
+    const elStatus = document.getElementById("status-badge");
+    const elBusca = document.getElementById("busca");
+    const elFiltro = document.getElementById("filtro");
+    const elBtn = document.getElementById("btnAtualizar");
+
+    let dados = [];
+
+    function fmtNumero(n) {
+      return new Intl.NumberFormat("pt-BR").format(Number(n || 0));
+    }
+
+    function fmtPct(n) {
+      return `${(Number(n || 0) * 100).toFixed(1)}%`;
+    }
+
+    function fotoOuPadrao(url, nome) {
+      if (url && typeof url === "string" && url.trim()) return url;
+      const txt = encodeURIComponent((nome || "📸").slice(0, 2));
+      return `https://placehold.co/160x160/1e3a5f/ffffff?text=${txt}`;
+    }
+
+    function statusClass(status) {
+      switch (status) {
+        case "Muito alta": return "background: rgba(34,197,94,0.15); color:#bbf7d0; border-color: rgba(34,197,94,0.25)";
+        case "Alta": return "background: rgba(96,165,250,0.15); color:#dbeafe; border-color: rgba(96,165,250,0.25)";
+        case "Média": return "background: rgba(251,191,36,0.15); color:#fef3c7; border-color: rgba(251,191,36,0.25)";
+        default: return "background: rgba(251,113,133,0.15); color:#ffe4e6; border-color: rgba(251,113,133,0.25)";
+      }
+    }
+
+    async function carregar() {
+      elStatus.textContent = "Carregando...";
+      elConteudo.innerHTML = `<div class="empty">Buscando dados da view...</div>`;
+
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/viabilidade_deputado_federal_sp?select=*&order=total_votos.desc`,
+          {
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        dados = await res.json();
+        elStatus.textContent = `${dados.length} registros carregados`;
+        render();
+      } catch (err) {
+        console.error(err);
+        elStatus.textContent = "Erro ao carregar";
+        elConteudo.innerHTML = `<div class="error">Não foi possível carregar a view. Verifique a URL, a chave anônima e se a view está publicada no PostgREST.</div>`;
+      }
+    }
+
+    function render() {
+      const busca = elBusca.value.trim().toUpperCase();
+      const filtro = elFiltro.value;
+
+      const filtrados = dados.filter(item => {
+        const nome = String(item.nome_urna || item.nome_candidato || "").toUpperCase();
+        const okBusca = !busca || nome.includes(busca);
+        const okStatus = filtro === "todos" || item.status_viabilidade === filtro;
+        return okBusca && okStatus;
+      });
+
+      elMeta.innerHTML = `
+        <span>Total na view: <strong>${dados.length}</strong></span>
+        <span>Exibindo: <strong>${filtrados.length}</strong></span>
+        <span>Maior voto: <strong>${dados[0] ? fmtNumero(dados[0].total_votos) : "0"}</strong></span>
+      `;
+
+      if (!filtrados.length) {
+        elConteudo.innerHTML = `<div class="empty">Nenhum resultado para os filtros atuais.</div>`;
+        return;
+      }
+
+      const maxVotos = Math.max(...filtrados.map(x => Number(x.total_votos || 0)), 1);
+
+      elConteudo.innerHTML = `
+        <div class="grid">
+          ${filtrados.map((item, idx) => {
+            const p = item.total_votos / maxVotos;
+            const nomeExibido = item.nome_candidato || item.nome_urna || "Sem nome";
+            const partido = item.partido || "—";
+            const numero = item.numero_candidato || "—";
+            const foto = fotoOuPadrao(item.foto, nomeExibido);
+            const instagram = item.instagram || "";
+            const status = item.status_viabilidade || "—";
+            const styleStatus = statusClass(status);
+
+            return `
+              <article class="card">
+                <div class="card-head">
+                  <img class="foto" src="${foto}" alt="${nomeExibido}" onerror="this.src='https://placehold.co/160x160/1e3a5f/ffffff?text=📸'">
+                  <div class="who">
+                    <div class="rank">#${idx + 1} • ${status}</div>
+                    <h2 class="name">${nomeExibido}</h2>
+                    <div class="party">${partido} • Nº ${numero}</div>
+                    <div class="score-pill" style="${styleStatus}">Viabilidade: ${status}</div>
+                  </div>
+                </div>
+
+                <div class="bar-wrap">
+                  <div class="bar-top">
+                    <span>Votos totais</span>
+                    <strong>${fmtNumero(item.total_votos)}</strong>
+                  </div>
+                  <div class="bar"><span style="width:${Math.max(3, p * 100)}%"></span></div>
+                </div>
+
+                <div class="stats">
+                  <div class="stat">
+                    <span class="k">Seções com voto</span>
+                    <span class="v">${fmtNumero(item.secoes_com_voto)}</span>
+                  </div>
+                  <div class="stat">
+                    <span class="k">Zonas com voto</span>
+                    <span class="v">${fmtNumero(item.zonas_com_voto)}</span>
+                  </div>
+                  <div class="stat">
+                    <span class="k">Score final</span>
+                    <span class="v">${fmtPct(item.score_final)}</span>
+                  </div>
+                </div>
+
+                <div class="links">
+                  ${instagram ? `<a class="link" href="${instagram}" target="_blank" rel="noopener noreferrer">Instagram</a>` : ""}
+                </div>
+              </article>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    elBusca.addEventListener("input", render);
+    elFiltro.addEventListener("change", render);
+    elBtn.addEventListener("click", carregar);
+
+    carregar();
+  </script>
+</body>
+</html>
