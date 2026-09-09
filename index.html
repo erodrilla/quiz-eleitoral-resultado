@@ -234,6 +234,19 @@
       color: var(--muted);
     }
 
+    .errorBox {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid #fecaca;
+      background: #fff1f2;
+      color: #991b1b;
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
     .footerNote {
       margin-top: 14px;
       color: var(--muted);
@@ -324,6 +337,8 @@
       <div class="footerNote">
         A ordem é: match de perfil → integridade → viabilidade → top 3.
       </div>
+
+      <div id="erro" class="errorBox" style="display:none;"></div>
     </section>
 
     <section id="resultado" class="cards"></section>
@@ -334,6 +349,7 @@
     const SUPABASE_ANON_KEY = "COLE_AQUI_SUA_ANON_KEY_REAL";
 
     const statusEl = document.getElementById("status");
+    const erroEl = document.getElementById("erro");
     const resultadoEl = document.getElementById("resultado");
     const btnBuscar = document.getElementById("btnBuscar");
     const btnResetar = document.getElementById("btnResetar");
@@ -379,6 +395,16 @@
         p_seguranca: Number(document.getElementById("seguranca").value),
         p_transparencia: Number(document.getElementById("transparencia").value)
       };
+    }
+
+    function showError(message) {
+      erroEl.style.display = "block";
+      erroEl.textContent = message;
+    }
+
+    function clearError() {
+      erroEl.style.display = "none";
+      erroEl.textContent = "";
     }
 
     function renderCards(dados) {
@@ -437,6 +463,7 @@
       try {
         btnBuscar.disabled = true;
         statusEl.textContent = "Buscando candidatos...";
+        clearError();
         resultadoEl.innerHTML = "";
 
         const payload = getPesos();
@@ -451,12 +478,19 @@
           body: JSON.stringify(payload)
         });
 
+        const rawText = await res.text();
+
         if (!res.ok) {
-          const txt = await res.text();
-          throw new Error(txt || `HTTP ${res.status}`);
+          throw new Error(`HTTP ${res.status}\n\n${rawText}`);
         }
 
-        const dados = await res.json();
+        let dados;
+        try {
+          dados = JSON.parse(rawText);
+        } catch (e) {
+          throw new Error(`Resposta não veio em JSON válido:\n\n${rawText}`);
+        }
+
         statusEl.textContent = `Encontrados ${dados.length} candidatos.`;
         renderCards(dados);
 
@@ -464,6 +498,7 @@
         console.error(err);
         statusEl.textContent = "Erro ao buscar candidatos.";
         resultadoEl.innerHTML = `<div class="empty" style="color:#b91c1c;">Não foi possível carregar o top 3.</div>`;
+        showError(String(err.message || err));
       } finally {
         btnBuscar.disabled = false;
       }
@@ -475,6 +510,7 @@
         el.value = 5;
         document.getElementById(labelId).textContent = "5";
       });
+      clearError();
       statusEl.textContent = "Pesos resetados. Pronto para buscar.";
       resultadoEl.innerHTML = "";
     }
