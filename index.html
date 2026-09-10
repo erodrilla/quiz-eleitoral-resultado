@@ -599,7 +599,16 @@
         || Number(state.values.meio_ambiente) <= 33
         || countContrarios() >= 2;
     }
+    function viabilityRank(status) {
+  const s = String(status ?? '').toLowerCase();
 
+  if (s.includes('muito alta')) return 4;
+  if (s.includes('alta')) return 3;
+  if (s.includes('média') || s.includes('media')) return 2;
+  if (s.includes('baixa')) return 1;
+
+  return 0;
+}
     async function submitQuiz() {
       const payload = buildPayload();
       const modoResultado = getModoResultado();
@@ -660,15 +669,29 @@
 
         if (rpcResponse.error) throw rpcResponse.error;
 
-        const linhas = (Array.isArray(rpcResponse.data) ? rpcResponse.data : [rpcResponse.data])
-          .filter(Boolean)
-          .filter(isProgressista);
+       const linhas = (Array.isArray(rpcResponse.data) ? rpcResponse.data : [rpcResponse.data])
+  .filter(Boolean)
+  .filter(isProgressista)
+  .filter(c => c.bloquear_candidatos !== true && c.bloquear_candidatos !== 'true')
+  .filter(c => c.bloqueado !== true && c.bloqueado !== 'true')
+  .sort((a, b) => {
+    const vr = viabilityRank(b.status_viabilidade) - viabilityRank(a.status_viabilidade);
+    if (vr !== 0) return vr;
 
-        if (!linhas.length) {
-          showSemCandidato();
-          setStatus('Nenhum candidato progressista retornou da consulta.', 'warn');
-          return;
-        }
+    const sr = Number(b?.score_final ?? 0) - Number(a?.score_final ?? 0);
+    if (sr !== 0) return sr;
+
+    return Number(b?.total_votos ?? 0) - Number(a?.total_votos ?? 0);
+  });
+
+if (!linhas.length) {
+  showSemCandidato();
+  setStatus('Nenhum candidato progressista retornou da consulta.', 'warn');
+  return;
+}
+
+const recomendacaoFinal = linhas[0] || {};
+const alternativas = linhas.slice(1, 3);
 
         const recomendacaoFinal = linhas[0] || {};
         const alternativas = linhas.slice(1, 3);
