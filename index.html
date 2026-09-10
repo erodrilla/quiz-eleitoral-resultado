@@ -54,6 +54,12 @@
     .meta strong{color:#102038}
     .meta a{color:var(--accent);text-decoration:none;font-weight:700}
     .meta a:hover{text-decoration:underline}
+    .alt-list{padding:0 18px 18px;display:none;gap:10px;}
+    .alt-title{margin:0 0 4px;font-size:13px;font-weight:700;color:var(--muted);}
+    .alt-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fafcff;}
+    .alt-item img{width:44px;height:44px;border-radius:50%;object-fit:cover;background:#eef3f9;flex-shrink:0;}
+    .alt-info{font-size:13px;line-height:1.4;}
+    .alt-info strong{display:block;font-size:14px;}
     @media (max-width:720px){
       .result-top{grid-template-columns:1fr}
       .photo-box{border-right:0;border-bottom:1px solid #e4f2e8}
@@ -105,13 +111,14 @@
             <button class="btn secondary" id="shareBtn" type="button" style="display:none; margin-top:12px;">Compartilhar resultado</button>
           </div>
         </div>
+        <div class="alt-list" id="altList"></div>
       </div>
     </section>
   </div>
 
   <script>
     const SUPABASE_URL = 'https://hglifytalonmncphycfp.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ';
+    const SUPABASE_ANON_KEY = 'SUA_ANON_KEY_AQUI';
     const SUPABASE_TABLE = 'eleitores_respostas';
     const QUEM_FOI_QUEM_URL = 'https://quemfoiquem.org.br/';
     const DEPUTOMETRO_URL = 'https://www.agencialupa.org/institucional/2026/07/31/deputometro-conheca-o-painel-de-monitoramento-da-lupa/';
@@ -140,6 +147,7 @@
     const resultPhoto = document.getElementById('resultPhoto');
     const photoFallback = document.getElementById('photoFallback');
     const shareBtn = document.getElementById('shareBtn');
+    const altList = document.getElementById('altList');
 
     QUESTIONS.forEach((q, index) => {
       state.values[q.key] = 50;
@@ -322,9 +330,9 @@
 
         if (rpcResponse.error) throw rpcResponse.error;
 
-        const recomendacaoFinal = Array.isArray(rpcResponse.data)
-          ? (rpcResponse.data[0] || {})
-          : (rpcResponse.data || {});
+        const linhas = Array.isArray(rpcResponse.data) ? rpcResponse.data : [rpcResponse.data];
+        const recomendacaoFinal = linhas[0] || {};
+        const alternativas = linhas.slice(1, 3);
 
         const savePayload = {
           id_sessao: state.sessionId,
@@ -353,7 +361,8 @@
           numero_candidato: recomendacaoFinal.numero_candidato || null,
           foto: recomendacaoFinal.foto || null,
           instagram: recomendacaoFinal.instagram || null,
-          status_viabilidade: recomendacaoFinal.status_viabilidade || viabilidadeLabel(savePayload.pontuacao_afinidade)
+          status_viabilidade: recomendacaoFinal.status_viabilidade || viabilidadeLabel(savePayload.pontuacao_afinidade),
+          alternativas
         };
 
         showResult(finalRow);
@@ -405,6 +414,23 @@
         resultMeta.innerHTML += `<br><strong>Instagram:</strong> <a href="${escapeAttr(instagram)}" target="_blank" rel="noopener noreferrer">Abrir Instagram</a>`;
       }
 
+      if (row?.alternativas && row.alternativas.length) {
+        altList.style.display = 'grid';
+        altList.innerHTML = `<p class="alt-title">Outras opções compatíveis:</p>` +
+          row.alternativas.map(alt => `
+            <div class="alt-item">
+              ${alt.foto ? `<img src="${escapeAttr(alt.foto)}" alt="">` : ''}
+              <div class="alt-info">
+                <strong>${escapeHtml(alt.nome_urna || alt.nome_candidato || '—')}</strong>
+                Nº ${escapeHtml(String(alt.numero_candidato || '—'))} · ${escapeHtml(alt.partido || '—')} · Score ${escapeHtml(String(alt.pontuacao_afinidade ?? '—'))}
+              </div>
+            </div>
+          `).join('');
+      } else {
+        altList.style.display = 'none';
+        altList.innerHTML = '';
+      }
+
       lastShareText = `Meu candidato recomendado: ${nome} (${numero} - ${partido}). Faça o teste também!`;
       shareBtn.style.display = 'inline-flex';
     }
@@ -418,6 +444,8 @@
       resultPhoto.style.display = 'none';
       photoFallback.style.display = 'flex';
       shareBtn.style.display = 'none';
+      altList.style.display = 'none';
+      altList.innerHTML = '';
 
       resultMeta.innerHTML = `
         Nenhum candidato do nosso levantamento se alinhou totalmente ao seu perfil — e isso é exatamente o momento de ir mais fundo antes de decidir seu voto.<br><br>
