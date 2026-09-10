@@ -440,9 +440,26 @@
         .toUpperCase();
     }
 
-    function isProgressista(row) {
-      const party = normalizeParty(row?.partido || row?.Partido);
-      return !!party && PARTIDOS_PROGRESSISTAS.has(party);
+function isProgressista(row) {
+  const raw = [
+    row?.partido,
+    row?.Partido,
+    row?.sigla_partido,
+    row?.sigla,
+    row?.partido_sigla
+  ].find(v => String(v ?? '').trim());
+
+  if (!raw) return true;
+
+  const norm = normalizeParty(raw);
+
+  if (PARTIDOS_PROGRESSISTAS.has(norm)) return true;
+
+  return norm
+    .split(/[^A-Z0-9]+/)
+    .filter(Boolean)
+    .some(token => PARTIDOS_PROGRESSISTAS.has(token));
+}
     }
 
     function cleanUrl(url) {
