@@ -400,9 +400,7 @@
       { key: 'transparencia', label: 'Transparência', desc: 'Candidatos devem ter o compromisso explícito de combater mecanismos opacos como o orçamento secreto/emendas de relator?' }
     ];
 
-    const supabaseClient = window.supabase?.createClient
-  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-  : null;
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const state = {
       sessionId: generateSessionId(),
@@ -421,44 +419,25 @@
     const shareBtn = document.getElementById('shareBtn');
     const altList = document.getElementById('altList');
 
-    questionsRoot.innerHTML = '';
+    QUESTIONS.forEach((q, index) => {
+      state.values[q.key] = 50;
 
-QUESTIONS.forEach((q, index) => {
-  state.values[q.key] = 50;
-
-  const card = document.createElement('article');
-  card.className = 'card';
-  card.innerHTML = `
-    <div class="qhead">
-      <div>
-        <h2 class="qtitle">${index + 1}. ${q.label}</h2>
-        <p class="qdesc">${q.desc}</p>
-      </div>
-      <div class="badge moderado" id="${q.key}-badge">Moderado</div>
-    </div>
-    <input id="${q.key}-range" type="range" min="0" max="100" step="1" value="50" aria-label="${q.label}" />
-    <div class="scale">
-      <span>Contrário</span>
-      <span>Moderado</span>
-      <span>Favorável</span>
-    </div>
-  `;
-
-  questionsRoot.appendChild(card);
-
-  const range = card.querySelector(`#${q.key}-range`);
-  const badge = card.querySelector(`#${q.key}-badge`);
-
-  const sync = () => {
-    const v = Number(range.value);
-    state.values[q.key] = v;
-    badge.textContent = sliderLabel(v);
-    badge.className = `badge ${badgeClass(v)}`;
-  };
-
-  range.addEventListener('input', sync);
-  sync();
-});
+      const card = document.createElement('article');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="qhead">
+          <div>
+            <h2 class="qtitle">${index + 1}. ${q.label}</h2>
+            <p class="qdesc">${q.desc}</p>
+          </div>
+          <div class="badge moderado" id="${q.key}-badge">Moderado</div>
+        </div>
+        <input id="${q.key}-range" type="range" min="0" max="100" step="1" value="50" aria-label="${q.label}" />
+        <div class="scale">
+          <span>Contrário</span>
+          <span>Moderado</span>
+          <span>Favorável</span>
+        </div>
       `;
       questionsRoot.appendChild(card);
 
