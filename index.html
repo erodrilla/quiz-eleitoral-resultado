@@ -496,6 +496,7 @@
   <script>
     const SUPABASE_URL = 'https://hglifytalonmncphycfp.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ';
+
     const supabase = window.supabase?.createClient
       ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
       : null;
@@ -504,41 +505,13 @@
     const CANDIDATOS_TABLE = 'candidatos';
 
     const QUESTIONS = [
-      {
-        id: 'mulheres',
-        label: 'Mulheres & Gênero',
-        desc: 'Como você se posiciona sobre direitos das mulheres e igualdade de gênero?'
-      },
-      {
-        id: 'educacao',
-        label: 'Educação & Serv. Público',
-        desc: 'Qual é sua visão sobre educação e valorização do serviço público?'
-      },
-      {
-        id: 'meio_ambiente',
-        label: 'Meio Ambiente',
-        desc: 'Como você avalia as pautas de sustentabilidade e proteção ambiental?'
-      },
-      {
-        id: 'impostos',
-        label: 'Taxação sobre Renda/Fortunas',
-        desc: 'Qual a sua posição sobre tributação progressiva e distribuição de renda?'
-      },
-      {
-        id: 'direitos',
-        label: 'Direitos Sociais',
-        desc: 'Como você vê a ampliação ou proteção de direitos sociais?'
-      },
-      {
-        id: 'seguranca',
-        label: 'Segurança Pública',
-        desc: 'Como você avalia o equilíbrio entre segurança e garantias democráticas?'
-      },
-      {
-        id: 'transparencia',
-        label: 'Transparência',
-        desc: 'Qual a sua visão sobre transparência, controle e fiscalização pública?'
-      }
+      { id: 'mulheres', label: 'Mulheres & Gênero', desc: 'Como você se posiciona sobre direitos das mulheres e igualdade de gênero?' },
+      { id: 'educacao', label: 'Educação & Serv. Público', desc: 'Qual é sua visão sobre educação e valorização do serviço público?' },
+      { id: 'meio_ambiente', label: 'Meio Ambiente', desc: 'Como você avalia as pautas de sustentabilidade e proteção ambiental?' },
+      { id: 'impostos', label: 'Taxação sobre Renda/Fortunas', desc: 'Qual a sua posição sobre tributação progressiva e distribuição de renda?' },
+      { id: 'direitos', label: 'Direitos Sociais', desc: 'Como você vê a ampliação ou proteção de direitos sociais?' },
+      { id: 'seguranca', label: 'Segurança Pública', desc: 'Como você avalia o equilíbrio entre segurança e garantias democráticas?' },
+      { id: 'transparencia', label: 'Transparência', desc: 'Qual a sua visão sobre transparência, controle e fiscalização pública?' }
     ];
 
     const RESPONSE_VALUES = ['Contrário', 'Moderado', 'Favorável'];
@@ -641,13 +614,6 @@
       return n.toFixed(2);
     }
 
-    function scoreToPercent(score) {
-      const n = Number(score);
-      if (!Number.isFinite(n)) return '0%';
-      if (n <= 1) return `${Math.round(n * 100)}%`;
-      return `${Math.round(n)}%`;
-    }
-
     function getContraryCount() {
       return Object.values(state.respostas).filter(v => v === 'Contrário').length;
     }
@@ -746,7 +712,9 @@
                 ? `<img src="${escapeHtml(foto)}" alt="Foto de ${escapeHtml(nomeUrna)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`
                 : ''
             }
-            <div class="placeholder" style="${foto ? 'display:none;' : ''}">${getPhotoPlaceholder(nomeUrna)}<br><span style="font-weight:600;margin-top:6px;display:block;">Sem foto</span></div>
+            <div class="placeholder" style="${foto ? 'display:none;' : ''}">
+              ${getPhotoPlaceholder(nomeUrna)}<br><span style="font-weight:600;margin-top:6px;display:block;">Sem foto</span>
+            </div>
           </div>
           <div class="candidate-body">
             <div>
@@ -960,7 +928,6 @@
 
     function init() {
       renderQuestions();
-
       $('#btnEnviar').addEventListener('click', handleSubmit);
       $('#btnFav').addEventListener('click', () => setAllResponses('Favorável'));
       $('#btnMod').addEventListener('click', () => setAllResponses('Moderado'));
