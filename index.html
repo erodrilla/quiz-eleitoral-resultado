@@ -545,13 +545,17 @@
 
         try {
           const insertResponse = await withRetry(() =>
-  supabaseClient.from(SUPABASE_TABLE).insert(savePayload)
-);
+            supabaseClient.from(SUPABASE_TABLE).insert(savePayload)
+          );
 
-if (insertResponse.error) throw insertResponse.error;
+          if (insertResponse.error) throw insertResponse.error;
 
-const savedRow = savePayload;
-          const finalRow = { ...payload, ...savedRow, ...savePayload, bloqueado: true, justificativa: deputometro.message };
+          const finalRow = {
+            ...payload,
+            ...savePayload,
+            bloqueado: true,
+            justificativa: deputometro.message
+          };
 
           persistLastResult(finalRow);
           showDeputometro(finalRow);
@@ -599,25 +603,18 @@ const savedRow = savePayload;
         };
 
         const insertResponse = await withRetry(() =>
-  supabaseClient.from(SUPABASE_TABLE).insert(savePayload)
-);
+          supabaseClient.from(SUPABASE_TABLE).insert(savePayload)
+        );
 
-if (insertResponse.error) throw insertResponse.error;
-
-const finalRow = {
-  ...payload,
-  ...savePayload,
-  bloqueado: true,
-  justificativa: deputometro.message
-};;
+        if (insertResponse.error) throw insertResponse.error;
 
         const finalRow = {
           ...payload,
           ...recomendacaoFinal,
-          ...savedRow,
-          foto: recomendacaoFinal.foto || savedRow.foto || null,
-          instagram: recomendacaoFinal.instagram || savedRow.instagram || null,
-          bloqueado: recomendacaoFinal.bloqueado ?? savedRow.bloquear_candidatos ?? false,
+          ...savePayload,
+          foto: recomendacaoFinal.foto || null,
+          instagram: recomendacaoFinal.instagram || null,
+          bloqueado: recomendacaoFinal.bloqueado ?? false,
           pontuacao_afinidade: recomendacaoFinal.pontuacao_afinidade ?? payload.pontuacao_afinidade,
           status_viabilidade: recomendacaoFinal.status_viabilidade || viabilidadeLabel(recomendacaoFinal.pontuacao_afinidade ?? payload.pontuacao_afinidade),
           justificativa: recomendacaoFinal.justificativa || recomendacaoFinal.candidato_recomendado || payload.candidato_recomendado
