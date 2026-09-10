@@ -441,10 +441,10 @@
     }
 
     function isProgressista(row) {
-      const raw = row?.partido ?? row?.Partido ?? row?.sigla_partido ?? row?.sigla ?? row?.partido_sigla ?? '';
-      const party = normalizeParty(raw);
+      const raw = row?.partido || row?.Partido || row?.sigla_partido || row?.sigla || row?.partido_sigla || '';
+      if (!String(raw).trim()) return true;
 
-      if (!party) return false;
+      const party = normalizeParty(raw);
       if (PARTIDOS_PROGRESSISTAS.has(party)) return true;
 
       return party
@@ -458,6 +458,10 @@
       return String(url).split('|')[0].trim();
     }
 
+    function toBool(value) {
+      return value === true || value === 'true' || value === 1 || value === '1';
+    }
+
     function viabilityRank(status) {
       const s = String(status ?? '').toLowerCase();
       if (s.includes('muito alta')) return 4;
@@ -467,36 +471,80 @@
       return 0;
     }
 
-    function fetchTopCandidates(rawData) {
-      const base = (Array.isArray(rpcResponse.data) ? rpcResponse.data : [rpcResponse.data])
-  .filter(Boolean);
+    function sortCandidates(rows) {
+      return [...rows].sort((a, b) => {
+        const vr = viabilityRank(b.status_viabilidade) - viabilityRank(a.status_viabilidade);
+        if (vr !== 0) return vr;
 
-const progressistas = base.filter(isProgressista);
+        const sr = Number(b?.score_final ?? b?.pontuacao_afinidade ?? 0) - Number(a?.score_final ?? a?.pontuacao_afinidade ?? 0);
+        if (sr !== 0) return sr;
 
-const renovacao = base.filter(c =>
-  c.flag_renovacao === true || c.flag_renovacao === 'true'
-);
+        return Number(b?.total_votos ?? 0) - Number(a?.total_votos ?? 0);
+      });
+    }
 
-let linhasBase = base;
+    function normalizeCandidateRows(rawRows, modoResultado) {
+      const base = (Array.isArray(rawRows) ? rawRows : [rawRows])
+        .filter(Boolean)
+        .filter(c => !toBool(c.bloquear_candidatos))
+        .filter(c => !toBool(c.bloqueado));
 
-if (modoResultado === 'renovacao') {
-  linhasBase = renovacao.length ? renovacao : base;
-} else {
-  linhasBase = progressistas.length ? progressistas : base;
-}
+      let rows = base;
 
-const linhas = linhasBase
-  .filter(c => c.bloquear_candidatos !== true && c.bloquear_candidatos !== 'true')
-  .filter(c => c.bloqueado !== true && c.bloqueado !== 'true')
-  .sort((a, b) => {
-    const vr = viabilityRank(b.status_viabilidade) - viabilityRank(a.status_viabilidade);
-    if (vr !== 0) return vr;
+      if (modoResultado === 'renovacao') {
+        const renovacaoMarcada = rows.filter(c => toBool(c.flag_renovacao));
+        if (renovacaoMarcada.length) rows = renovacaoMarcada;
+      }
 
-    const sr = Number(b?.score_final ?? 0) - Number(a?.score_final ?? 0);
-    if (sr !== 0) return sr;
+      const progressistas = rows.filter(isProgressista);
+      const usar = progressistas.length ? progressistas : rows;
 
-    return Number(b?.total_votos ?? 0) - Number(a?.total_votos ?? 0);
-  });
+      return sortCandidates(usar);
+    }
+
+    async function fetchTopCandidates(modoResultado, payload) {
+      const rpcNames = modoResultado === 'renovacao'
+        ? ['calcular_viabilidade_renovacao', 'calcular_recomendacao']
+        : ['calcular_recomendacao'];
+
+      let lastError = null;
+      let lastRows = [];
+
+      for (const rpcName of rpcNames) {
+        try {
+          const rpcResponse = await withRetry(() =>
+            supabaseClient.rpc(rpcName, {
+              p_sessao: state.sessionId,
+              p_mulheres: payload.mulheres,
+              p_educacao: payload.educacao,
+              p_meio_ambiente: payload.meio_ambiente,
+              p_impostos: payload.impostos,
+              p_direitos: payload.direitos,
+              p_seguranca: payload.seguranca,
+              p_transparencia: payload.transparencia
+            })
+          );
+
+          console.log('RPC', rpcName, 'ERROR:', rpcResponse.error);
+          console.log('RPC', rpcName, 'DATA:', rpcResponse.data);
+
+          if (rpcResponse.error) throw rpcResponse.error;
+
+          const rows = normalizeCandidateRows(rpcResponse.data, modoResultado);
+          lastRows = rows;
+
+          if (rows.length) {
+            return { rows, rpcName, usedFallback: rpcName !== rpcNames[0] };
+          }
+        } catch (err) {
+          lastError = err;
+          console.error(`Falha no RPC ${rpcName}:`, err);
+        }
+      }
+
+      return { rows: lastRows, rpcName: rpcNames[0], usedFallback: rpcNames.length > 1, error: lastError };
+    }
+
     questionsRoot.innerHTML = '';
 
     QUESTIONS.forEach((q, index) => {
@@ -652,6 +700,7 @@ const linhas = linhasBase
       const modoResultado = getModoResultado();
 
       if (!supabaseClient) {
+        showSemCandidato();
         setStatus('A conexão com a base não está inicializada.', 'err');
         return;
       }
@@ -693,38 +742,28 @@ const linhas = linhasBase
       setStatus('Calculando recomendação...', '');
 
       try {
-        const rpcName = modoResultado === 'renovacao'
-          ? 'calcular_viabilidade_renovacao'
-          : 'calcular_recomendacao';
+        const { rows, rpcName, usedFallback, error } = await fetchTopCandidates(modoResultado, payload);
 
-        const rpcResponse = await withRetry(() =>
-          supabaseClient.rpc(rpcName, {
-            p_sessao: state.sessionId,
-            p_mulheres: payload.mulheres,
-            p_educacao: payload.educacao,
-            p_meio_ambiente: payload.meio_ambiente,
-            p_impostos: payload.impostos,
-            p_direitos: payload.direitos,
-            p_seguranca: payload.seguranca,
-            p_transparencia: payload.transparencia
-          })
-        );
-
-        console.log('RPC ERROR:', rpcResponse.error);
-        console.log('RPC DATA:', rpcResponse.data);
-
-        if (rpcResponse.error) throw rpcResponse.error;
-
-        const linhas = fetchTopCandidates(rpcResponse.data);
-
-        if (!linhas.length) {
+        if (error && !rows.length) {
+          console.error(error);
           showSemCandidato();
-          setStatus('Nenhum candidato progressista retornou da consulta.', 'warn');
+          setStatus('Erro ao gerar a recomendação.', 'err');
           return;
         }
 
-        const recomendacaoFinal = linhas[0] || {};
-        const alternativas = linhas.slice(1, 3);
+        if (!rows.length) {
+          showSemCandidato();
+          setStatus(
+            modoResultado === 'renovacao'
+              ? 'Nenhum candidato de renovação retornou da consulta.'
+              : 'Nenhum candidato progressista retornou da consulta.',
+            'warn'
+          );
+          return;
+        }
+
+        const recomendacaoFinal = rows[0] || {};
+        const alternativas = rows.slice(1, 3);
 
         const savePayload = {
           id_sessao: state.sessionId,
@@ -751,7 +790,11 @@ const linhas = linhasBase
           alternativas
         };
 
-        showResult(finalRow);
+        showResult(finalRow, {
+          modoResultado,
+          usedFallback,
+          rpcName
+        });
         setStatus('Recomendação exibida.', 'ok');
 
         try {
@@ -767,10 +810,11 @@ const linhas = linhasBase
       } catch (err) {
         console.error(err);
         setStatus('Erro ao gerar a recomendação.', 'err');
+        showSemCandidato();
       }
     }
 
-    function showResult(row) {
+    function showResult(row, extra = {}) {
       if (row?.bloqueado || row?.bloquear_candidatos) {
         showSemCandidato();
         return;
@@ -794,12 +838,22 @@ const linhas = linhasBase
       resultName.textContent = nome;
       resultPhoto.alt = nome || 'Foto do candidato';
 
+      const modoTexto = extra.modoResultado === 'renovacao'
+        ? '<br><strong>Modo:</strong> Novos entrantes / renovação'
+        : '';
+
+      const fallbackTexto = extra.usedFallback
+        ? '<br><strong>Observação:</strong> usando retorno alternativo para não deixar a tela vazia.'
+        : '';
+
       resultMeta.innerHTML = `
         <strong>Número:</strong> ${escapeHtml(String(numero))}<br>
         <strong>Partido:</strong> ${escapeHtml(partido)}<br>
         <strong>Score:</strong> ${escapeHtml(String(afinidade))}<br>
         <strong>Chance:</strong> ${escapeHtml(statusViabilidade)}<br>
         <strong>Justificativa:</strong> ${escapeHtml(justificativa)}
+        ${modoTexto}
+        ${fallbackTexto}
       `;
 
       if (foto) {
@@ -822,7 +876,7 @@ const linhas = linhasBase
               ${alt.foto ? `<img src="${escapeAttr(alt.foto)}" alt="">` : ''}
               <div class="alt-info">
                 <strong>${escapeHtml(alt.nome_urna || alt.nome_candidato || '—')}</strong>
-                Nº ${escapeHtml(String(alt.numero_candidato || '—'))} · ${escapeHtml(alt.partido || '—')} · Score ${escapeHtml(String(alt.pontuacao_afinidade ?? '—'))}
+                Nº ${escapeHtml(String(alt.numero_candidato || '—'))} · ${escapeHtml(alt.partido || '—')} · Score ${escapeHtml(String(alt.pontuacao_afinidade ?? alt.score_final ?? '—'))}
               </div>
             </div>
           `).join('');
@@ -850,8 +904,8 @@ const linhas = linhasBase
       altList.innerHTML = '';
 
       resultMeta.innerHTML = `
-        <strong>Nenhum candidato para sugerir neste perfil.</strong><br><br>
-        Antes de decidir, consulte as fontes abaixo e compare histórico, propostas e coerência pública:<br><br>
+        Nenhum candidato a sugerir neste perfil.<br><br>
+        Antes de decidir, consulte as fontes abaixo e compare histórico, propostas e coerência pública.<br><br>
         <strong>Quem Foi Quem:</strong> <a href="${escapeAttr(QUEM_FOI_QUEM_URL)}" target="_blank" rel="noopener noreferrer">Abrir Quem Foi Quem</a><br>
         <strong>Deputômetro / Agência Lupa:</strong> <a href="${escapeAttr(DEPUTOMETRO_URL)}" target="_blank" rel="noopener noreferrer">Abrir painel</a>
       `;
