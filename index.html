@@ -391,42 +391,18 @@
     const BLOCK_IMAGE = 'assets/nao_manipulado.jpeg';
 
     const QUESTIONS = [
-      {
-        key: 'mulheres',
-        label: 'Mulheres & Gênero',
-        desc: 'A criação de políticas públicas específicas e orçamento garantido para o combate à violência contra a mulher e apoio à igualdade de gênero deve ser prioridade no mandato?'
-      },
-      {
-        key: 'educacao',
-        label: 'Educação & Serv. Público',
-        desc: 'O foco principal dos investimentos em educação deve ser o fortalecimento e a expansão do ensino público e gratuito?'
-      },
-      {
-        key: 'meio_ambiente',
-        label: 'Meio Ambiente',
-        desc: 'A fiscalização ambiental deve ser mais rigorosa, restringindo empreendimentos que impactem áreas de preservação?'
-      },
-      {
-        key: 'impostos',
-        label: 'Taxação sobre Renda/Fortunas',
-        desc: 'Você apoia o aumento da taxação sobre grandes fortunas e rendas mais altas para financiar serviços públicos?'
-      },
-      {
-        key: 'direitos',
-        label: 'Direitos Sociais',
-        desc: 'A defesa dos direitos de pessoas negras, povos indígenas e da comunidade LGBTQIA+, com foco no combate ao racismo e à discriminação, deve ser pauta prioritária do candidato?'
-      },
-      {
-        key: 'seguranca',
-        label: 'Segurança Pública',
-        desc: 'A atuação na segurança pública deve focar prioritariamente em prevenção, inteligência e direitos humanos, em vez de apenas no endurecimento de penas?'
-      },
-      {
-        key: 'transparencia',
-        label: 'Transparência',
-        desc: 'Candidatos devem ter o compromisso explícito de combater mecanismos opacos como o orçamento secreto/emendas de relator?'
-      }
+      { key: 'mulheres', label: 'Mulheres & Gênero', desc: 'A criação de políticas públicas específicas e orçamento garantido para o combate à violência contra a mulher e apoio à igualdade de gênero deve ser prioridade no mandato?' },
+      { key: 'educacao', label: 'Educação & Serv. Público', desc: 'O foco principal dos investimentos em educação deve ser o fortalecimento e a expansão do ensino público e gratuito?' },
+      { key: 'meio_ambiente', label: 'Meio Ambiente', desc: 'A fiscalização ambiental deve ser mais rigorosa, restringindo empreendimentos que impactem áreas de preservação?' },
+      { key: 'impostos', label: 'Taxação sobre Renda/Fortunas', desc: 'Você apoia o aumento da taxação sobre grandes fortunas e rendas mais altas para financiar serviços públicos?' },
+      { key: 'direitos', label: 'Direitos Sociais', desc: 'A defesa dos direitos de pessoas negras, povos indígenas e da comunidade LGBTQIA+, com foco no combate ao racismo e à discriminação, deve ser pauta prioritária do candidato?' },
+      { key: 'seguranca', label: 'Segurança Pública', desc: 'A atuação na segurança pública deve focar prioritariamente em prevenção, inteligência e direitos humanos, em vez de apenas no endurecimento de penas?' },
+      { key: 'transparencia', label: 'Transparência', desc: 'Candidatos devem ter o compromisso explícito de combater mecanismos opacos como o orçamento secreto/emendas de relator?' }
     ];
+
+    const supabaseClient = window.supabase?.createClient
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
 
     const PARTIDOS_PROGRESSISTAS = new Set([
       'PT',
@@ -437,10 +413,6 @@
       'PSTU',
       'PV'
     ]);
-
-    const supabaseClient = window.supabase?.createClient
-      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-      : null;
 
     const state = {
       sessionId: generateSessionId(),
@@ -459,10 +431,6 @@
     const shareBtn = document.getElementById('shareBtn');
     const altList = document.getElementById('altList');
 
-    function generateSessionId() {
-      return Math.random().toString(36).slice(2, 9);
-    }
-
     function normalizeParty(party) {
       return String(party ?? '')
         .normalize('NFD')
@@ -472,22 +440,9 @@
         .toUpperCase();
     }
 
-    function extractParty(row) {
-      return row?.partido
-        ?? row?.Partido
-        ?? row?.sigla_partido
-        ?? row?.sigla
-        ?? row?.partido_sigla
-        ?? '';
-    }
-
-    function isTruthyFlag(value) {
-      return value === true || value === 1 || value === '1' || value === 'true' || value === 'TRUE' || value === 't' || value === 'T';
-    }
-
     function isProgressista(row) {
-      const raw = extractParty(row);
-      if (!String(raw).trim()) return false;
+      const raw = row?.partido || row?.Partido || row?.sigla_partido || row?.sigla || row?.partido_sigla || '';
+      if (!String(raw).trim()) return true;
 
       const party = normalizeParty(raw);
       if (PARTIDOS_PROGRESSISTAS.has(party)) return true;
@@ -498,33 +453,15 @@
         .some(token => PARTIDOS_PROGRESSISTAS.has(token));
     }
 
+    function normalizeBool(value) {
+      if (value === true || value === 1) return true;
+      const s = String(value ?? '').trim().toLowerCase();
+      return s === 'true' || s === '1' || s === 'sim' || s === 'yes';
+    }
+
     function cleanUrl(url) {
       if (!url) return '';
       return String(url).split('|')[0].trim();
-    }
-
-    function sliderLabel(v) {
-      if (v <= 33) return 'Contrário';
-      if (v <= 66) return 'Moderado';
-      return 'Favorável';
-    }
-
-    function badgeClass(v) {
-      if (v <= 33) return 'contrario';
-      if (v <= 66) return 'moderado';
-      return 'favoravel';
-    }
-
-    function computeAfinidade(values) {
-      const nums = Object.values(values);
-      return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
-    }
-
-    function viabilidadeLabel(score) {
-      if (score >= 90) return 'Muito alta';
-      if (score >= 75) return 'Alta';
-      if (score >= 60) return 'Média';
-      return 'Baixa';
     }
 
     function viabilityRank(status) {
@@ -536,68 +473,52 @@
       return 0;
     }
 
-    function getRowStatus(row) {
-      return row?.status_viabilidade
-        ?? row?.viabilidade
-        ?? row?.Viabilidade
-        ?? '';
-    }
+    function fetchTopCandidates(rows, modoResultado) {
+      const base = (Array.isArray(rows) ? rows : [rows]).filter(Boolean);
 
-    function getRowScore(row) {
-      const value = row?.score_final ?? row?.score ?? row?.pontuacao_afinidade ?? 0;
-      return Number(value) || 0;
-    }
+      const progressistas = base
+        .filter(isProgressista)
+        .filter(c => c.bloquear_candidatos !== true && c.bloquear_candidatos !== 'true')
+        .filter(c => c.bloqueado !== true && c.bloqueado !== 'true');
 
-    function getRowVotes(row) {
-      const value = row?.total_votos ?? row?.votos ?? 0;
-      return Number(value) || 0;
-    }
+      const renovacao = progressistas.filter(c => normalizeBool(c.flag_renovacao));
 
-    function isBlockedRow(row) {
-      return isTruthyFlag(row?.bloquear_candidatos) || isTruthyFlag(row?.bloqueado);
-    }
+      const pool = (modoResultado === 'renovacao' && renovacao.length)
+        ? renovacao
+        : progressistas;
 
-    function normalizeRows(data) {
-      return (Array.isArray(data) ? data : [data]).filter(Boolean);
-    }
-
-    function sortCandidates(rows) {
-      return [...rows].sort((a, b) => {
-        const vr = viabilityRank(getRowStatus(b)) - viabilityRank(getRowStatus(a));
+      return pool.sort((a, b) => {
+        const vr = viabilityRank(b.status_viabilidade) - viabilityRank(a.status_viabilidade);
         if (vr !== 0) return vr;
 
-        const sr = getRowScore(b) - getRowScore(a);
+        const sr = Number(b?.score_final ?? 0) - Number(a?.score_final ?? 0);
         if (sr !== 0) return sr;
 
-        const tr = getRowVotes(b) - getRowVotes(a);
-        if (tr !== 0) return tr;
-
-        return String(a?.nome_candidato || a?.nome_urna || '').localeCompare(String(b?.nome_candidato || b?.nome_urna || ''));
+        return Number(b?.total_votos ?? 0) - Number(a?.total_votos ?? 0);
       });
     }
 
-    function fetchTopCandidates(rawData, modoResultado) {
-      const base = normalizeRows(rawData)
-        .filter(Boolean)
-        .filter(row => !isBlockedRow(row));
+    function resetResultBox() {
+      resultBox.classList.remove('blocked');
+      resultBox.style.display = 'none';
 
-      let pool = base;
+      resultPill.style.display = 'inline-flex';
+      resultPill.classList.remove('blocked');
+      resultPill.textContent = 'Última recomendação';
 
-      if (modoResultado === 'renovacao') {
-        const renovacao = base.filter(row => isTruthyFlag(row?.flag_renovacao));
-        if (renovacao.length) pool = renovacao;
-      }
+      resultName.textContent = '—';
+      resultMeta.textContent = '—';
+      resultPhoto.removeAttribute('src');
+      resultPhoto.style.display = 'none';
 
-      const progressistas = pool.filter(isProgressista);
-      const finalPool = progressistas.length ? progressistas : pool;
-
-      return sortCandidates(finalPool);
+      shareBtn.style.display = 'none';
+      altList.style.display = 'none';
+      altList.innerHTML = '';
     }
 
-    const questions = QUESTIONS;
     questionsRoot.innerHTML = '';
 
-    questions.forEach((q, index) => {
+    QUESTIONS.forEach((q, index) => {
       state.values[q.key] = 50;
 
       const card = document.createElement('article');
@@ -633,13 +554,6 @@
       range.addEventListener('input', sync);
       sync();
     });
-
-    function setAll(value) {
-      document.querySelectorAll('input[type="range"]').forEach(input => {
-        input.value = value;
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-      });
-    }
 
     document.getElementById('fillFavBtn').addEventListener('click', () => {
       setAll(85);
@@ -698,14 +612,35 @@
       throw lastError;
     }
 
-    function countContrarios() {
-      return Object.values(state.values).filter(v => Number(v) <= 33).length;
+    function setAll(value) {
+      document.querySelectorAll('input[type="range"]').forEach(input => {
+        input.value = value;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      });
     }
 
-    function mustBlockCandidate() {
-      return Number(state.values.mulheres) <= 33
-        || Number(state.values.meio_ambiente) <= 33
-        || countContrarios() >= 2;
+    function sliderLabel(v) {
+      if (v <= 33) return 'Contrário';
+      if (v <= 66) return 'Moderado';
+      return 'Favorável';
+    }
+
+    function badgeClass(v) {
+      if (v <= 33) return 'contrario';
+      if (v <= 66) return 'moderado';
+      return 'favoravel';
+    }
+
+    function computeAfinidade(values) {
+      const nums = Object.values(values);
+      return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
+    }
+
+    function viabilidadeLabel(score) {
+      if (score >= 90) return 'Muito alta';
+      if (score >= 75) return 'Alta';
+      if (score >= 60) return 'Média';
+      return 'Baixa';
     }
 
     function buildPayload() {
@@ -721,15 +656,27 @@
       };
     }
 
+    function countContrarios() {
+      return Object.values(state.values).filter(v => Number(v) <= 33).length;
+    }
+
+    function mustBlockCandidate() {
+      return Number(state.values.mulheres) <= 33
+        || Number(state.values.meio_ambiente) <= 33
+        || countContrarios() >= 2;
+    }
+
     async function submitQuiz() {
+      const payload = buildPayload();
+      const modoResultado = getModoResultado();
+
+      resetResultBox();
+
       if (!supabaseClient) {
         showSemCandidato();
         setStatus('A conexão com a base não está inicializada.', 'err');
         return;
       }
-
-      const payload = buildPayload();
-      const modoResultado = getModoResultado();
 
       if (mustBlockCandidate()) {
         const savePayload = {
@@ -768,12 +715,8 @@
       setStatus('Calculando recomendação...', '');
 
       try {
-        const rpcName = modoResultado === 'renovacao'
-          ? 'calcular_viabilidade_renovacao'
-          : 'calcular_recomendacao';
-
         const rpcResponse = await withRetry(() =>
-          supabaseClient.rpc(rpcName, {
+          supabaseClient.rpc('calcular_recomendacao', {
             p_sessao: state.sessionId,
             p_mulheres: payload.mulheres,
             p_educacao: payload.educacao,
@@ -813,7 +756,7 @@
           pontuacao_afinidade: recomendacaoFinal.pontuacao_afinidade ?? payload.pontuacao_afinidade,
           candidato_recomendado: recomendacaoFinal.candidato_recomendado || 'Candidato selecionado por afinidade programática.',
           nome_candidato: recomendacaoFinal.nome_candidato || recomendacaoFinal.nome_urna || null,
-          partido: extractParty(recomendacaoFinal) || null,
+          partido: recomendacaoFinal.partido || null,
           bloquear_candidatos: false
         };
 
@@ -822,15 +765,12 @@
           numero_candidato: recomendacaoFinal.numero_candidato || null,
           foto: cleanUrl(recomendacaoFinal.foto || null),
           instagram: cleanUrl(recomendacaoFinal.instagram || null),
-          status_viabilidade: getRowStatus(recomendacaoFinal) || viabilidadeLabel(savePayload.pontuacao_afinidade),
+          status_viabilidade: recomendacaoFinal.status_viabilidade || viabilidadeLabel(savePayload.pontuacao_afinidade),
           modo_resultado: modoResultado,
-          observacao: modoResultado === 'renovacao'
-            ? 'usando retorno alternativo da renovação para não deixar a tela vazia'
-            : 'seleção tradicional por afinidade e viabilidade',
           alternativas
         };
 
-        showResult(finalRow, modoResultado);
+        showResult(finalRow);
         setStatus('Recomendação exibida.', 'ok');
 
         try {
@@ -845,11 +785,12 @@
         }
       } catch (err) {
         console.error(err);
+        resetResultBox();
         setStatus('Erro ao gerar a recomendação.', 'err');
       }
     }
 
-    function showResult(row, modoResultado = 'tradicional') {
+    function showResult(row) {
       if (row?.bloqueado || row?.bloquear_candidatos) {
         showSemCandidato();
         return;
@@ -861,7 +802,7 @@
       resultPill.classList.remove('blocked');
       resultPill.textContent = 'Última recomendação';
 
-      const nome = row?.nome_candidato || row?.nome_urna || '—';
+      const nome = row?.nome_candidato || '—';
       const partido = row?.partido || '—';
       const numero = row?.numero_candidato || '—';
       const foto = row?.foto || '';
@@ -869,19 +810,22 @@
       const afinidade = row?.pontuacao_afinidade ?? computeAfinidade(state.values);
       const justificativa = row?.candidato_recomendado || 'Candidato selecionado por afinidade programática.';
       const statusViabilidade = row?.status_viabilidade || viabilidadeLabel(afinidade);
-      const modoTexto = modoResultado === 'renovacao' ? 'Novos entrantes / renovação' : 'Candidatos tradicionais';
+      const modoResultado = row?.modo_resultado === 'renovacao' ? 'Novos entrantes / renovação' : 'Candidatos tradicionais';
+      const observacao = row?.modo_resultado === 'renovacao'
+        ? 'usando filtragem de renovação com fallback para não deixar a tela vazia.'
+        : 'seleção padrão por afinidade e viabilidade.';
 
       resultName.textContent = nome;
       resultPhoto.alt = nome || 'Foto do candidato';
 
       resultMeta.innerHTML = `
         <strong>Número:</strong> ${escapeHtml(String(numero))}<br>
-        <strong>Partido:</strong> ${escapeHtml(String(partido))}<br>
+        <strong>Partido:</strong> ${escapeHtml(partido)}<br>
         <strong>Score:</strong> ${escapeHtml(String(afinidade))}<br>
-        <strong>Chance:</strong> ${escapeHtml(String(statusViabilidade))}<br>
-        <strong>Modo:</strong> ${escapeHtml(modoTexto)}<br>
+        <strong>Chance:</strong> ${escapeHtml(statusViabilidade)}<br>
         <strong>Justificativa:</strong> ${escapeHtml(justificativa)}<br>
-        ${row?.observacao ? `<strong>Observação:</strong> ${escapeHtml(row.observacao)}<br>` : ''}
+        <strong>Modo:</strong> ${escapeHtml(modoResultado)}<br>
+        <strong>Observação:</strong> ${escapeHtml(observacao)}
       `;
 
       if (foto) {
@@ -893,7 +837,7 @@
       }
 
       if (instagram) {
-        resultMeta.innerHTML += `<strong>Instagram:</strong> <a href="${escapeAttr(instagram)}" target="_blank" rel="noopener noreferrer">Abrir Instagram</a>`;
+        resultMeta.innerHTML += `<br><strong>Instagram:</strong> <a href="${escapeAttr(instagram)}" target="_blank" rel="noopener noreferrer">Abrir Instagram</a>`;
       }
 
       if (row?.alternativas && row.alternativas.length) {
@@ -904,7 +848,7 @@
               ${alt.foto ? `<img src="${escapeAttr(alt.foto)}" alt="">` : ''}
               <div class="alt-info">
                 <strong>${escapeHtml(alt.nome_urna || alt.nome_candidato || '—')}</strong>
-                Nº ${escapeHtml(String(alt.numero_candidato || '—'))} · ${escapeHtml(String(alt.partido || '—'))} · Score ${escapeHtml(String(alt.score_final ?? alt.pontuacao_afinidade ?? '—'))}
+                Nº ${escapeHtml(String(alt.numero_candidato || '—'))} · ${escapeHtml(alt.partido || '—')} · Score ${escapeHtml(String(alt.pontuacao_afinidade ?? '—'))}
               </div>
             </div>
           `).join('');
@@ -932,16 +876,21 @@
       altList.innerHTML = '';
 
       resultMeta.innerHTML = `
-        Nenhum candidato do nosso levantamento se alinhou totalmente ao seu perfil.<br><br>
-        Antes de decidir seu voto, consulte as fontes abaixo e compare histórico, propostas e coerência pública.<br><br>
+        Nenhum candidato do nosso levantamento se alinhou totalmente ao seu perfil — e isso é exatamente o momento de ir mais fundo antes de decidir seu voto.<br><br>
+        Consulte o histórico e as posições reais de cada candidato nas fontes abaixo:<br><br>
         <strong>Quem Foi Quem:</strong> <a href="${escapeAttr(QUEM_FOI_QUEM_URL)}" target="_blank" rel="noopener noreferrer">Abrir Quem Foi Quem</a><br>
-        <strong>Deputômetro / Agência Lupa:</strong> <a href="${escapeAttr(DEPUTOMETRO_URL)}" target="_blank" rel="noopener noreferrer">Abrir painel</a>
+        <strong>Deputômetro / Agência Lupa:</strong> <a href="${escapeAttr(DEPUTOMETRO_URL)}" target="_blank" rel="noopener noreferrer">Abrir painel</a><br><br>
+        Seu voto consciente começa com informação — vale muito a pena esse passo a mais.
       `;
     }
 
     function setStatus(text, kind) {
       statusEl.textContent = text;
       statusEl.className = 'status' + (kind ? ' ' + kind : '');
+    }
+
+    function generateSessionId() {
+      return Math.random().toString(36).slice(2, 9);
     }
 
     function escapeHtml(str) {
