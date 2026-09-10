@@ -218,10 +218,6 @@
       max-height:280px;
     }
 
-    #manipulacaoImg{
-      display:none;
-    }
-
     .result-body{
       padding:18px;
     }
@@ -351,8 +347,7 @@
       <div class="result" id="resultBox">
         <div class="result-top">
           <div class="photo-box">
-            <img id="resultPhoto" src="" alt="Foto do candidato" style="display:none" />
-            <img id="manipulacaoImg" src="assets/nao_manipulado.jpeg" alt="Não se deixe ser manipulado" />
+            <img id="resultPhoto" src="" alt="Imagem do resultado" style="display:none" />
           </div>
           <div class="result-body">
             <div class="pill" id="resultPill">Última recomendação</div>
@@ -372,6 +367,7 @@
     const SUPABASE_TABLE = 'eleitores_respostas';
     const QUEM_FOI_QUEM_URL = 'https://quemfoiquem.org.br/';
     const DEPUTOMETRO_URL = 'https://www.agencialupa.org/institucional/2026/07/31/deputometro-conheca-o-painel-de-monitoramento-da-lupa/';
+    const BLOCK_IMAGE = 'assets/nao_manipulado.jpeg';
 
     const QUESTIONS = [
       { key: 'mulheres', label: 'Mulheres & Gênero', desc: 'A criação de políticas públicas específicas e orçamento garantido para o combate à violência contra a mulher e apoio à igualdade de gênero deve ser prioridade no mandato?' },
@@ -399,7 +395,6 @@
     const resultName = document.getElementById('resultName');
     const resultMeta = document.getElementById('resultMeta');
     const resultPhoto = document.getElementById('resultPhoto');
-    const manipulacaoImg = document.getElementById('manipulacaoImg');
     const shareBtn = document.getElementById('shareBtn');
     const altList = document.getElementById('altList');
 
@@ -655,10 +650,6 @@
       resultPill.classList.remove('blocked');
       resultPill.textContent = 'Última recomendação';
 
-      resultPhoto.style.display = 'none';
-      resultPhoto.removeAttribute('src');
-      manipulacaoImg.style.display = 'none';
-
       const nome = row?.nome_candidato || '—';
       const partido = row?.partido || '—';
       const numero = row?.numero_candidato || '—';
@@ -690,6 +681,7 @@
         resultMeta.innerHTML += `<br><strong>Instagram:</strong> <a href="${escapeAttr(instagram)}" target="_blank" rel="noopener noreferrer">Abrir Instagram</a>`;
       }
 
+      const altList = document.getElementById('altList');
       if (row?.alternativas && row.alternativas.length) {
         altList.style.display = 'grid';
         altList.innerHTML = `<p class="alt-title">Outras opções compatíveis:</p>` +
@@ -716,9 +708,11 @@
       resultBox.style.display = 'block';
       resultPill.style.display = 'none';
       resultName.textContent = 'Não se deixe ser manipulado';
-      resultPhoto.style.display = 'none';
-      resultPhoto.removeAttribute('src');
-      manipulacaoImg.style.display = 'block';
+
+      resultPhoto.src = BLOCK_IMAGE;
+      resultPhoto.alt = 'Não se deixe ser manipulado';
+      resultPhoto.style.display = 'block';
+
       shareBtn.style.display = 'none';
       altList.style.display = 'none';
       altList.innerHTML = '';
