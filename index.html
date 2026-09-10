@@ -3,644 +3,787 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Quiz Eleitoral 2026</title>
+  <title>Quiz eleitoral resultado</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root{
       --bg:#f4f7fb;
       --card:#ffffff;
-      --text:#132033;
-      --muted:#5d6b7e;
-      --line:#d9e2ef;
-      --brand:#1b7f75;
-      --brand-2:#166a61;
-      --soft:#eaf6f4;
-      --good:#dff7df;
-      --warn:#fff5d9;
-      --bad:#ffe3e3;
-      --shadow:0 10px 30px rgba(19,32,51,.08);
+      --text:#123;
+      --muted:#5d6b7b;
+      --line:#d9e3ef;
+      --teal:#1f8a8a;
+      --teal-dark:#166b6b;
+      --blue:#eaf2ff;
+      --green:#e9f8ea;
+      --green-text:#1b7a2f;
+      --yellow:#fff7de;
+      --yellow-text:#8a5a00;
+      --red:#ffe8e8;
+      --red-text:#b42318;
+      --shadow:0 10px 28px rgba(15, 23, 42, .08);
       --radius:18px;
     }
+
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:linear-gradient(180deg,#eef4fb 0%, #f7f9fc 100%);
+      background:var(--bg);
       color:var(--text);
     }
-    .wrap{max-width:980px;margin:0 auto;padding:18px}
-    .header{
-      background:linear-gradient(135deg,var(--brand),#2d9b8f);
-      color:#fff;
-      border-radius:24px;
-      padding:22px 20px;
-      box-shadow:var(--shadow);
-      margin-bottom:16px;
+    .page{
+      max-width:1100px;
+      margin:0 auto;
+      padding:20px 16px 40px;
     }
-    .header h1{margin:0 0 8px;font-size:28px;line-height:1.1}
-    .header p{margin:0;color:rgba(255,255,255,.9);max-width:760px}
-    .grid{display:grid;grid-template-columns:1fr;gap:14px}
-    .card{
+    .hero, .panel, .result-panel{
       background:var(--card);
       border:1px solid var(--line);
       border-radius:var(--radius);
       box-shadow:var(--shadow);
-      padding:16px;
+    }
+    .hero{
+      padding:18px 18px 16px;
+      margin-bottom:14px;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+      background:#e9f6f4;
+      color:var(--teal-dark);
+      margin-bottom:10px;
+    }
+    .hero h1{
+      margin:0 0 6px;
+      font-size:26px;
+      line-height:1.15;
+    }
+    .hero p{
+      margin:0;
+      color:var(--muted);
+      max-width:840px;
+      font-size:14px;
+    }
+
+    .panel{
+      padding:16px 16px 14px;
+      margin-bottom:12px;
     }
     .section-title{
-      margin:0 0 6px;
+      margin:0 0 4px;
       font-size:18px;
+      line-height:1.2;
     }
-    .section-sub{
+    .section-subtitle{
       margin:0 0 12px;
       color:var(--muted);
-      font-size:14px;
-      line-height:1.45;
+      font-size:13px;
     }
+
     .question{
-      background:#fff;
-      border:1px solid var(--line);
+      padding:12px 0 14px;
+      border-top:1px solid var(--line);
+    }
+    .question:first-of-type{border-top:0;padding-top:0}
+    .question-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:8px;
+    }
+    .q-label{
+      font-weight:800;
+      font-size:16px;
+      margin:0;
+    }
+    .q-text{
+      margin:4px 0 0;
+      font-size:13px;
+      color:var(--muted);
+      max-width:860px;
+      line-height:1.35;
+    }
+    .pill{
+      flex:0 0 auto;
+      padding:6px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      border:1px solid transparent;
+      min-width:92px;
+      text-align:center;
+    }
+    .pill.favoravel{background:#e8f8ec;color:var(--green-text);border-color:#bfe8c8}
+    .pill.moderado{background:var(--yellow);color:var(--yellow-text);border-color:#f0d58b}
+    .pill.contrario{background:var(--red);color:var(--red-text);border-color:#f3b3b3}
+
+    .slider-wrap{
+      margin-top:10px;
+      padding:6px 0 0;
+    }
+    input[type="range"]{
+      width:100%;
+      accent-color:var(--teal);
+      height:30px;
+    }
+    .scale{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      font-size:12px;
+      color:var(--muted);
+      margin-top:-2px;
+    }
+
+    .choice-box{
+      margin-top:6px;
+      display:flex;
+      gap:22px;
+      flex-wrap:wrap;
+      align-items:center;
+      color:#243244;
+      font-size:14px;
+    }
+    .choice-box label{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:8px;
+    }
+    button{
+      border:0;
+      border-radius:12px;
+      padding:12px 16px;
+      font-weight:800;
+      cursor:pointer;
+      transition:.15s ease;
+      font-size:14px;
+    }
+    button:hover{transform:translateY(-1px)}
+    .btn-primary{background:var(--teal);color:#fff}
+    .btn-primary:hover{background:var(--teal-dark)}
+    .btn-light{background:#eef4ff;color:#183a7a}
+    .btn-contrario{background:#ffe9e9;color:#a02626}
+    .btn-moderado{background:#fff7de;color:#8a5a00}
+    .btn-favoravel{background:#e8f8ec;color:#1b7a2f}
+
+    .hint{
+      margin-top:10px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .status{
+      margin-top:10px;
+      font-size:13px;
+      color:#1e3a8a;
+      min-height:18px;
+    }
+    .status.error{color:#b42318}
+    .status.ok{color:#166534}
+
+    .result-panel{
+      padding:16px;
+      margin-top:14px;
+    }
+    .result-title{
+      margin:0 0 10px;
+      font-size:18px;
+    }
+
+    .result-card{
+      display:grid;
+      grid-template-columns:112px 1fr;
+      gap:14px;
+      background:#f8fcff;
+      border:1px solid #d9eaf7;
       border-radius:16px;
       padding:14px;
       margin-bottom:12px;
     }
-    .question:last-child{margin-bottom:0}
-    .q-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-    .q-title{font-weight:700;margin:0 0 6px}
-    .q-text{margin:0;color:var(--muted);font-size:14px;line-height:1.4}
-    .pill{
-      flex:0 0 auto;
-      padding:7px 12px;
-      border-radius:999px;
-      font-size:13px;
-      font-weight:700;
-      border:1px solid var(--line);
-      background:#f7fafc;
-      color:#22324b;
-      min-width:96px;
-      text-align:center;
-    }
-    .pill.contrario{background:#ffe8e8;border-color:#ffc2c2;color:#b42318}
-    .pill.moderado{background:#fff7dd;border-color:#ffe4a3;color:#9a6d00}
-    .pill.favoravel{background:#e3faf2;border-color:#bff1df;color:#0f7a5a}
-    .slider-row{
-      margin-top:12px;
-      display:grid;
-      grid-template-columns:90px 1fr 90px;
-      align-items:center;
-      gap:10px;
-      color:var(--muted);
-      font-size:12px;
-    }
-    input[type="range"]{
-      width:100%;
-      appearance:none;
-      height:8px;
-      border-radius:999px;
-      background:linear-gradient(90deg,#b5c3d9,#d3dbe6);
-      outline:none;
-    }
-    input[type="range"]::-webkit-slider-thumb{
-      appearance:none;
-      width:22px;
-      height:22px;
-      border-radius:50%;
-      background:#fff;
-      border:4px solid var(--brand);
-      box-shadow:0 2px 6px rgba(0,0,0,.18);
-      cursor:pointer;
-    }
-    input[type="range"]::-moz-range-thumb{
-      width:22px;height:22px;border-radius:50%;
-      background:#fff;border:4px solid var(--brand);cursor:pointer;
-    }
-    .mode{
-      display:flex;gap:16px;flex-wrap:wrap;margin-top:8px
-    }
-    .mode label{
-      display:flex;align-items:center;gap:8px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      padding:10px 14px;
-      cursor:pointer;
-      background:#fff;
-    }
-    .actions{
-      display:flex;gap:10px;flex-wrap:wrap;margin-top:12px
-    }
-    .btn{
-      border:0;
+    .result-card .photo{
+      width:112px;
+      height:146px;
       border-radius:12px;
-      padding:12px 16px;
-      font-weight:700;
-      cursor:pointer;
-      transition:.18s ease;
-      font-size:14px;
-    }
-    .btn:hover{transform:translateY(-1px)}
-    .btn.primary{background:var(--brand);color:#fff}
-    .btn.primary:hover{background:var(--brand-2)}
-    .btn.soft{background:#eaf2ff;color:#153a70}
-    .btn.gray{background:#edf2f7;color:#2a3a4f}
-    .btn.green{background:#e5f8ee;color:#13734f}
-    .btn.orange{background:#fff1d6;color:#8a5a00}
-    .btn.red{background:#ffe3e3;color:#a61b1b}
-    .note{font-size:13px;color:var(--muted);line-height:1.45}
-    .error{color:#c02626;font-size:13px;margin-top:10px}
-    .result-area{display:none}
-    .result-area.show{display:block}
-    .result-card{
-      border-radius:22px;
-      background:linear-gradient(180deg,#eefaf0 0%, #ffffff 100%);
-      border:1px solid #d3ead7;
-      overflow:hidden;
-    }
-    .result-top{
-      display:grid;
-      grid-template-columns:190px 1fr;
-      gap:16px;
-      padding:16px;
-      align-items:start;
-    }
-    .photo{
-      width:100%;
-      aspect-ratio:3/4;
-      border-radius:14px;
       object-fit:cover;
-      background:#f2f4f7;
-      border:1px solid #dfe7ef;
+      background:#e8eef5;
+      display:block;
     }
-    .badge{
-      display:inline-block;
-      font-size:12px;
-      font-weight:800;
-      color:#0a6a52;
-      background:#def8eb;
-      border:1px solid #b9eed2;
-      padding:6px 10px;
-      border-radius:999px;
-      margin-bottom:8px;
+    .result-card .meta h3{
+      margin:4px 0 6px;
+      font-size:20px;
+      line-height:1.15;
     }
-    .candidate-name{
-      margin:0 0 8px;
-      font-size:24px;
-      line-height:1.1;
-      letter-spacing:-.02em;
-    }
-    .meta{
-      display:grid;
-      gap:4px;
-      font-size:14px;
-      line-height:1.45;
-    }
-    .meta strong{color:#132033}
-    .meta a{color:#0f6b64;text-decoration:none;font-weight:700}
-    .meta a:hover{text-decoration:underline}
-    .share-line{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap}
-    .compat-title{padding:0 16px 10px;font-weight:800;color:#254057}
-    .compat-list{padding:0 16px 16px;display:grid;gap:10px}
-    .compat-item{
-      border:1px solid #dce7f1;
-      background:#fff;
-      border-radius:14px;
-      padding:12px;
-      display:grid;
-      grid-template-columns:42px 1fr auto;
-      gap:10px;
-      align-items:center;
-    }
-    .compat-photo{
-      width:42px;height:42px;border-radius:50%;object-fit:cover;background:#eef2f6;border:1px solid #dce7f1;
-    }
-    .compat-name{font-weight:800;margin:0;font-size:14px}
-    .compat-sub{margin:2px 0 0;color:var(--muted);font-size:12px}
-    .compat-right{
-      text-align:right;
-      font-size:12px;
-      color:var(--muted);
-      white-space:nowrap;
-    }
-    .anti-card{
-      display:none;
-      border-radius:22px;
-      background:linear-gradient(180deg,#fff 0%, #fff7f7 100%);
-      border:1px solid #ffd0d0;
-      overflow:hidden;
-    }
-    .anti-card.show{display:block}
-    .anti-inner{
-      padding:16px;
-      display:grid;
-      grid-template-columns:220px 1fr;
-      gap:16px;
-      align-items:center;
-    }
-    .anti-inner img{
-      width:100%;
-      border-radius:16px;
-      border:1px solid #efd6d6;
-      object-fit:cover;
-      background:#fff;
-    }
-    .anti-copy h2{margin:0 0 8px;font-size:24px;line-height:1.1}
-    .anti-copy p{margin:0 0 10px;color:#4f2d2d;line-height:1.55}
-    .anti-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-    .anti-links a{
-      text-decoration:none;
-      font-weight:800;
-      border-radius:12px;
-      padding:11px 14px;
+    .small-badge{
       display:inline-flex;
       align-items:center;
-      gap:8px;
-      border:1px solid #e4c3c3;
-      background:#fff;
-      color:#8f2424;
+      padding:5px 10px;
+      border-radius:999px;
+      background:#dff6e7;
+      color:#16703b;
+      font-size:12px;
+      font-weight:800;
+      margin-bottom:4px;
     }
-    .muted-box{
-      background:#f8fbfd;
-      border:1px dashed #d8e2ee;
-      color:var(--muted);
-      padding:12px 14px;
-      border-radius:14px;
-      font-size:13px;
+    .detail-list{
+      margin:0;
+      padding:0;
+      list-style:none;
+      font-size:14px;
       line-height:1.5;
     }
-    @media (max-width:760px){
-      .result-top,.anti-inner{grid-template-columns:1fr}
-      .header h1{font-size:24px}
-      .candidate-name,.anti-copy h2{font-size:22px}
-      .q-top{flex-direction:column}
-      .pill{align-self:flex-start}
+    .detail-list strong{font-weight:800}
+    .result-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .share-btn, .open-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      text-decoration:none;
+      padding:10px 14px;
+      border-radius:12px;
+      font-weight:800;
+      font-size:14px;
+      border:1px solid transparent;
+    }
+    .share-btn{background:#eef4ff;color:#183a7a}
+    .open-btn{background:#e8f8ec;color:#17603b}
+    .share-btn:hover, .open-btn:hover{filter:brightness(.98)}
+
+    .compatible-title{
+      margin:14px 0 8px;
+      font-size:14px;
+      font-weight:800;
+      color:#334155;
+    }
+    .candidate-mini{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px 12px;
+      background:#fff;
+      margin-bottom:8px;
+    }
+    .candidate-mini img{
+      width:44px;
+      height:44px;
+      border-radius:999px;
+      object-fit:cover;
+      background:#edf2f7;
+      flex:0 0 auto;
+    }
+    .candidate-mini .name{
+      font-weight:800;
+      font-size:14px;
+      margin:0;
+    }
+    .candidate-mini .sub{
+      margin:2px 0 0;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .blocked-card{
+      display:grid;
+      grid-template-columns:180px 1fr;
+      gap:16px;
+      align-items:center;
+      background:#f8fcff;
+      border:1px solid #d8e9f1;
+      border-radius:18px;
+      padding:14px;
+    }
+    .blocked-card img{
+      width:180px;
+      height:180px;
+      object-fit:cover;
+      border-radius:14px;
+      background:#edf2f7;
+    }
+    .blocked-copy h3{
+      margin:0 0 8px;
+      font-size:22px;
+      line-height:1.15;
+    }
+    .blocked-copy p{
+      margin:0 0 10px;
+      color:#334155;
+      line-height:1.45;
+      font-size:14px;
+      max-width:720px;
+    }
+    .blocked-links{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:6px;
+    }
+    .blocked-links a{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+      padding:10px 14px;
+      border-radius:12px;
+      background:#eef4ff;
+      color:#183a7a;
+      font-weight:800;
+      border:1px solid #d7e3ff;
+      font-size:14px;
+    }
+
+    .hidden{display:none !important}
+
+    @media (max-width: 780px){
+      .hero h1{font-size:22px}
+      .result-card, .blocked-card{
+        grid-template-columns:1fr;
+      }
+      .result-card .photo, .blocked-card img{
+        width:100%;
+        height:auto;
+        aspect-ratio: 4 / 5;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="header">
-      <h1>Quiz eleitoral 2026</h1>
-      <p>Responda às 7 perguntas com a barra deslizante. O resultado mostra os 3 candidatos mais compatíveis. Se houver 2 ou mais respostas Contrário, ou se Mulheres ou Meio Ambiente forem Contrário, o quiz bloqueia a recomendação e exibe a mensagem de investigação independente.</p>
-    </div>
+  <div class="page">
+    <section class="hero">
+      <div class="badge">Quiz eleitoral</div>
+      <h1>Resultado com bloqueio automático para contrariedade crítica</h1>
+      <p>
+        Se houver 2 ou mais respostas Contrário, ou se Mulheres &amp; Gênero ou Meio Ambiente forem Contrário,
+        o card de candidato não aparece. Em vez disso, mostramos a mensagem de investigação independente.
+      </p>
+    </section>
 
-    <div class="grid">
-      <div class="card">
-        <h2 class="section-title">Questionário</h2>
-        <p class="section-sub">Use a barra para marcar cada tema como Contrário, Moderado ou Favorável.</p>
-        <div id="questions"></div>
+    <section class="panel">
+      <h2 class="section-title">Como você quer ver o resultado?</h2>
+      <p class="section-subtitle">O quiz é o mesmo para todos. O que muda é o cálculo final.</p>
 
-        <div class="question">
-          <div class="q-top">
-            <div>
-              <p class="q-title">Como você quer ver o resultado?</p>
-              <p class="q-text">O quiz é o mesmo para todos. O que muda é o cálculo final.</p>
-            </div>
-          </div>
-          <div class="mode">
-            <label><input type="radio" name="modo" value="tradicional" checked> Candidatos tradicionais</label>
-            <label><input type="radio" name="modo" value="renovacao"> Novos entrantes / renovação</label>
-          </div>
-        </div>
+      <div class="choice-box">
+        <label><input type="radio" name="modo" value="tradicionais" checked /> Candidatos tradicionais</label>
+        <label><input type="radio" name="modo" value="renovacao" /> Novos entrantes / renovação</label>
+      </div>
+    </section>
 
-        <div class="card" style="padding:14px;margin-top:12px;background:#fbfdff">
-          <h2 class="section-title" style="margin-bottom:4px">Teste do questionário</h2>
-          <p class="section-sub">Clique em enviar para calcular a recomendação e ver o resultado.</p>
-          <div class="actions">
-            <button class="btn primary" id="submitBtn" type="button">Enviar respostas</button>
-            <button class="btn green" type="button" id="fillFavoravel">Preencher Favorável</button>
-            <button class="btn orange" type="button" id="fillModerado">Preencher Moderado</button>
-            <button class="btn red" type="button" id="fillContrario">Preencher Contrário</button>
-          </div>
-          <div id="errorBox" class="error"></div>
-        </div>
+    <section class="panel" id="quiz-panel">
+      <h2 class="section-title">Teste do questionário</h2>
+      <p class="section-subtitle">Clique em enviar para calcular a recomendação e ver o resultado.</p>
+
+      <div id="questions"></div>
+
+      <div class="actions">
+        <button class="btn-primary" id="btnSubmit">Enviar respostas</button>
+        <button class="btn-favoravel" data-fill="1">Preencher Favorável</button>
+        <button class="btn-moderado" data-fill="0">Preencher Moderado</button>
+        <button class="btn-contrario" data-fill="-1">Preencher Contrário</button>
       </div>
 
-      <div id="antiCard" class="anti-card">
-        <div class="anti-inner">
-          <img src="assets/nao_manipulado.jpeg" alt="Não se deixe ser manipulado" />
-          <div class="anti-copy">
-            <h2>Não se deixe ser manipulado</h2>
-            <p id="antiMessage"></p>
-            <div class="anti-links">
-              <a href="https://quemfoiquem.org.br/" target="_blank" rel="noopener noreferrer">Quem Foi Quem</a>
-              <a href="https://www.agencialupa.org/institucional/2026/07/31/deputometro-conheca-o-painel-de-monitoramento-lupa/" target="_blank" rel="noopener noreferrer">Agência Lupa Deputômetro</a>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div class="hint">Use o slider de cada pergunta. Esquerda = Contrário, meio = Moderado, direita = Favorável.</div>
+      <div id="status" class="status"></div>
+    </section>
 
-      <div id="resultArea" class="result-area">
-        <div class="card result-card">
-          <div class="result-top">
-            <img id="mainPhoto" class="photo" src="" alt="Foto do candidato" />
-            <div>
-              <span class="badge">Última recomendação</span>
-              <h2 id="mainName" class="candidate-name"></h2>
-              <div class="meta">
-                <div><strong>Número:</strong> <span id="mainNumber"></span></div>
-                <div><strong>Partido:</strong> <span id="mainParty"></span></div>
-                <div><strong>Score:</strong> <span id="mainScore"></span></div>
-                <div><strong>Chance:</strong> <span id="mainChance"></span></div>
-                <div><strong>Justificativa:</strong> <span id="mainJustification"></span></div>
-                <div><strong>Instagram:</strong> <a id="mainInstagram" href="#" target="_blank" rel="noopener noreferrer">Abrir Instagram</a></div>
-              </div>
-              <div class="share-line">
-                <button class="btn soft" id="shareBtn" type="button">Compartilhar resultado</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="compat-title">Outras opções compatíveis:</div>
-          <div id="compatList" class="compat-list"></div>
-        </div>
-      </div>
-    </div>
+    <section class="result-panel hidden" id="result-panel">
+      <h2 class="result-title">Resultado</h2>
+      <div id="result-content"></div>
+    </section>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // Preencha com suas credenciais públicas do Supabase
-    const SUPABASE_URL = "https://SEU-PROJETO.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // ========= CONFIG SUPABASE =========
+    // Se já estiver usando variáveis globais no seu projeto, pode trocar aqui.
+    const SUPABASE_URL = window.SUPABASE_URL || '';
+    const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || '';
+    const supabase = (SUPABASE_URL && SUPABASE_ANON_KEY)
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
 
-    const QUESTIONS = [
+    // ========= PERGUNTAS =========
+    const questions = [
       {
-        key: "mulheres",
-        title: "1. Mulheres & Gênero",
-        text: "Candidatos devem defender igualdade de gênero, enfrentamento à violência contra a mulher e direitos reprodutivos?"
+        key: 'mulheres',
+        label: '1. Mulheres & Gênero',
+        text: 'Candidatos devem ter compromisso explícito com direitos das mulheres, igualdade de gênero e enfrentamento da violência política?'
       },
       {
-        key: "educacao",
-        title: "2. Educação & Serv. Público",
-        text: "Candidatos devem defender investimento em educação pública e valorização do serviço público?"
+        key: 'educacao',
+        label: '2. Educação & Serv. Público',
+        text: 'Candidatos devem defender educação pública, valorização do serviço público e investimentos sociais?'
       },
       {
-        key: "meio_ambiente",
-        title: "3. Meio Ambiente",
-        text: "Candidatos devem priorizar agenda climática, proteção ambiental e transição ecológica?"
+        key: 'meio_ambiente',
+        label: '3. Meio Ambiente',
+        text: 'Candidatos devem assumir compromisso claro com a agenda climática e preservação ambiental?'
       },
       {
-        key: "impostos",
-        title: "4. Taxação sobre Renda/Fortunas",
-        text: "Candidatos devem apoiar maior taxação sobre altas rendas e grandes fortunas?"
+        key: 'impostos',
+        label: '4. Taxação sobre Renda/Fortunas',
+        text: 'Candidatos devem apoiar maior justiça tributária com foco em renda alta e grandes fortunas?'
       },
       {
-        key: "direitos",
-        title: "5. Direitos Sociais",
-        text: "Candidatos devem fortalecer políticas de proteção social, trabalho e renda?"
+        key: 'direitos',
+        label: '5. Direitos Sociais',
+        text: 'Candidatos devem defender ampliação de direitos sociais e políticas públicas?'
       },
       {
-        key: "seguranca",
-        title: "6. Segurança Pública",
-        text: "Candidatos devem defender segurança pública com foco em inteligência, prevenção e controle?"
+        key: 'seguranca',
+        label: '6. Segurança Pública',
+        text: 'Candidatos devem apoiar políticas de segurança com responsabilidade social e efetividade?'
       },
       {
-        key: "transparencia",
-        title: "7. Transparência",
-        text: "Candidatos devem ter compromisso explícito de combater mecanismos opacos como orçamento secreto/emendas de relator?"
+        key: 'transparencia',
+        label: '7. Transparência',
+        text: 'Candidatos devem ter compromisso explícito de combater mecanismos opacos como orçamento secreto/emendas de relator?'
       }
     ];
 
-    const SCORE_MAP = { contrario: -1, moderado: 0, favoravel: 1 };
-    const SCORE_LABEL = { contrario: "Contrário", moderado: "Moderado", favoravel: "Favorável" };
-    const SCORE_CLASS = { contrario: "contrario", moderado: "moderado", favoravel: "favoravel" };
+    const valueMap = {
+      '-1': { label: 'Contrário', cls: 'contrario' },
+      '0': { label: 'Moderado', cls: 'moderado' },
+      '1': { label: 'Favorável', cls: 'favoravel' }
+    };
 
-    const elQuestions = document.getElementById("questions");
-    const resultArea = document.getElementById("resultArea");
-    const antiCard = document.getElementById("antiCard");
-    const antiMessage = document.getElementById("antiMessage");
-    const errorBox = document.getElementById("errorBox");
-    const compatList = document.getElementById("compatList");
+    const els = {
+      questions: document.getElementById('questions'),
+      status: document.getElementById('status'),
+      resultPanel: document.getElementById('result-panel'),
+      resultContent: document.getElementById('result-content'),
+      btnSubmit: document.getElementById('btnSubmit')
+    };
 
-    let lastResult = null;
+    const state = {};
+    questions.forEach(q => state[q.key] = 1);
 
-    function createQuestion(q, idx) {
-      const wrap = document.createElement("div");
-      wrap.className = "question";
-      wrap.innerHTML = `
-        <div class="q-top">
-          <div>
-            <p class="q-title">${q.title}</p>
-            <p class="q-text">${q.text}</p>
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function normalizeInstagram(url) {
+      if (!url) return '';
+      const trimmed = String(url).trim();
+      return trimmed.startsWith('http') ? trimmed : `https://${trimmed}`;
+    }
+
+    function sliderLabel(v) {
+      return valueMap[String(v)] || valueMap['0'];
+    }
+
+    function renderQuestions() {
+      els.questions.innerHTML = questions.map((q, idx) => {
+        const current = sliderLabel(state[q.key]);
+        return `
+          <div class="question" data-question="${q.key}">
+            <div class="question-head">
+              <div>
+                <p class="q-label">${escapeHtml(q.label)}</p>
+                <p class="q-text">${escapeHtml(q.text)}</p>
+              </div>
+              <div class="pill ${current.cls}" data-pill-for="${q.key}">${current.label}</div>
+            </div>
+            <div class="slider-wrap">
+              <input
+                type="range"
+                min="-1"
+                max="1"
+                step="1"
+                value="${state[q.key]}"
+                aria-label="${escapeHtml(q.label)}"
+                data-slider="${q.key}"
+              />
+              <div class="scale">
+                <span>Contrário</span>
+                <span>Moderado</span>
+                <span>Favorável</span>
+              </div>
+            </div>
           </div>
-          <div class="pill favoravel" id="pill-${q.key}">Favorável</div>
-        </div>
-        <div class="slider-row">
-          <span>Contrário</span>
-          <input type="range" min="0" max="2" step="1" value="2" data-key="${q.key}" />
-          <span style="text-align:right">Favorável</span>
-        </div>
-      `;
-      return wrap;
-    }
+        `;
+      }).join('');
 
-    function updatePill(key, value) {
-      const pill = document.getElementById(`pill-${key}`);
-      const values = ["contrario","moderado","favoravel"];
-      const current = values[value];
-      pill.textContent = SCORE_LABEL[current];
-      pill.className = `pill ${SCORE_CLASS[current]}`;
-    }
-
-    QUESTIONS.forEach((q, idx) => {
-      elQuestions.appendChild(createQuestion(q, idx));
-      updatePill(q.key, 2);
-    });
-
-    elQuestions.addEventListener("input", (e) => {
-      if (e.target.matches('input[type="range"]')) {
-        updatePill(e.target.dataset.key, Number(e.target.value));
-      }
-    });
-
-    function getAnswers() {
-      const answers = {};
-      document.querySelectorAll('input[type="range"][data-key]').forEach(r => {
-        const idx = Number(r.value);
-        const map = ["contrario", "moderado", "favoravel"];
-        answers[r.dataset.key] = map[idx];
+      document.querySelectorAll('[data-slider]').forEach(input => {
+        input.addEventListener('input', (e) => {
+          const key = e.target.dataset.slider;
+          state[key] = Number(e.target.value);
+          const pill = document.querySelector(`[data-pill-for="${key}"]`);
+          const l = sliderLabel(state[key]);
+          pill.textContent = l.label;
+          pill.className = `pill ${l.cls}`;
+        });
       });
-      return answers;
+    }
+
+    function setAll(value) {
+      questions.forEach(q => state[q.key] = Number(value));
+      renderQuestions();
+    }
+
+    function getModo() {
+      return document.querySelector('input[name="modo"]:checked')?.value || 'tradicionais';
+    }
+
+    function toAnswerText(v) {
+      return valueMap[String(v)].label;
     }
 
     function countContrarios(answers) {
-      return Object.values(answers).filter(v => v === "contrario").length;
+      return Object.values(answers).filter(v => v === -1).length;
     }
 
-    function shouldBlock(answers) {
-      return countContrarios(answers) >= 2 || answers.mulheres === "contrario" || answers.meio_ambiente === "contrario";
+    function isBlocked(answers) {
+      const contrarios = countContrarios(answers);
+      return contrarios >= 2 || answers.mulheres === -1 || answers.meio_ambiente === -1;
     }
 
-    function fillAll(mode) {
-      const val = mode === "contrario" ? 0 : mode === "moderado" ? 1 : 2;
-      document.querySelectorAll('input[type="range"][data-key]').forEach(r => {
-        r.value = String(val);
-        updatePill(r.dataset.key, val);
-      });
+    function getBlockReason(answers) {
+      const reasons = [];
+      if (answers.mulheres === -1) reasons.push('Mulheres & Gênero em Contrário');
+      if (answers.meio_ambiente === -1) reasons.push('Meio Ambiente em Contrário');
+      if (countContrarios(answers) >= 2) reasons.push(`${countContrarios(answers)} respostas Contrário`);
+      return reasons.join(' • ');
     }
 
-    document.getElementById("fillFavoravel").onclick = () => fillAll("favoravel");
-    document.getElementById("fillModerado").onclick = () => fillAll("moderado");
-    document.getElementById("fillContrario").onclick = () => fillAll("contrario");
-
-    function formatChance(scoreFinal) {
-      if (scoreFinal >= 0.8) return "Muito alta";
-      if (scoreFinal >= 0.65) return "Alta";
-      if (scoreFinal >= 0.45) return "Média";
-      return "Baixa";
+    function setStatus(msg, type='') {
+      els.status.textContent = msg || '';
+      els.status.className = `status ${type}`.trim();
     }
 
-    function normalizeName(v) {
-      return (v || "").trim();
-    }
-
-    function pickMain(list) {
-      return list[0] || null;
-    }
-
-    function candidateLabel(c) {
-      return c.nome_urna || c.nome_candidato || "";
-    }
-
-    function safeUrl(url) {
-      if (!url) return "#";
-      return url;
-    }
-
-    function renderBlocked() {
-      resultArea.classList.remove("show");
-      antiCard.classList.add("show");
-      antiMessage.innerHTML = `
-        Não temos candidato para sugerir com base nestas respostas. 
-        Para seguir avaliando propostas e histórico de atuação, visite os sites abaixo e compare as informações por conta própria.
+    function renderBlockCard() {
+      els.resultPanel.classList.remove('hidden');
+      els.resultContent.innerHTML = `
+        <div class="blocked-card">
+          <img src="assets/nao_manipulado.jpeg" alt="Não se deixe ser manipulado" onerror="this.style.display='none'">
+          <div class="blocked-copy">
+            <h3>Não se deixe ser manipulado</h3>
+            <p>
+              Não temos candidato a sugerir com base nas suas respostas.
+              Recomendamos que você investigue propostas, histórico parlamentar e votação com fontes independentes.
+            </p>
+            <div class="blocked-links">
+              <a href="https://quemfoiquem.org.br/" target="_blank" rel="noopener noreferrer">Quem Foi Quem</a>
+              <a href="https://www.agencialupa.org/institucional/2026/07/31/deputometro-conheca-o-painel-de-monitoramento-lupa/" target="_blank" rel="noopener noreferrer">Deputômetro</a>
+            </div>
+          </div>
+        </div>
       `;
     }
 
-    function renderResults(list) {
-      antiCard.classList.remove("show");
-      resultArea.classList.add("show");
+    function renderCandidateCard(row, highlight=false) {
+      const foto = row.foto || '';
+      const instagram = normalizeInstagram(row.instagram);
+      const nomeDisplay = row.nome_candidato || row.nome_urna || 'Candidato';
+      const partido = row.partido || '—';
+      const numero = row.numero_candidato ?? '—';
+      const score = row.score_final != null ? Number(row.score_final).toFixed(4) : '—';
+      const chance = row.status_viabilidade || '—';
+      const totalVotos = row.total_votos != null ? Number(row.total_votos).toLocaleString('pt-BR') : '—';
+      const secoes = row.secoes_com_voto ?? '—';
+      const zonas = row.zonas_com_voto ?? '—';
+      const imgTag = foto
+        ? `<img class="photo" src="${escapeHtml(foto)}" alt="${escapeHtml(nomeDisplay)}">`
+        : `<div class="photo" aria-label="Sem foto"></div>`;
 
-      const main = pickMain(list);
-      if (!main) return;
-
-      document.getElementById("mainPhoto").src = main.foto || "assets/default-avatar.png";
-      document.getElementById("mainName").textContent = candidateLabel(main);
-      document.getElementById("mainNumber").textContent = main.numero_candidato ?? "—";
-      document.getElementById("mainParty").textContent = main.partido ?? "—";
-      document.getElementById("mainScore").textContent = main.score_final != null ? Number(main.score_final).toFixed(4) : "—";
-      document.getElementById("mainChance").textContent = main.status_viabilidade || formatChance(Number(main.score_final || 0));
-      document.getElementById("mainJustification").textContent = main.justificativa || "Candidato selecionado por afinidade programática.";
-      const ig = document.getElementById("mainInstagram");
-      ig.href = safeUrl(main.instagram);
-      ig.textContent = main.instagram ? "Abrir Instagram" : "Sem Instagram";
-
-      compatList.innerHTML = "";
-      list.slice(1, 3).forEach((c) => {
-        const row = document.createElement("div");
-        row.className = "compat-item";
-        row.innerHTML = `
-          <img class="compat-photo" src="${c.foto || "assets/default-avatar.png"}" alt="">
-          <div>
-            <p class="compat-name">${candidateLabel(c)}</p>
-            <p class="compat-sub">Nº ${c.numero_candidato ?? "—"} • ${c.partido ?? "—"} • Score ${c.score_final != null ? Number(c.score_final).toFixed(4) : "—"}</p>
+      return `
+        <div class="result-card">
+          ${imgTag}
+          <div class="meta">
+            ${highlight ? '<div class="small-badge">Última recomendação</div>' : ''}
+            <h3>${escapeHtml(nomeDisplay)}</h3>
+            <ul class="detail-list">
+              <li><strong>Partido:</strong> ${escapeHtml(partido)}</li>
+              <li><strong>Número:</strong> ${escapeHtml(numero)}</li>
+              <li><strong>Score:</strong> ${escapeHtml(score)}</li>
+              <li><strong>Chance:</strong> ${escapeHtml(chance)}</li>
+              <li><strong>Total de votos:</strong> ${escapeHtml(totalVotos)}</li>
+              <li><strong>Seções:</strong> ${escapeHtml(secoes)} | <strong>Zonas:</strong> ${escapeHtml(zonas)}</li>
+              <li><strong>Justificativa:</strong> Candidato selecionado por afinidade programática.</li>
+              <li><strong>Instagram:</strong> ${
+                instagram
+                  ? `<a href="${escapeHtml(instagram)}" target="_blank" rel="noopener noreferrer">Abrir Instagram</a>`
+                  : '—'
+              }</li>
+            </ul>
+            <div class="result-actions">
+              <a class="share-btn" href="#" data-share="1">Compartilhar resultado</a>
+              ${instagram ? `<a class="open-btn" href="${escapeHtml(instagram)}" target="_blank" rel="noopener noreferrer">Ver Instagram</a>` : ''}
+            </div>
           </div>
-          <div class="compat-right">${c.status_viabilidade || formatChance(Number(c.score_final || 0))}</div>
-        `;
-        compatList.appendChild(row);
-      });
-
-      lastResult = main;
+        </div>
+      `;
     }
 
-    async function saveResult(payload) {
-      // Ajuste o nome da função conforme seu fluxo de gravação, se necessário.
-      // Se você já salva em outra tabela/trigger, pode manter só o cálculo na tela.
-      try {
-        await supabase.from("resultados_quiz").insert([payload]);
-      } catch (e) {
-        console.warn("Falha ao salvar resultado:", e);
-      }
-    }
-
-    async function fetchTopCandidates(answers, modo) {
-      // Tenta primeiro a RPC com o limite
-      const p_limit = 20;
-
-      try {
-        const { data, error } = await supabase.rpc("rpc_top_viabilidade", { p_limit });
-        if (!error && Array.isArray(data)) return data;
-      } catch (e) {
-        console.warn("RPC falhou, tentando tabela direta.", e);
+    async function fetchTopCandidates(modo) {
+      if (!supabase) {
+        throw new Error('Supabase não configurado.');
       }
 
-      // fallback para a view/tabela já materializada
-      const { data, error } = await supabase
-        .from("viabilidade_deputado_federal_sp")
-        .select("*")
-        .order("score_final", { ascending: false })
-        .limit(p_limit);
+      // A view já está pronta e evita o problema do RPC com conflito de assinatura.
+      let query = supabase
+        .from('viabilidade_deputado_federal_sp')
+        .select('nome_urna,nome_candidato,partido,numero_candidato,foto,instagram,total_votos,secoes_com_voto,zonas_com_voto,score_final,status_viabilidade')
+        .order('score_final', { ascending: false })
+        .order('total_votos', { ascending: false })
+        .limit(3);
 
+      if (modo === 'renovacao') {
+        query = query.eq('flag_renovacao', true);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     }
 
-    async function onSubmit() {
-      errorBox.textContent = "";
-      const answers = getAnswers();
-      const modo = document.querySelector('input[name="modo"]:checked')?.value || "tradicional";
+    async function saveQuizResult(answers, blocked, topCandidate) {
+      if (!supabase) return;
 
-      if (shouldBlock(answers)) {
-        renderBlocked();
-        await saveResult({
-          bloqueado: true,
-          justificativa: "Não temos candidato a sugerir. Consulte Quem Foi Quem e o Deputômetro para continuar sua investigação.",
-          perguntas: answers,
-          modo
-        });
-        return;
-      }
+      const payload = {
+        mulheres: toAnswerText(answers.mulheres),
+        educacao: toAnswerText(answers.educacao),
+        meio_ambiente: toAnswerText(answers.meio_ambiente),
+        impostos: toAnswerText(answers.impostos),
+        direitos: toAnswerText(answers.direitos),
+        seguranca: toAnswerText(answers.segurança),
+        transparencia: toAnswerText(answers.transparencia),
+        pontuacao_afinidade: blocked ? 0 : (topCandidate?.score_final ? Math.round(Number(topCandidate.score_final) * 100) : 0),
+        candidato_recomendado: blocked ? 'Não há candidato sugerido' : 'Candidato selecionado por afinidade programática.',
+        nome_candidato: blocked ? null : (topCandidate?.nome_candidato || topCandidate?.nome_urna || null),
+        partido: blocked ? null : (topCandidate?.partido || null),
+        bloqueado: !!blocked
+      };
 
+      // Tenta salvar em resultados_quiz. Se seu nome for outro, troque aqui.
       try {
-        const list = await fetchTopCandidates(answers, modo);
-        if (!list.length) {
-          errorBox.textContent = "Não foi possível carregar os candidatos. Tente novamente.";
-          return;
-        }
-
-        renderResults(list);
-
-        await saveResult({
-          bloqueado: false,
-          nome_candidato: candidateLabel(list[0]),
-          partido: list[0].partido || null,
-          numero_candidato: list[0].numero_candidato || null,
-          justificativa: list[0].justificativa || null,
-          perguntas: answers,
-          modo
-        });
-      } catch (err) {
-        console.error(err);
-        errorBox.textContent = "Erro ao gerar ou salvar a recomendação.";
+        await supabase.from('resultados_quiz').insert(payload);
+      } catch (e) {
+        console.warn('Falha ao salvar resultado:', e);
       }
     }
 
-    document.getElementById("submitBtn").addEventListener("click", onSubmit);
+    async function submitQuiz() {
+      setStatus('', '');
+      const answers = {};
+      questions.forEach(q => {
+        answers[q.key] = Number(state[q.key]);
+      });
 
-    document.getElementById("shareBtn").addEventListener("click", async () => {
-      if (!lastResult) return;
-      const text = `Minha recomendação no Quiz Eleitoral: ${candidateLabel(lastResult)} (${lastResult.partido || "sem partido"})`;
-      const url = location.href;
+      if (isBlocked(answers)) {
+        const reason = getBlockReason(answers);
+        els.resultPanel.classList.remove('hidden');
+        renderBlockCard();
+        setStatus(`Bloqueio aplicado: ${reason}.`, 'ok');
+
+        await saveQuizResult(answers, true, null);
+        return;
+      }
+
+      els.resultPanel.classList.remove('hidden');
+      els.resultContent.innerHTML = '<div style="padding:14px;color:#334155">Carregando resultado...</div>';
 
       try {
-        if (navigator.share) {
-          await navigator.share({ title: "Resultado do Quiz Eleitoral", text, url });
-        } else {
-          await navigator.clipboard.writeText(`${text} - ${url}`);
-          alert("Resultado copiado para a área de transferência.");
+        const modo = getModo();
+        const rows = await fetchTopCandidates(modo);
+
+        if (!rows.length) {
+          els.resultContent.innerHTML = `
+            <div class="result-card" style="grid-template-columns:1fr">
+              <div class="meta">
+                <h3>Sem candidatos retornados</h3>
+                <ul class="detail-list">
+                  <li><strong>Mensagem:</strong> a consulta não trouxe candidatos para este filtro.</li>
+                </ul>
+              </div>
+            </div>
+          `;
+          setStatus('Consulta sem candidatos retornados.', 'error');
+          return;
         }
-      } catch (e) {
-        console.warn(e);
+
+        const [top1, ...others] = rows;
+        els.resultContent.innerHTML = `
+          ${renderCandidateCard(top1, true)}
+          <div class="compatible-title">Outras opções compatíveis:</div>
+          ${others.map(item => renderCandidateCard(item, false)).join('')}
+        `;
+
+        document.querySelectorAll('[data-share="1"]').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const txt = window.location.href;
+            try {
+              if (navigator.share) {
+                await navigator.share({
+                  title: 'Resultado do quiz eleitoral',
+                  text: 'Veja meu resultado no quiz eleitoral',
+                  url: txt
+                });
+              } else {
+                await navigator.clipboard.writeText(txt);
+                setStatus('Link copiado para a área de transferência.', 'ok');
+              }
+            } catch (err) {
+              console.warn(err);
+            }
+          });
+        });
+
+        setStatus('Resultado carregado com sucesso.', 'ok');
+        await saveQuizResult(answers, false, top1);
+      } catch (err) {
+        console.error(err);
+        els.resultContent.innerHTML = `
+          <div class="result-card" style="grid-template-columns:1fr">
+            <div class="meta">
+              <h3>Erro ao carregar o resultado</h3>
+              <ul class="detail-list">
+                <li><strong>Detalhe:</strong> ${escapeHtml(err.message || 'Falha inesperada')}</li>
+              </ul>
+            </div>
+          </div>
+        `;
+        setStatus('Erro ao gerar ou salvar a recomendação.', 'error');
       }
+    }
+
+    document.querySelectorAll('[data-fill]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setAll(Number(btn.dataset.fill));
+        setStatus('Questionário preenchido.', 'ok');
+      });
     });
+
+    els.btnSubmit.addEventListener('click', submitQuiz);
+
+    renderQuestions();
   </script>
 </body>
 </html>
