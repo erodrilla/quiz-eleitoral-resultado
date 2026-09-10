@@ -80,7 +80,7 @@
       <div class="qhead">
         <div>
           <h2 class="qtitle">Teste do questionário</h2>
-          <p class="qdesc">Clique em enviar para calcular a recomendação, salvar o resultado e mostrar a última recomendação salva.</p>
+          <p class="qdesc">Clique em enviar para calcular a recomendação e ver o resultado.</p>
         </div>
       </div>
 
@@ -119,7 +119,6 @@
     const SUPABASE_TABLE = 'eleitores_respostas';
     const QUEM_FOI_QUEM_URL = 'https://quemfoiquem.org.br/';
     const DEPUTOMETRO_URL = 'https://www.agencialupa.org/institucional/2026/07/31/deputometro-conheca-o-painel-de-monitoramento-da-lupa/';
-    const LAST_RESULT_KEY = 'quiz_eleitoral_last_result';
 
     const QUESTIONS = [
       { key: 'mulheres', label: 'Mulheres & Gênero', desc: 'Como você quer que o tema de mulheres e igualdade de gênero seja tratado?' },
@@ -215,14 +214,6 @@
       return 'Favorável';
     }
 
-    function labelToValue(label) {
-      const n = String(label || '').trim().toLowerCase();
-      if (n === 'contrário' || n === 'contrario') return 15;
-      if (n === 'moderado') return 50;
-      if (n === 'favorável' || n === 'favoravel') return 85;
-      return 50;
-    }
-
     function badgeClass(v) {
       if (v <= 33) return 'contrario';
       if (v <= 66) return 'moderado';
@@ -311,9 +302,7 @@
 
           if (insertResponse.error) throw insertResponse.error;
 
-          const finalRow = { ...savePayload };
-          persistLastResult(finalRow);
-          showDeputometro(finalRow);
+          showDeputometro(savePayload);
           setStatus('Deputômetro exibido e salvo.', 'warn');
         } catch (err) {
           console.error(err);
@@ -374,70 +363,12 @@
           status_viabilidade: recomendacaoFinal.status_viabilidade || viabilidadeLabel(savePayload.pontuacao_afinidade)
         };
 
-        persistLastResult(finalRow);
         showResult(finalRow);
         setStatus('Recomendação salva e exibida.', 'ok');
       } catch (err) {
         console.error(err);
         setStatus('Erro ao gerar ou salvar a recomendação.', 'err');
       }
-    }
-
-    async function loadLatestRecommendation() {
-      const cached = loadLastResult();
-      if (cached) {
-        applyRowToSliders(cached);
-        showResult(cached);
-        setStatus('Última recomendação carregada.', 'ok');
-        return;
-      }
-
-      try {
-        const selectResponse = await withRetry(() =>
-          supabaseClient.from(SUPABASE_TABLE).select('*').order('id', { ascending: false }).limit(1)
-        );
-
-        if (selectResponse.error) throw selectResponse.error;
-
-        const row = Array.isArray(selectResponse.data) && selectResponse.data.length ? selectResponse.data[0] : null;
-        if (!row) return;
-
-        applyRowToSliders(row);
-        showResult(row);
-        persistLastResult(row);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    function persistLastResult(row) {
-      try { localStorage.setItem(LAST_RESULT_KEY, JSON.stringify(row)); } catch (e) {}
-    }
-
-    function loadLastResult() {
-      try {
-        const raw = localStorage.getItem(LAST_RESULT_KEY);
-        return raw ? JSON.parse(raw) : null;
-      } catch (e) { return null; }
-    }
-
-    function applyRowToSliders(row) {
-      const map = {
-        mulheres: row?.mulheres, educacao: row?.educacao, meio_ambiente: row?.meio_ambiente,
-        impostos: row?.impostos, direitos: row?.direitos, seguranca: row?.seguranca,
-        transparencia: row?.transparencia
-      };
-
-      Object.entries(map).forEach(([key, label]) => {
-        if (!label) return;
-        const input = document.getElementById(`${key}-range`);
-        const value = labelToValue(label);
-        state.values[key] = value;
-        if (input) {
-          input.value = value;
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-      });
     }
 
     function showResult(row) {
@@ -522,8 +453,6 @@
     }
 
     function escapeAttr(str) { return escapeHtml(String(str)).replace(/`/g, '&#96;'); }
-
-    loadLatestRecommendation();
   </script>
 </body>
 </html>
