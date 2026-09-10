@@ -45,6 +45,7 @@
     .photo-box{min-height:210px;background:#f5f8fb;display:flex;align-items:center;justify-content:center;border-right:1px solid #e4f2e8;overflow:hidden;}
     .result.blocked .photo-box{border-right:1px solid #f5d0a0;background:#fff6e8;}
     .photo-box img{width:100%;height:100%;object-fit:cover;display:block;max-height:280px;}
+    .photo-box .icon-fallback{font-size:64px;color:var(--warning);display:none;align-items:center;justify-content:center;}
     .result-body{padding:18px;}
     .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#0f7d63;color:#fff;font-size:12px;font-weight:800;margin-bottom:10px;}
     .pill.blocked{background:#b45309;}
@@ -95,11 +96,13 @@
         <div class="result-top">
           <div class="photo-box">
             <img id="resultPhoto" src="" alt="Foto do candidato" style="display:none" />
+            <span class="icon-fallback" id="photoFallback">🔍</span>
           </div>
           <div class="result-body">
             <div class="pill" id="resultPill">Última recomendação</div>
             <h2 class="candidate" id="resultName">—</h2>
             <p class="meta" id="resultMeta">—</p>
+            <button class="btn secondary" id="shareBtn" type="button" style="display:none; margin-top:12px;">Compartilhar resultado</button>
           </div>
         </div>
       </div>
@@ -113,19 +116,20 @@
     const QUEM_FOI_QUEM_URL = 'https://quemfoiquem.org.br/';
     const DEPUTOMETRO_URL = 'https://www.agencialupa.org/institucional/2026/07/31/deputometro-conheca-o-painel-de-monitoramento-da-lupa/';
 
-  const QUESTIONS = [
-  { key: 'mulheres', label: 'Mulheres & Gênero', desc: 'A criação de políticas públicas específicas e orçamento garantido para o combate à violência contra a mulher e apoio à igualdade de gênero deve ser prioridade no mandato?' },
-  { key: 'educacao', label: 'Educação & Serv. Público', desc: 'O foco principal dos investimentos em educação deve ser o fortalecimento e a expansão do ensino público e gratuito?' },
-  { key: 'meio_ambiente', label: 'Meio Ambiente', desc: 'A fiscalização ambiental deve ser mais rigorosa, restringindo empreendimentos que impactem áreas de preservação?' },
-  { key: 'impostos', label: 'Taxação sobre Renda/Fortunas', desc: 'Você apoia o aumento da taxação sobre grandes fortunas e rendas mais altas para financiar serviços públicos?' },
-  { key: 'direitos', label: 'Direitos Sociais', desc: 'A defesa dos direitos de pessoas negras, povos indígenas e da comunidade LGBTQIA+, com foco no combate ao racismo e à discriminação, deve ser pauta prioritária do candidato?' },
-  { key: 'seguranca', label: 'Segurança Pública', desc: 'A atuação na segurança pública deve focar prioritariamente em prevenção, inteligência e direitos humanos, em vez de apenas no endurecimento de penas?' },
-  { key: 'transparencia', label: 'Transparência', desc: 'Candidatos devem ter o compromisso explícito de combater mecanismos opacos como o orçamento secreto/emendas de relator?' }
-];
+    const QUESTIONS = [
+      { key: 'mulheres', label: 'Mulheres & Gênero', desc: 'A criação de políticas públicas específicas e orçamento garantido para o combate à violência contra a mulher e apoio à igualdade de gênero deve ser prioridade no mandato?' },
+      { key: 'educacao', label: 'Educação & Serv. Público', desc: 'O foco principal dos investimentos em educação deve ser o fortalecimento e a expansão do ensino público e gratuito?' },
+      { key: 'meio_ambiente', label: 'Meio Ambiente', desc: 'A fiscalização ambiental deve ser mais rigorosa, restringindo empreendimentos que impactem áreas de preservação?' },
+      { key: 'impostos', label: 'Taxação sobre Renda/Fortunas', desc: 'Você apoia o aumento da taxação sobre grandes fortunas e rendas mais altas para financiar serviços públicos?' },
+      { key: 'direitos', label: 'Direitos Sociais', desc: 'A defesa dos direitos de pessoas negras, povos indígenas e da comunidade LGBTQIA+, com foco no combate ao racismo e à discriminação, deve ser pauta prioritária do candidato?' },
+      { key: 'seguranca', label: 'Segurança Pública', desc: 'A atuação na segurança pública deve focar prioritariamente em prevenção, inteligência e direitos humanos, em vez de apenas no endurecimento de penas?' },
+      { key: 'transparencia', label: 'Transparência', desc: 'Candidatos devem ter o compromisso explícito de combater mecanismos opacos como o orçamento secreto/emendas de relator?' }
+    ];
 
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const state = { sessionId: generateSessionId(), values: {} };
+    let lastShareText = '';
 
     const questionsRoot = document.getElementById('questions');
     const statusEl = document.getElementById('status');
@@ -134,6 +138,8 @@
     const resultName = document.getElementById('resultName');
     const resultMeta = document.getElementById('resultMeta');
     const resultPhoto = document.getElementById('resultPhoto');
+    const photoFallback = document.getElementById('photoFallback');
+    const shareBtn = document.getElementById('shareBtn');
 
     QUESTIONS.forEach((q, index) => {
       state.values[q.key] = 50;
@@ -175,6 +181,20 @@
     document.getElementById('fillModBtn').addEventListener('click', () => { setAll(50); setStatus('Questionário preenchido como Moderado.', 'ok'); });
     document.getElementById('fillContBtn').addEventListener('click', () => { setAll(15); setStatus('Questionário preenchido como Contrário.', 'ok'); });
     document.getElementById('submitBtn').addEventListener('click', submitQuiz);
+
+    shareBtn.addEventListener('click', async () => {
+      if (navigator.share) {
+        try { await navigator.share({ text: lastShareText, url: window.location.href }); }
+        catch (e) {}
+      } else {
+        try {
+          await navigator.clipboard.writeText(`${lastShareText} ${window.location.href}`);
+          setStatus('Resultado copiado para a área de transferência!', 'ok');
+        } catch (e) {
+          setStatus('Não foi possível copiar automaticamente.', 'err');
+        }
+      }
+    });
 
     function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
@@ -330,6 +350,7 @@
 
         const finalRow = {
           ...savePayload,
+          numero_candidato: recomendacaoFinal.numero_candidato || null,
           foto: recomendacaoFinal.foto || null,
           instagram: recomendacaoFinal.instagram || null,
           status_viabilidade: recomendacaoFinal.status_viabilidade || viabilidadeLabel(savePayload.pontuacao_afinidade)
@@ -351,9 +372,11 @@
       resultPill.style.display = 'inline-flex';
       resultPill.classList.remove('blocked');
       resultPill.textContent = 'Última recomendação';
+      photoFallback.style.display = 'none';
 
       const nome = row?.nome_candidato || '—';
       const partido = row?.partido || '—';
+      const numero = row?.numero_candidato || '—';
       const foto = row?.foto || '';
       const instagram = row?.instagram || '';
       const afinidade = row?.pontuacao_afinidade ?? computeAfinidade(state.values);
@@ -363,6 +386,7 @@
       resultName.textContent = nome;
 
       resultMeta.innerHTML = `
+        <strong>Número:</strong> ${escapeHtml(String(numero))}<br>
         <strong>Partido:</strong> ${escapeHtml(partido)}<br>
         <strong>Score:</strong> ${escapeHtml(String(afinidade))}<br>
         <strong>Chance:</strong> ${escapeHtml(statusViabilidade)}<br>
@@ -380,21 +404,27 @@
       if (instagram) {
         resultMeta.innerHTML += `<br><strong>Instagram:</strong> <a href="${escapeAttr(instagram)}" target="_blank" rel="noopener noreferrer">Abrir Instagram</a>`;
       }
+
+      lastShareText = `Meu candidato recomendado: ${nome} (${numero} - ${partido}). Faça o teste também!`;
+      shareBtn.style.display = 'inline-flex';
     }
 
     function showSemCandidato() {
       resultBox.classList.add('blocked');
       resultBox.style.display = 'block';
       resultPill.style.display = 'none';
-      resultName.textContent = 'Nenhum candidato recomendado';
+      resultName.textContent = 'Vale a pena investigar mais';
       resultPhoto.removeAttribute('src');
       resultPhoto.style.display = 'none';
+      photoFallback.style.display = 'flex';
+      shareBtn.style.display = 'none';
 
       resultMeta.innerHTML = `
-        Com base nas suas respostas, não temos um candidato para sugerir no momento.
-        Convidamos você a consultar diretamente as fontes abaixo para se informar melhor antes de votar:<br><br>
+        Nenhum candidato do nosso levantamento se alinhou totalmente ao seu perfil — e isso é exatamente o momento de ir mais fundo antes de decidir seu voto.<br><br>
+        Consulte o histórico e as posições reais de cada candidato nas fontes abaixo:<br><br>
         <strong>Quem Foi Quem:</strong> <a href="${escapeAttr(QUEM_FOI_QUEM_URL)}" target="_blank" rel="noopener noreferrer">Abrir Quem Foi Quem</a><br>
-        <strong>Deputômetro / Agência Lupa:</strong> <a href="${escapeAttr(DEPUTOMETRO_URL)}" target="_blank" rel="noopener noreferrer">Abrir painel</a>
+        <strong>Deputômetro / Agência Lupa:</strong> <a href="${escapeAttr(DEPUTOMETRO_URL)}" target="_blank" rel="noopener noreferrer">Abrir painel</a><br><br>
+        Seu voto consciente começa com informação — vale muito a pena esse passo a mais.
       `;
     }
 
