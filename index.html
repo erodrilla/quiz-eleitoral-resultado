@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Quiz Eleitoral SP</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -388,7 +387,7 @@
     const SUPABASE_ANON_KEY = 'sb_publishable_0SyoXPILkEfgIOrzWnEh7A_LTp6BHKf';
     const SUPABASE_TABLE = 'eleitores_respostas';
     const QUEM_FOI_QUEM_URL = 'https://quemfoiquem.org.br/';
-    const DEPUTOMETRO_URL = 'https://www.agencialupa.org/institucional/2026/07/31/deputometro-conheca-o-painel-de-monitoramento-lupa/';
+    const DEPUTOMETRO_URL = 'https://www.agencialupa.org/institucional/2026/07/31/deputometro-conheca-o-painel-de-monitoramento-da-lupa/';
     const BLOCK_IMAGE = 'assets/nao_manipulado.jpeg';
 
     const QUESTIONS = [
@@ -442,10 +441,10 @@
     }
 
     function isProgressista(row) {
-      const raw = row?.partido || row?.Partido || row?.sigla_partido || row?.sigla || row?.partido_sigla || '';
-      if (!String(raw).trim()) return true;
-
+      const raw = row?.partido ?? row?.Partido ?? row?.sigla_partido ?? row?.sigla ?? row?.partido_sigla ?? '';
       const party = normalizeParty(raw);
+
+      if (!party) return false;
       if (PARTIDOS_PROGRESSISTAS.has(party)) return true;
 
       return party
@@ -466,6 +465,24 @@
       if (s.includes('média') || s.includes('media')) return 2;
       if (s.includes('baixa')) return 1;
       return 0;
+    }
+
+    function fetchTopCandidates(rawData) {
+      const base = (Array.isArray(rawData) ? rawData : [rawData]).filter(Boolean);
+
+      return base
+        .filter(isProgressista)
+        .filter(c => c.bloquear_candidatos !== true && c.bloquear_candidatos !== 'true')
+        .filter(c => c.bloqueado !== true && c.bloqueado !== 'true')
+        .sort((a, b) => {
+          const vr = viabilityRank(b.status_viabilidade) - viabilityRank(a.status_viabilidade);
+          if (vr !== 0) return vr;
+
+          const sr = Number(b?.score_final ?? 0) - Number(a?.score_final ?? 0);
+          if (sr !== 0) return sr;
+
+          return Number(b?.total_votos ?? 0) - Number(a?.total_votos ?? 0);
+        });
     }
 
     questionsRoot.innerHTML = '';
@@ -623,7 +640,6 @@
       const modoResultado = getModoResultado();
 
       if (!supabaseClient) {
-        showSemCandidato();
         setStatus('A conexão com a base não está inicializada.', 'err');
         return;
       }
@@ -687,24 +703,7 @@
 
         if (rpcResponse.error) throw rpcResponse.error;
 
-        const base = (Array.isArray(rpcResponse.data) ? rpcResponse.data : [rpcResponse.data])
-          .filter(Boolean);
-
-        const progressistas = base.filter(isProgressista);
-        const linhasBase = progressistas.length ? progressistas : base;
-
-        const linhas = linhasBase
-          .filter(c => c.bloquear_candidatos !== true && c.bloquear_candidatos !== 'true')
-          .filter(c => c.bloqueado !== true && c.bloqueado !== 'true')
-          .sort((a, b) => {
-            const vr = viabilityRank(b.status_viabilidade) - viabilityRank(a.status_viabilidade);
-            if (vr !== 0) return vr;
-
-            const sr = Number(b?.score_final ?? 0) - Number(a?.score_final ?? 0);
-            if (sr !== 0) return sr;
-
-            return Number(b?.total_votos ?? 0) - Number(a?.total_votos ?? 0);
-          });
+        const linhas = fetchTopCandidates(rpcResponse.data);
 
         if (!linhas.length) {
           showSemCandidato();
@@ -839,11 +838,10 @@
       altList.innerHTML = '';
 
       resultMeta.innerHTML = `
-        Nenhum candidato do nosso levantamento se alinhou totalmente ao seu perfil — e isso é exatamente o momento de ir mais fundo antes de decidir seu voto.<br><br>
-        Consulte o histórico e as posições reais de cada candidato nas fontes abaixo:<br><br>
+        <strong>Nenhum candidato para sugerir neste perfil.</strong><br><br>
+        Antes de decidir, consulte as fontes abaixo e compare histórico, propostas e coerência pública:<br><br>
         <strong>Quem Foi Quem:</strong> <a href="${escapeAttr(QUEM_FOI_QUEM_URL)}" target="_blank" rel="noopener noreferrer">Abrir Quem Foi Quem</a><br>
-        <strong>Deputômetro / Agência Lupa:</strong> <a href="${escapeAttr(DEPUTOMETRO_URL)}" target="_blank" rel="noopener noreferrer">Abrir painel</a><br><br>
-        Seu voto consciente começa com informação — vale muito a pena esse passo a mais.
+        <strong>Deputômetro / Agência Lupa:</strong> <a href="${escapeAttr(DEPUTOMETRO_URL)}" target="_blank" rel="noopener noreferrer">Abrir painel</a>
       `;
     }
 
