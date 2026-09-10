@@ -384,7 +384,7 @@
 
   <script>
     const SUPABASE_URL = 'https://hglifytalonmncphycfp.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6QxqXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ';
     const SUPABASE_TABLE = 'eleitores_respostas';
     const QUEM_FOI_QUEM_URL = 'https://quemfoiquem.org.br/';
     const DEPUTOMETRO_URL = 'https://www.agencialupa.org/institucional/2026/07/31/deputometro-conheca-o-painel-de-monitoramento-lupa/';
@@ -440,31 +440,31 @@
         .toUpperCase();
     }
 
-function isProgressista(row) {
-  const raw = [
-    row?.partido,
-    row?.Partido,
-    row?.sigla_partido,
-    row?.sigla,
-    row?.partido_sigla
-  ].find(v => String(v ?? '').trim());
+    function isProgressista(row) {
+      const raw = row?.partido || row?.Partido || row?.sigla_partido || row?.sigla || row?.partido_sigla || '';
+      const party = normalizeParty(raw);
+      if (!party) return false;
 
-  if (!raw) return true;
+      if (PARTIDOS_PROGRESSISTAS.has(party)) return true;
 
-  const norm = normalizeParty(raw);
-
-  if (PARTIDOS_PROGRESSISTAS.has(norm)) return true;
-
-  return norm
-    .split(/[^A-Z0-9]+/)
-    .filter(Boolean)
-    .some(token => PARTIDOS_PROGRESSISTAS.has(token));
-}
+      return party
+        .split(/[^A-Z0-9]+/)
+        .filter(Boolean)
+        .some(token => PARTIDOS_PROGRESSISTAS.has(token));
     }
 
     function cleanUrl(url) {
       if (!url) return '';
       return String(url).split('|')[0].trim();
+    }
+
+    function viabilityRank(status) {
+      const s = String(status ?? '').toLowerCase();
+      if (s.includes('muito alta')) return 4;
+      if (s.includes('alta')) return 3;
+      if (s.includes('média') || s.includes('media')) return 2;
+      if (s.includes('baixa')) return 1;
+      return 0;
     }
 
     questionsRoot.innerHTML = '';
@@ -594,15 +594,6 @@ function isProgressista(row) {
       return 'Baixa';
     }
 
-    function viabilityRank(status) {
-      const s = String(status ?? '').toLowerCase();
-      if (s.includes('muito alta')) return 4;
-      if (s.includes('alta')) return 3;
-      if (s.includes('média') || s.includes('media')) return 2;
-      if (s.includes('baixa')) return 1;
-      return 0;
-    }
-
     function buildPayload() {
       return {
         mulheres: sliderLabel(state.values.mulheres),
@@ -629,6 +620,12 @@ function isProgressista(row) {
     async function submitQuiz() {
       const payload = buildPayload();
       const modoResultado = getModoResultado();
+
+      if (!supabaseClient) {
+        showSemCandidato();
+        setStatus('A conexão com a base não está inicializada.', 'err');
+        return;
+      }
 
       if (mustBlockCandidate()) {
         const savePayload = {
