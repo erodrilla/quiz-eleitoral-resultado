@@ -7,258 +7,54 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root{
-      --bg1:#f5f8fc;
-      --bg2:#edf5ff;
-      --card:#ffffff;
-      --text:#102038;
-      --muted:#5d6c83;
-      --line:#dfe7f1;
-      --accent:#167a7a;
-      --accent2:#0f8b57;
-      --danger:#b42318;
-      --warning:#a16207;
-      --shadow:0 10px 30px rgba(16,32,56,.08);
-      --radius:18px;
+      --bg1:#f5f8fc;--bg2:#edf5ff;--card:#ffffff;--text:#102038;--muted:#5d6c83;
+      --line:#dfe7f1;--accent:#167a7a;--accent2:#0f8b57;--danger:#b42318;--warning:#a16207;
+      --shadow:0 10px 30px rgba(16,32,56,.08);--radius:18px;
     }
-
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{
-      margin:0;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color:var(--text);
-      background:linear-gradient(180deg,var(--bg1) 0%, var(--bg2) 100%);
-    }
-
-    .wrap{
-      max-width:980px;
-      margin:0 auto;
-      padding:28px 16px 56px;
-    }
-
-    .hero{
-      background:linear-gradient(135deg,#fff 0%, #f7fbff 100%);
-      border:1px solid var(--line);
-      border-radius:24px;
-      padding:24px;
-      box-shadow:var(--shadow);
-      margin-bottom:16px;
-    }
-
-    h1{
-      margin:0 0 8px;
-      font-size:clamp(28px, 4vw, 40px);
-      line-height:1.05;
-      letter-spacing:-.03em;
-    }
-
-    .lead{
-      margin:0;
-      color:var(--muted);
-      line-height:1.55;
-      max-width:78ch;
-    }
-
-    .grid{
-      display:grid;
-      gap:14px;
-    }
-
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:18px;
-    }
-
-    .qhead{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      align-items:flex-start;
-      margin-bottom:12px;
-    }
-
-    .qtitle{
-      margin:0;
-      font-size:18px;
-      line-height:1.25;
-    }
-
-    .qdesc{
-      margin:6px 0 0;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.45;
-    }
-
-    .badge{
-      min-width:110px;
-      text-align:center;
-      border-radius:999px;
-      padding:8px 10px;
-      font-size:13px;
-      font-weight:800;
-      border:1px solid var(--line);
-      background:#f8fbff;
-    }
-
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:linear-gradient(180deg,var(--bg1) 0%,var(--bg2) 100%);}
+    .wrap{max-width:980px;margin:0 auto;padding:28px 16px 56px;}
+    .hero{background:linear-gradient(135deg,#fff 0%,#f7fbff 100%);border:1px solid var(--line);border-radius:24px;padding:24px;box-shadow:var(--shadow);margin-bottom:16px;}
+    h1{margin:0 0 8px;font-size:clamp(28px,4vw,40px);line-height:1.05;letter-spacing:-.03em;}
+    .lead{margin:0;color:var(--muted);line-height:1.55;max-width:78ch;}
+    .grid{display:grid;gap:14px;}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;}
+    .qhead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px;}
+    .qtitle{margin:0;font-size:18px;line-height:1.25;}
+    .qdesc{margin:6px 0 0;color:var(--muted);font-size:14px;line-height:1.45;}
+    .badge{min-width:110px;text-align:center;border-radius:999px;padding:8px 10px;font-size:13px;font-weight:800;border:1px solid var(--line);background:#f8fbff;}
     .badge.contrario{background:#fff5f5;color:#b91c1c;border-color:#fecaca}
     .badge.moderado{background:#fffaf0;color:#b45309;border-color:#fde68a}
     .badge.favoravel{background:#effdf3;color:#15803d;border-color:#bbf7d0}
-
-    input[type="range"]{
-      width:100%;
-      accent-color:var(--accent);
-      cursor:pointer;
-    }
-
-    .scale{
-      display:flex;
-      justify-content:space-between;
-      gap:8px;
-      font-size:12px;
-      color:var(--muted);
-      margin-top:8px;
-    }
-
-    .actions{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:18px;
-      align-items:center;
-    }
-
-    .btn{
-      appearance:none;
-      border:0;
-      border-radius:14px;
-      padding:12px 16px;
-      font-weight:700;
-      cursor:pointer;
-      transition:transform .08s ease, opacity .2s ease, background .2s ease;
-      user-select:none;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-    }
-
+    input[type="range"]{width:100%;accent-color:var(--accent);cursor:pointer;}
+    .scale{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);margin-top:8px;}
+    .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center;}
+    .btn{appearance:none;border:0;border-radius:14px;padding:12px 16px;font-weight:700;cursor:pointer;transition:transform .08s ease,opacity .2s ease,background .2s ease;user-select:none;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;}
     .btn:active{transform:translateY(1px)}
     .btn.primary{background:var(--accent);color:#fff}
     .btn.secondary{background:#eaf1fb;color:#18314d}
-    .btn.warning{background:#fff6e5;color:var(--warning);border:1px solid #fed7aa}
     .btn:hover{opacity:.96}
-
-    .status{
-      margin-top:12px;
-      font-size:14px;
-      color:var(--muted);
-      line-height:1.45;
-    }
-
+    .status{margin-top:12px;font-size:14px;color:var(--muted);line-height:1.45;}
     .status.ok{color:var(--accent2)}
     .status.err{color:var(--danger)}
     .status.warn{color:var(--warning)}
-
-    .result{
-      display:none;
-      margin-top:18px;
-      border:1px solid #cce9d6;
-      background:linear-gradient(180deg,#effdf4 0%, #fff 100%);
-      border-radius:20px;
-      overflow:hidden;
-    }
-
-    .result.blocked{
-      border-color:#fed7aa;
-      background:linear-gradient(180deg,#fff8ed 0%, #fff 100%);
-    }
-
-    .result-top{
-      display:grid;
-      grid-template-columns:180px 1fr;
-      gap:0;
-      align-items:stretch;
-    }
-
-    .photo-box{
-      min-height:210px;
-      background:#f5f8fb;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border-right:1px solid #e4f2e8;
-      overflow:hidden;
-    }
-
-    .result.blocked .photo-box{
-      border-right:1px solid #f5d0a0;
-      background:#fff6e8;
-    }
-
-    .photo-box img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-      max-height:280px;
-    }
-
-    .result-body{
-      padding:18px;
-    }
-
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:6px 10px;
-      border-radius:999px;
-      background:#0f7d63;
-      color:#fff;
-      font-size:12px;
-      font-weight:800;
-      margin-bottom:10px;
-    }
-
-    .pill.blocked{
-      background:#b45309;
-    }
-
-    .candidate{
-      margin:0 0 6px;
-      font-size:24px;
-      line-height:1.1;
-      letter-spacing:-.02em;
-    }
-
-    .meta{
-      margin:0;
-      font-size:14px;
-      line-height:1.55;
-      color:#25415e;
-    }
-
+    .result{display:none;margin-top:18px;border:1px solid #cce9d6;background:linear-gradient(180deg,#effdf4 0%,#fff 100%);border-radius:20px;overflow:hidden;}
+    .result.blocked{border-color:#fed7aa;background:linear-gradient(180deg,#fff8ed 0%,#fff 100%);}
+    .result-top{display:grid;grid-template-columns:180px 1fr;gap:0;align-items:stretch;}
+    .photo-box{min-height:210px;background:#f5f8fb;display:flex;align-items:center;justify-content:center;border-right:1px solid #e4f2e8;overflow:hidden;}
+    .result.blocked .photo-box{border-right:1px solid #f5d0a0;background:#fff6e8;}
+    .photo-box img{width:100%;height:100%;object-fit:cover;display:block;max-height:280px;}
+    .result-body{padding:18px;}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#0f7d63;color:#fff;font-size:12px;font-weight:800;margin-bottom:10px;}
+    .pill.blocked{background:#b45309;}
+    .candidate{margin:0 0 6px;font-size:24px;line-height:1.1;letter-spacing:-.02em;}
+    .meta{margin:0;font-size:14px;line-height:1.55;color:#25415e;}
     .meta strong{color:#102038}
     .meta a{color:var(--accent);text-decoration:none;font-weight:700}
     .meta a:hover{text-decoration:underline}
-
-    .blocked-body{
-      margin-top:10px;
-      color:#5b3b00;
-      line-height:1.55;
-      font-size:14px;
-    }
-
-    .footer-note{
-      margin-top:10px;
-      font-size:12px;
-      color:var(--muted);
-    }
-
+    .blocked-body{margin-top:10px;color:#5b3b00;line-height:1.55;font-size:14px;}
+    .footer-note{margin-top:10px;font-size:12px;color:var(--muted);}
     @media (max-width:720px){
       .result-top{grid-template-columns:1fr}
       .photo-box{border-right:0;border-bottom:1px solid #e4f2e8}
@@ -284,9 +80,7 @@
       <div class="qhead">
         <div>
           <h2 class="qtitle">Teste do questionário</h2>
-          <p class="qdesc">
-            Clique em enviar para calcular a recomendação, salvar o resultado e mostrar a última recomendação salva.
-          </p>
+          <p class="qdesc">Clique em enviar para calcular a recomendação, salvar o resultado e mostrar a última recomendação salva.</p>
         </div>
       </div>
 
@@ -339,10 +133,7 @@
 
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const state = {
-      sessionId: generateSessionId(),
-      values: {}
-    };
+    const state = { sessionId: generateSessionId(), values: {} };
 
     const questionsRoot = document.getElementById('questions');
     const statusEl = document.getElementById('status');
@@ -366,17 +157,7 @@
           </div>
           <div class="badge moderado" id="${q.key}-badge">Moderado</div>
         </div>
-
-        <input
-          id="${q.key}-range"
-          type="range"
-          min="0"
-          max="100"
-          step="1"
-          value="50"
-          aria-label="${q.label}"
-        />
-
+        <input id="${q.key}-range" type="range" min="0" max="100" step="1" value="50" aria-label="${q.label}" />
         <div class="scale">
           <span>Contrário</span>
           <span>Moderado</span>
@@ -391,8 +172,7 @@
       const sync = () => {
         const v = Number(range.value);
         state.values[q.key] = v;
-        const label = sliderLabel(v);
-        badge.textContent = label;
+        badge.textContent = sliderLabel(v);
         badge.className = `badge ${badgeClass(v)}`;
       };
 
@@ -400,44 +180,25 @@
       sync();
     });
 
-    document.getElementById('fillFavBtn').addEventListener('click', () => {
-      setAll(85);
-      setStatus('Questionário preenchido como Favorável.', 'ok');
-    });
-
-    document.getElementById('fillModBtn').addEventListener('click', () => {
-      setAll(50);
-      setStatus('Questionário preenchido como Moderado.', 'ok');
-    });
-
-    document.getElementById('fillContBtn').addEventListener('click', () => {
-      setAll(15);
-      setStatus('Questionário preenchido como Contrário.', 'ok');
-    });
-
+    document.getElementById('fillFavBtn').addEventListener('click', () => { setAll(85); setStatus('Questionário preenchido como Favorável.', 'ok'); });
+    document.getElementById('fillModBtn').addEventListener('click', () => { setAll(50); setStatus('Questionário preenchido como Moderado.', 'ok'); });
+    document.getElementById('fillContBtn').addEventListener('click', () => { setAll(15); setStatus('Questionário preenchido como Contrário.', 'ok'); });
     document.getElementById('submitBtn').addEventListener('click', submitQuiz);
 
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
+    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
     async function withRetry(fn, attempts = 3, delayMs = 350) {
       let lastError;
-
       for (let i = 1; i <= attempts; i++) {
-        try {
-          return await fn();
-        } catch (err) {
+        try { return await fn(); }
+        catch (err) {
           lastError = err;
-
           const code = Number(err?.code || err?.status || err?.statusCode);
-          const retryable = ![400, 401, 403, 404, 409, 422, 42702, 42703, 42712].includes(code);
-
+          const retryable = ![400, 401, 403, 404, 409, 422].includes(code);
           if (i === attempts || !retryable) throw err;
           await sleep(delayMs * i);
         }
       }
-
       throw lastError;
     }
 
@@ -455,10 +216,10 @@
     }
 
     function labelToValue(label) {
-      const normalized = String(label || '').trim().toLowerCase();
-      if (normalized === 'contrário' || normalized === 'contrario') return 15;
-      if (normalized === 'moderado') return 50;
-      if (normalized === 'favorável' || normalized === 'favoravel') return 85;
+      const n = String(label || '').trim().toLowerCase();
+      if (n === 'contrário' || n === 'contrario') return 15;
+      if (n === 'moderado') return 50;
+      if (n === 'favorável' || n === 'favoravel') return 85;
       return 50;
     }
 
@@ -466,10 +227,6 @@
       if (v <= 33) return 'contrario';
       if (v <= 66) return 'moderado';
       return 'favoravel';
-    }
-
-    function valueToDbLabel(v) {
-      return sliderLabel(v);
     }
 
     function computeAfinidade(values) {
@@ -486,18 +243,14 @@
 
     function buildPayload() {
       return {
-        mulheres: valueToDbLabel(state.values.mulheres),
-        educacao: valueToDbLabel(state.values.educacao),
-        meio_ambiente: valueToDbLabel(state.values.meio_ambiente),
-        impostos: valueToDbLabel(state.values.impostos),
-        direitos: valueToDbLabel(state.values.direitos),
-        seguranca: valueToDbLabel(state.values.seguranca),
-        transparencia: valueToDbLabel(state.values.transparencia),
-        pontuacao_afinidade: computeAfinidade(state.values),
-        candidato_recomendado: 'Candidato selecionado por afinidade programática.',
-        nome_candidato: null,
-        partido: null,
-        bloqueado: false
+        mulheres: sliderLabel(state.values.mulheres),
+        educacao: sliderLabel(state.values.educacao),
+        meio_ambiente: sliderLabel(state.values.meio_ambiente),
+        impostos: sliderLabel(state.values.impostos),
+        direitos: sliderLabel(state.values.direitos),
+        seguranca: sliderLabel(state.values.seguranca),
+        transparencia: sliderLabel(state.values.transparencia),
+        pontuacao_afinidade: computeAfinidade(state.values)
       };
     }
 
@@ -513,10 +266,8 @@
 
     function buildDeputometroMessage() {
       const reasons = [];
-
       if (Number(state.values.mulheres) <= 33) reasons.push('Mulheres & Gênero em Contrário');
       if (Number(state.values.meio_ambiente) <= 33) reasons.push('Meio Ambiente em Contrário');
-
       const contraryCount = countContrarios();
       if (contraryCount >= 2) reasons.push(`${contraryCount} respostas em Contrário`);
 
@@ -539,8 +290,18 @@
 
         const savePayload = {
           id_sessao: state.sessionId,
-          justificativa: deputometro.message,
-          bloquear_candidatos: true
+          mulheres: payload.mulheres,
+          educacao: payload.educacao,
+          meio_ambiente: payload.meio_ambiente,
+          impostos: payload.impostos,
+          direitos: payload.direitos,
+          seguranca: payload.seguranca,
+          transparencia: payload.transparencia,
+          pontuacao_afinidade: payload.pontuacao_afinidade,
+          candidato_recomendado: deputometro.message,
+          nome_candidato: null,
+          partido: null,
+          bloqueado: true
         };
 
         try {
@@ -550,13 +311,7 @@
 
           if (insertResponse.error) throw insertResponse.error;
 
-          const finalRow = {
-            ...payload,
-            ...savePayload,
-            bloqueado: true,
-            justificativa: deputometro.message
-          };
-
+          const finalRow = { ...savePayload };
           persistLastResult(finalRow);
           showDeputometro(finalRow);
           setStatus('Deputômetro exibido e salvo.', 'warn');
@@ -592,14 +347,18 @@
 
         const savePayload = {
           id_sessao: state.sessionId,
-          id_candidato: recomendacaoFinal.id_candidato ?? null,
+          mulheres: payload.mulheres,
+          educacao: payload.educacao,
+          meio_ambiente: payload.meio_ambiente,
+          impostos: payload.impostos,
+          direitos: payload.direitos,
+          seguranca: payload.seguranca,
+          transparencia: payload.transparencia,
+          pontuacao_afinidade: recomendacaoFinal.pontuacao_afinidade ?? payload.pontuacao_afinidade,
+          candidato_recomendado: recomendacaoFinal.candidato_recomendado || 'Candidato selecionado por afinidade programática.',
           nome_candidato: recomendacaoFinal.nome_candidato || recomendacaoFinal.nome_urna || null,
           partido: recomendacaoFinal.partido || null,
-          numero_candidato: recomendacaoFinal.numero_candidato ?? null,
-          justificativa: recomendacaoFinal.justificativa || recomendacaoFinal.candidato_recomendado || 'Candidato selecionado por afinidade programática.',
-          foto: recomendacaoFinal.foto || null,
-          instagram: recomendacaoFinal.instagram || null,
-          bloquear_candidatos: recomendacaoFinal.bloqueado ?? false
+          bloqueado: recomendacaoFinal.bloqueado ?? false
         };
 
         const insertResponse = await withRetry(() =>
@@ -609,15 +368,10 @@
         if (insertResponse.error) throw insertResponse.error;
 
         const finalRow = {
-          ...payload,
-          ...recomendacaoFinal,
           ...savePayload,
           foto: recomendacaoFinal.foto || null,
           instagram: recomendacaoFinal.instagram || null,
-          bloqueado: recomendacaoFinal.bloqueado ?? false,
-          pontuacao_afinidade: recomendacaoFinal.pontuacao_afinidade ?? payload.pontuacao_afinidade,
-          status_viabilidade: recomendacaoFinal.status_viabilidade || viabilidadeLabel(recomendacaoFinal.pontuacao_afinidade ?? payload.pontuacao_afinidade),
-          justificativa: recomendacaoFinal.justificativa || recomendacaoFinal.candidato_recomendado || payload.candidato_recomendado
+          status_viabilidade: recomendacaoFinal.status_viabilidade || viabilidadeLabel(savePayload.pontuacao_afinidade)
         };
 
         persistLastResult(finalRow);
@@ -640,11 +394,7 @@
 
       try {
         const selectResponse = await withRetry(() =>
-          supabaseClient
-            .from(SUPABASE_TABLE)
-            .select('*')
-            .order('id', { ascending: false })
-            .limit(1)
+          supabaseClient.from(SUPABASE_TABLE).select('*').order('id', { ascending: false }).limit(1)
         );
 
         if (selectResponse.error) throw selectResponse.error;
@@ -652,6 +402,7 @@
         const row = Array.isArray(selectResponse.data) && selectResponse.data.length ? selectResponse.data[0] : null;
         if (!row) return;
 
+        applyRowToSliders(row);
         showResult(row);
         persistLastResult(row);
       } catch (err) {
@@ -660,29 +411,20 @@
     }
 
     function persistLastResult(row) {
-      try {
-        localStorage.setItem(LAST_RESULT_KEY, JSON.stringify(row));
-      } catch (e) {}
+      try { localStorage.setItem(LAST_RESULT_KEY, JSON.stringify(row)); } catch (e) {}
     }
 
     function loadLastResult() {
       try {
         const raw = localStorage.getItem(LAST_RESULT_KEY);
-        if (!raw) return null;
-        return JSON.parse(raw);
-      } catch (e) {
-        return null;
-      }
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) { return null; }
     }
 
     function applyRowToSliders(row) {
       const map = {
-        mulheres: row?.mulheres,
-        educacao: row?.educacao,
-        meio_ambiente: row?.meio_ambiente,
-        impostos: row?.impostos,
-        direitos: row?.direitos,
-        seguranca: row?.seguranca,
+        mulheres: row?.mulheres, educacao: row?.educacao, meio_ambiente: row?.meio_ambiente,
+        impostos: row?.impostos, direitos: row?.direitos, seguranca: row?.seguranca,
         transparencia: row?.transparencia
       };
 
@@ -699,21 +441,18 @@
     }
 
     function showResult(row) {
-      if (row?.bloqueado || row?.bloquear_candidatos || row?.status_viabilidade === 'Deputômetro') {
-        showDeputometro(row);
-        return;
-      }
+      if (row?.bloqueado) { showDeputometro(row); return; }
 
       resultBox.classList.remove('blocked');
       resultBox.style.display = 'block';
       blockedBody.style.display = 'none';
 
-      const nome = row?.nome_candidato || row?.nome_urna || '—';
+      const nome = row?.nome_candidato || '—';
       const partido = row?.partido || '—';
       const foto = row?.foto || '';
       const instagram = row?.instagram || '';
       const afinidade = row?.pontuacao_afinidade ?? computeAfinidade(state.values);
-      const justificativa = row?.justificativa || row?.candidato_recomendado || 'Candidato selecionado por afinidade programática.';
+      const justificativa = row?.candidato_recomendado || 'Candidato selecionado por afinidade programática.';
       const statusViabilidade = row?.status_viabilidade || viabilidadeLabel(afinidade);
 
       resultPill.textContent = 'Última recomendação';
@@ -740,7 +479,7 @@
       }
     }
 
-    function showDeputometro(rowOrInfo) {
+    function showDeputometro(row) {
       resultBox.classList.add('blocked');
       resultBox.style.display = 'block';
       resultPill.textContent = 'Deputômetro';
@@ -749,23 +488,19 @@
       resultPhoto.removeAttribute('src');
       resultPhoto.style.display = 'none';
 
-      const info = rowOrInfo?.justificativa
-        ? {
-            message: rowOrInfo.justificativa,
-            reasons: buildDeputometroMessage().reasons
-          }
-        : buildDeputometroMessage();
+      const message = row?.candidato_recomendado || buildDeputometroMessage().message;
+      const reasons = buildDeputometroMessage().reasons;
 
       resultMeta.innerHTML = `
         <strong>Status:</strong> Deputômetro<br>
         <strong>Quem Foi Quem:</strong> <a href="${escapeAttr(QUEM_FOI_QUEM_URL)}" target="_blank" rel="noopener noreferrer">Abrir Quem Foi Quem</a><br>
         <strong>Deputômetro / Agência Lupa:</strong> <a href="${escapeAttr(DEPUTOMETRO_URL)}" target="_blank" rel="noopener noreferrer">Abrir painel</a><br>
-        <strong>Mensagem:</strong> ${escapeHtml(info.message)}
+        <strong>Mensagem:</strong> ${escapeHtml(message)}
       `;
 
       blockedBody.style.display = 'block';
       blockedBody.innerHTML = `
-        ${info.reasons ? `<div><strong>Motivos:</strong></div><div>${info.reasons}</div>` : ''}
+        <div><strong>Motivos:</strong></div><div>${reasons}</div>
         <div style="margin-top:10px;">
           Com 2 ou mais respostas em Contrário, ou com <strong>Mulheres & Gênero</strong> / <strong>Meio Ambiente</strong> em Contrário,
           o sistema não apresenta candidato.
@@ -778,22 +513,15 @@
       statusEl.className = 'status' + (kind ? ' ' + kind : '');
     }
 
-    function generateSessionId() {
-      return Math.random().toString(36).slice(2, 9);
-    }
+    function generateSessionId() { return Math.random().toString(36).slice(2, 9); }
 
     function escapeHtml(str) {
       return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    function escapeAttr(str) {
-      return escapeHtml(String(str)).replace(/`/g, '&#96;');
-    }
+    function escapeAttr(str) { return escapeHtml(String(str)).replace(/`/g, '&#96;'); }
 
     loadLatestRecommendation();
   </script>
