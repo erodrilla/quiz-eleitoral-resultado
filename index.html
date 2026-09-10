@@ -11,12 +11,8 @@
       --text:#152033;
       --muted:#5f6b7a;
       --line:#e6eaf0;
-      --primary:#0f766e;
-      --primary-2:#15803d;
-      --danger:#b91c1c;
       --soft:#f8fafc;
       --shadow:0 10px 30px rgba(18, 28, 45, .08);
-      --radius:18px;
     }
 
     *{box-sizing:border-box}
@@ -90,50 +86,6 @@
       margin:0 0 14px;
       font-size:13px;
       color:var(--muted);
-    }
-
-    .toggle-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-bottom:14px;
-    }
-
-    .toggle{
-      position:relative;
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      padding:12px 14px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:#fff;
-      cursor:pointer;
-      user-select:none;
-      font-size:14px;
-      min-width:180px;
-    }
-
-    .toggle input{display:none}
-
-    .toggle .dot{
-      width:14px;
-      height:14px;
-      border-radius:50%;
-      border:2px solid #94a3b8;
-      display:inline-block;
-      position:relative;
-      flex:none;
-    }
-
-    .toggle input:checked + .dot{
-      border-color:#2563eb;
-      box-shadow:inset 0 0 0 3px #2563eb;
-    }
-
-    .toggle.active{
-      border-color:#c7d2fe;
-      background:#eff6ff;
     }
 
     .question{
@@ -496,24 +448,8 @@
     </section>
 
     <section class="panel">
-      <h2>Como você quer ver o resultado?</h2>
-      <p class="note">O quiz é o mesmo para todos. O que muda é o cálculo final.</p>
-
-      <div class="toggle-row">
-        <label class="toggle active">
-          <input type="radio" name="modo" value="tradicionais" checked />
-          <span class="dot"></span>
-          <span>Candidatos tradicionais</span>
-        </label>
-        <label class="toggle">
-          <input type="radio" name="modo" value="novos" />
-          <span class="dot"></span>
-          <span>Novos entrantes / renovação</span>
-        </label>
-      </div>
-
-      <h2>Teste do questionário</h2>
-      <p class="note">Clique em enviar para calcular a recomendação e ver o resultado.</p>
+      <h2>Responda e envie</h2>
+      <p class="note">Esquerda = Contrário · meio = Moderado · direita = Favorável</p>
 
       <div id="questions"></div>
 
@@ -525,7 +461,7 @@
       </div>
 
       <p class="note" style="margin-top:12px;">
-        Use o slider de cada pergunta. Esquerda = Contrário, meio = Moderado, direita = Favorável.
+        Use o slider de cada pergunta. Nada é preenchido automaticamente ao abrir a página.
       </p>
     </section>
 
@@ -556,12 +492,16 @@
     </section>
   </div>
 
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
     const SUPABASE_URL = 'https://hglifytalonmncphycfp.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnbGlmeXRhbG9ubW5jcGh5Y2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTM3MTksImV4cCI6MjEwMTI2OTcxOX0.gFB1qB_n6qXcmVOAj-UyEKqwj4J4oylpK_w0s_cZcVQ';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = window.supabase?.createClient
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
+
+    const RESULTADOS_TABLE = 'resultados_quiz';
+    const CANDIDATOS_TABLE = 'candidatos';
 
     const QUESTIONS = [
       {
@@ -614,27 +554,30 @@
     ]);
 
     const state = {
-      modo: 'tradicionais',
       respostas: Object.fromEntries(QUESTIONS.map(q => [q.id, 'Moderado'])),
       resultados: []
     };
 
-    const SESSION_STORAGE_KEY = 'quiz_eleitoral_session_id';
-
-    function getSessionId() {
-      const current = sessionStorage.getItem(SESSION_STORAGE_KEY);
-      if (current) return current;
-      const created = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2))
-        .replace(/-/g, '')
-        .slice(0, 8);
-      sessionStorage.setItem(SESSION_STORAGE_KEY, created);
-      return created;
-    }
-
+    const SESSION_KEY = 'quiz_eleitoral_session_id';
     const SESSION_ID = getSessionId();
 
     const $ = (sel) => document.querySelector(sel);
     const questionsEl = $('#questions');
+    const resultArea = $('#resultadoArea');
+    const cardsGrid = $('#cardsGrid');
+    const cardBloqueio = $('#cardBloqueio');
+    const resultadoTitulo = $('#resultadoTitulo');
+    const resultadoSubtitulo = $('#resultadoSubtitulo');
+
+    function getSessionId() {
+      const current = sessionStorage.getItem(SESSION_KEY);
+      if (current) return current;
+      const created = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2))
+        .replace(/-/g, '')
+        .slice(0, 8);
+      sessionStorage.setItem(SESSION_KEY, created);
+      return created;
+    }
 
     function escapeHtml(value) {
       return String(value ?? '')
@@ -662,13 +605,7 @@
 
     function isCandidateProgressist(c) {
       const party = normalizeParty(c?.partido);
-      if (!party) return false;
-      return PARTIDOS_PROGRESSISTAS.has(party);
-    }
-
-    function isRenovacao(c) {
-      const v = c?.flag_renovacao;
-      return v === true || v === 'true' || v === 1 || v === '1';
+      return !!party && PARTIDOS_PROGRESSISTAS.has(party);
     }
 
     function normalizeStatus(status) {
@@ -685,13 +622,16 @@
           status.includes('baixa') ||
           status.includes('invi') ||
           status.includes('sem chance')
-        ) {
-          return false;
-        }
+        ) return false;
         return true;
       }
 
       return score >= 0.35;
+    }
+
+    function isRenovacao(c) {
+      const v = c?.flag_renovacao;
+      return v === true || v === 'true' || v === 1 || v === '1';
     }
 
     function formatScore(score) {
@@ -713,9 +653,8 @@
     }
 
     function shouldBlockByAnswers() {
-      const contraryCount = getContraryCount();
       return (
-        contraryCount >= 2 ||
+        getContraryCount() >= 2 ||
         state.respostas.mulheres === 'Contrário' ||
         state.respostas.meio_ambiente === 'Contrário'
       );
@@ -723,7 +662,7 @@
 
     function renderQuestions() {
       questionsEl.innerHTML = QUESTIONS.map((q, idx) => `
-        <div class="question" data-q="${q.id}">
+        <div class="question">
           <div class="q-head">
             <div>
               <p class="q-title">${idx + 1}. ${escapeHtml(q.label)}</p>
@@ -733,94 +672,99 @@
           </div>
           <div class="slider-wrap">
             <div class="slider-label left">Contrário</div>
-            <input type="range" min="0" max="2" step="1" value="1" aria-label="${escapeHtml(q.label)}" />
+            <input type="range" min="0" max="2" step="1" value="1" aria-label="${escapeHtml(q.label)}" data-question="${q.id}" />
             <div class="slider-label right">Favorável</div>
           </div>
         </div>
       `).join('');
 
-      questionsEl.querySelectorAll('input[type="range"]').forEach((range, idx) => {
-        const q = QUESTIONS[idx];
-        range.addEventListener('input', () => {
-          const v = RESPONSE_VALUES[Number(range.value)];
-          state.respostas[q.id] = v;
-          $(`#status-${q.id}`).textContent = v;
-        });
+      questionsEl.querySelectorAll('input[type="range"]').forEach(range => {
+        const qid = range.dataset.question;
+        const sync = () => {
+          const v = RESPONSE_VALUES[Number(range.value)] || 'Moderado';
+          state.respostas[qid] = v;
+          const el = document.getElementById(`status-${qid}`);
+          if (el) el.textContent = v;
+        };
+        range.addEventListener('input', sync);
+        sync();
       });
     }
 
     function setAllResponses(value) {
-      QUESTIONS.forEach((q, idx) => {
-        state.respostas[q.id] = value;
-        const range = questionsEl.querySelectorAll('input[type="range"]')[idx];
-        range.value = RESPONSE_VALUES.indexOf(value);
-        $(`#status-${q.id}`).textContent = value;
+      questionsEl.querySelectorAll('input[type="range"]').forEach(range => {
+        range.value = String(RESPONSE_VALUES.indexOf(value));
+        range.dispatchEvent(new Event('input', { bubbles: true }));
       });
     }
 
-    function showResultadoContainer() {
-      $('#resultadoArea').classList.remove('hidden');
+    function showResultArea() {
+      resultArea.classList.remove('hidden');
     }
 
-    function hideAllResultViews() {
-      $('#cardsGrid').classList.add('hidden');
-      $('#cardBloqueio').classList.add('hidden');
+    function hideResultViews() {
+      cardsGrid.classList.add('hidden');
+      cardBloqueio.classList.add('hidden');
     }
 
-    function showBloqueio(customSubtitle) {
-      showResultadoContainer();
-      hideAllResultViews();
-
-      $('#resultadoTitulo').textContent = 'Não foi possível calcular o resultado';
-      $('#resultadoSubtitulo').textContent = customSubtitle || 'Como houve contrariedade nas pautas sensíveis, não exibimos recomendação de candidato.';
-      $('#cardBloqueio').classList.remove('hidden');
+    function showBlockedMessage(subtitle) {
+      showResultArea();
+      hideResultViews();
+      resultadoTitulo.textContent = 'Não foi possível calcular o resultado';
+      resultadoSubtitulo.textContent = subtitle || 'Como houve contrariedade nas pautas sensíveis, não exibimos recomendação de candidato.';
+      cardBloqueio.classList.remove('hidden');
+      window.scrollTo({ top: resultArea.offsetTop - 18, behavior: 'smooth' });
     }
 
-    function buildCardHtml(c, index) {
-      const nomeUrna = escapeHtml(c.nome_urna ?? c.nome_candidato ?? '');
-      const nomeCompleto = escapeHtml(c.nome_candidato ?? c.nome_urna ?? '');
-      const partido = escapeHtml(c.partido ?? '—');
-      const numero = escapeHtml(c.numero_candidato ?? '—');
-      const score = escapeHtml(formatScore(c.score_final));
-      const viabilidade = escapeHtml(c.status_viabilidade ?? '—');
-      const justificativa = escapeHtml(
-        c.justificativa ??
-        'Candidato selecionado por afinidade programática.'
-      );
+    function getPhotoPlaceholder(name) {
+      const initials = String(name || 'Sem foto')
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map(p => p[0])
+        .join('')
+        .toUpperCase() || 'SF';
+      return initials;
+    }
 
-      const foto = cleanUrl(c.foto || '');
-      const instagram = cleanUrl(c.instagram || '');
+    function candidateCardHtml(c, index) {
+      const nomeUrna = c.nome_urna || c.Nome_Urna || c.nome_candidato || c.Nome_Candidato || 'Sem nome';
+      const nomeCompleto = c.nome_candidato || c.Nome_Candidato || nomeUrna;
+      const partido = c.partido || c.Partido || '—';
+      const numero = c.numero_candidato || c.Numero_Candidato || c['Número Candidato'] || '—';
+      const foto = cleanUrl(c.foto || c.Foto || '');
+      const instagram = cleanUrl(c.instagram || c.Instagram || '');
+      const score = formatScore(c.score_final ?? c.score ?? c.pontuacao_afinidade ?? 0);
+      const chance = c.status_viabilidade || c.chance || '—';
+      const justificativa = c.justificativa || c.candidato_recomendado || 'Candidato selecionado por afinidade programática.';
 
       return `
         <article class="candidate-card">
           <div class="candidate-photo">
             ${
               foto
-                ? `<img src="${escapeHtml(foto)}" alt="Foto de ${nomeUrna || 'candidato'}" loading="lazy" />`
-                : `<div class="placeholder">Sem foto</div>`
+                ? `<img src="${escapeHtml(foto)}" alt="Foto de ${escapeHtml(nomeUrna)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`
+                : ''
             }
+            <div class="placeholder" style="${foto ? 'display:none;' : ''}">${getPhotoPlaceholder(nomeUrna)}<br><span style="font-weight:600;margin-top:6px;display:block;">Sem foto</span></div>
           </div>
           <div class="candidate-body">
             <div>
-              <h3 class="candidate-name">${index + 1}. ${nomeUrna || 'Sem nome'}</h3>
-              <div class="candidate-urna">Nome completo: ${nomeCompleto || '—'}</div>
+              <h3 class="candidate-name">${index + 1}. ${escapeHtml(nomeUrna)}</h3>
+              <div class="candidate-urna">Nome completo: ${escapeHtml(nomeCompleto || '—')}</div>
             </div>
 
             <div class="meta">
-              <span class="pill party"><strong>Partido</strong> ${partido}</span>
-              <span class="pill"><strong>Nº</strong> ${numero}</span>
-              <span class="pill score"><strong>Score</strong> ${score}</span>
-              <span class="pill viab"><strong>Chance</strong> ${viabilidade}</span>
+              <span class="pill party"><strong>Partido</strong> ${escapeHtml(partido)}</span>
+              <span class="pill"><strong>Nº</strong> ${escapeHtml(numero)}</span>
+              <span class="pill score"><strong>Score</strong> ${escapeHtml(score)}</span>
+              <span class="pill viab"><strong>Chance</strong> ${escapeHtml(chance)}</span>
             </div>
 
-            <div class="justificativa">${justificativa}</div>
+            <div class="justificativa">${escapeHtml(justificativa)}</div>
 
             <div class="links">
-              ${
-                instagram
-                  ? `<a href="${escapeHtml(instagram)}" target="_blank" rel="noopener noreferrer">Instagram</a>`
-                  : ''
-              }
+              ${instagram ? `<a href="${escapeHtml(instagram)}" target="_blank" rel="noopener noreferrer">Instagram</a>` : ''}
             </div>
 
             <div class="share">
@@ -858,70 +802,101 @@
       });
     }
 
-    function renderNormalCards(candidatos) {
-      state.resultados = candidatos;
+    function renderCandidates(list) {
+      state.resultados = list;
+      showResultArea();
+      hideResultViews();
 
-      showResultadoContainer();
-      hideAllResultViews();
-
-      $('#resultadoTitulo').textContent = 'Top 3 candidatos mais compatíveis';
-      $('#resultadoSubtitulo').textContent = 'Foram exibidos os três candidatos mais aderentes após o filtro de viabilidade e modo selecionado.';
-      $('#cardsGrid').innerHTML = candidatos.map((c, idx) => buildCardHtml(c, idx)).join('');
-      $('#cardsGrid').classList.remove('hidden');
+      resultadoTitulo.textContent = 'Top 3 candidatos mais compatíveis';
+      resultadoSubtitulo.textContent = 'Foram exibidos os três candidatos mais aderentes após o filtro progressista e de viabilidade.';
+      cardsGrid.innerHTML = list.map((c, idx) => candidateCardHtml(c, idx)).join('');
+      cardsGrid.classList.remove('hidden');
 
       bindShareButtons();
+      window.scrollTo({ top: resultArea.offsetTop - 18, behavior: 'smooth' });
     }
 
-    async function salvarResultadoBloqueio() {
+    async function saveResult({ blocked, candidate = null, message = '' }) {
+      if (!supabase) return;
+
+      const row = {
+        id_sessao: SESSION_ID,
+        id_candidato: candidate?.id_candidato ?? candidate?.id ?? candidate?.Id ?? null,
+        nome_candidato: candidate?.nome_candidato ?? candidate?.Nome_Candidato ?? candidate?.nome_urna ?? candidate?.Nome_Urna ?? null,
+        partido: candidate?.partido ?? candidate?.Partido ?? null,
+        numero_candidato: candidate?.numero_candidato ?? candidate?.Numero_Candidato ?? candidate?.['Número Candidato'] ?? null,
+        justificativa: message || candidate?.justificativa || candidate?.candidato_recomendado || null,
+        foto: candidate?.foto ?? candidate?.Foto ?? null,
+        instagram: candidate?.instagram ?? candidate?.Instagram ?? null,
+        bloquear_candidatos: !!blocked
+      };
+
       try {
-        await supabase.from('resultados_quiz').insert([{
-          id_sessao: SESSION_ID,
-          mulheres: state.respostas.mulheres,
-          educacao: state.respostas.educacao,
-          meio_ambiente: state.respostas.meio_ambiente,
-          impostos: state.respostas.impostos,
-          direitos: state.respostas.direitos,
-          seguranca: state.respostas.seguranca,
-          transparencia: state.respostas.transparencia,
-          pontuacao_afinidade: null,
-          candidato_recomendado: 'Bloqueado por contrariedade crítica',
-          nome_candidato: null,
-          partido: null,
-          bloqueado: true
-        }]);
-      } catch (e) {
-        console.warn('Falha ao salvar bloqueio:', e);
+        const { error } = await supabase.from(RESULTADOS_TABLE).insert([row]);
+        if (error) console.warn('Falha ao salvar resultado:', error);
+      } catch (err) {
+        console.warn('Erro ao salvar resultado:', err);
       }
     }
 
-    async function salvarResultadoNormal(candidatoPrincipal) {
-      try {
-        await supabase.from('resultados_quiz').insert([{
-          id_sessao: SESSION_ID,
-          mulheres: state.respostas.mulheres,
-          educacao: state.respostas.educacao,
-          meio_ambiente: state.respostas.meio_ambiente,
-          impostos: state.respostas.impostos,
-          direitos: state.respostas.direitos,
-          seguranca: state.respostas.seguranca,
-          transparencia: state.respostas.transparencia,
-          pontuacao_afinidade: candidatoPrincipal?.score_final ?? null,
-          candidato_recomendado: 'Candidato selecionado por afinidade programática.',
-          nome_candidato: candidatoPrincipal?.nome_urna ?? candidatoPrincipal?.nome_candidato ?? null,
-          partido: candidatoPrincipal?.partido ?? null,
-          bloqueado: false
-        }]);
-      } catch (e) {
-        console.warn('Falha ao salvar resultado:', e);
+    async function enrichWithRegistry(list) {
+      if (!supabase || !list.length) return list;
+
+      const names = list
+        .map(c => c.nome_urna || c.Nome_Urna || c.nome_candidato || c.Nome_Candidato)
+        .filter(Boolean);
+
+      if (!names.length) return list;
+
+      async function fetchByColumn(column) {
+        const { data, error } = await supabase
+          .from(CANDIDATOS_TABLE)
+          .select('*')
+          .in(column, names);
+
+        if (error || !Array.isArray(data) || !data.length) return [];
+        return data;
       }
+
+      let rows = await fetchByColumn('Nome_Urna');
+      if (!rows.length) rows = await fetchByColumn('nome_urna');
+
+      if (!rows.length) return list;
+
+      const map = new Map();
+      rows.forEach(row => {
+        const key = normalizeParty(row.Nome_Urna || row.nome_urna || row.Nome_Candidato || row.nome_candidato || '');
+        if (key) map.set(key, row);
+      });
+
+      return list.map(c => {
+        const key = normalizeParty(c.nome_urna || c.Nome_Urna || c.nome_candidato || c.Nome_Candidato || '');
+        const extra = map.get(key);
+        if (!extra) return c;
+
+        return {
+          ...c,
+          id_candidato: c.id_candidato ?? extra.Id ?? extra.id ?? null,
+          nome_candidato: c.nome_candidato || extra.Nome_Candidato || extra.nome_candidato || c.nome_urna || extra.Nome_Urna || extra.nome_urna || '',
+          partido: c.partido || extra.Partido || extra.partido || '',
+          numero_candidato: c.numero_candidato || extra.Numero_Candidato || extra.numero_candidato || '',
+          foto: cleanUrl(c.foto || extra.Foto || extra.foto || ''),
+          instagram: cleanUrl(c.instagram || extra.Instagram || extra.instagram || ''),
+          justificativa: c.justificativa || extra.justificativa || c.candidato_recomendado || ''
+        };
+      });
     }
 
-    async function buscarTopCandidatos() {
+    async function fetchTopCandidates() {
+      if (!supabase) throw new Error('Supabase não inicializado.');
+
       const { data, error } = await supabase.rpc('rpc_top_viabilidade');
       if (error) throw error;
       if (!Array.isArray(data) || !data.length) return [];
 
-      const progressistas = data
+      const enriched = await enrichWithRegistry(data);
+
+      const progressistas = enriched
         .filter(isCandidateProgressist)
         .filter(c => {
           const bloqueado = c.bloqueado ?? c.flag_renovacao ?? c.gravame_etico;
@@ -929,61 +904,70 @@
         })
         .filter(isCandidateViable);
 
-      const porModo = progressistas.filter(c => {
-        const renovacao = isRenovacao(c);
-        if (state.modo === 'novos') return renovacao;
-        return !renovacao;
-      });
-
-      return porModo
+      return progressistas
         .sort((a, b) => {
-          const sb = Number(b?.score_final ?? 0);
-          const sa = Number(a?.score_final ?? 0);
+          const sb = Number(b?.score_final ?? b?.score ?? 0);
+          const sa = Number(a?.score_final ?? a?.score ?? 0);
           if (sb !== sa) return sb - sa;
           return Number(b?.total_votos ?? 0) - Number(a?.total_votos ?? 0);
         })
         .slice(0, 3);
     }
 
-    async function enviarRespostas() {
+    async function handleSubmit() {
+      if (!supabase) {
+        showBlockedMessage('A conexão com a base ainda não foi inicializada.');
+        return;
+      }
+
       if (shouldBlockByAnswers()) {
-        await salvarResultadoBloqueio();
-        showBloqueio('Pelas suas respostas, não temos um candidato a sugerir neste momento.');
+        await saveResult({
+          blocked: true,
+          message: 'Pelas suas respostas, não temos um candidato a sugerir neste momento.'
+        });
+        showBlockedMessage('Pelas suas respostas, não temos um candidato a sugerir neste momento.');
         return;
       }
 
       try {
-        const candidatos = await buscarTopCandidatos();
+        const candidates = await fetchTopCandidates();
 
-        if (!candidatos.length) {
-          await salvarResultadoBloqueio();
-          showBloqueio('Pelas suas respostas e pela viabilidade atual, não há candidato seguro para sugerir agora.');
+        if (!candidates.length) {
+          await saveResult({
+            blocked: true,
+            message: 'Pelas suas respostas e pela viabilidade atual, não há candidato seguro para sugerir agora.'
+          });
+          showBlockedMessage('Pelas suas respostas e pela viabilidade atual, não há candidato seguro para sugerir agora.');
           return;
         }
 
-        await salvarResultadoNormal(candidatos[0]);
-        renderNormalCards(candidatos);
+        await saveResult({
+          blocked: false,
+          candidate: candidates[0],
+          message: 'Candidato selecionado por afinidade programática.'
+        });
+
+        renderCandidates(candidates);
       } catch (error) {
         console.error(error);
-        await salvarResultadoBloqueio();
-        showBloqueio('Não foi possível calcular um candidato neste momento. Consulte as plataformas independentes abaixo.');
+        await saveResult({
+          blocked: true,
+          message: 'Não foi possível calcular um candidato neste momento.'
+        });
+        showBlockedMessage('Não foi possível calcular um candidato neste momento. Consulte as plataformas independentes abaixo.');
       }
     }
 
-    document.querySelectorAll('input[name="modo"]').forEach(radio => {
-      radio.addEventListener('change', () => {
-        state.modo = radio.value;
-        document.querySelectorAll('.toggle').forEach(label => label.classList.remove('active'));
-        radio.closest('.toggle').classList.add('active');
-      });
-    });
+    function init() {
+      renderQuestions();
 
-    $('#btnEnviar').addEventListener('click', enviarRespostas);
-    $('#btnFav').addEventListener('click', () => setAllResponses('Favorável'));
-    $('#btnMod').addEventListener('click', () => setAllResponses('Moderado'));
-    $('#btnCont').addEventListener('click', () => setAllResponses('Contrário'));
+      $('#btnEnviar').addEventListener('click', handleSubmit);
+      $('#btnFav').addEventListener('click', () => setAllResponses('Favorável'));
+      $('#btnMod').addEventListener('click', () => setAllResponses('Moderado'));
+      $('#btnCont').addEventListener('click', () => setAllResponses('Contrário'));
+    }
 
-    renderQuestions();
+    init();
   </script>
 </body>
 </html>
