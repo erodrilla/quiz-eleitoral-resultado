@@ -327,6 +327,27 @@
 
     <section class="grid" id="questions"></section>
 
+    <section class="card" style="margin-top:14px;">
+      <div class="qhead">
+        <div>
+          <h2 class="qtitle">Como você quer ver o resultado?</h2>
+          <p class="qdesc">O quiz é o mesmo para todos. O que muda é o cálculo final.</p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <label style="display:flex;align-items:center;gap:8px;font-weight:700;">
+          <input type="radio" name="modoResultado" value="tradicional" checked />
+          Candidatos tradicionais
+        </label>
+
+        <label style="display:flex;align-items:center;gap:8px;font-weight:700;">
+          <input type="radio" name="modoResultado" value="renovacao" />
+          Novos entrantes / renovação
+        </label>
+      </div>
+    </section>
+
     <section class="card">
       <div class="qhead">
         <div>
@@ -466,6 +487,11 @@
       }
     });
 
+    function getModoResultado() {
+      const el = document.querySelector('input[name="modoResultado"]:checked');
+      return el ? el.value : 'tradicional';
+    }
+
     function sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
     }
@@ -542,6 +568,7 @@
 
     async function submitQuiz() {
       const payload = buildPayload();
+      const modoResultado = getModoResultado();
 
       if (mustBlockCandidate()) {
         const savePayload = {
@@ -580,8 +607,12 @@
       setStatus('Calculando recomendação...', '');
 
       try {
+        const rpcName = modoResultado === 'renovacao'
+          ? 'calcular_viabilidade_renovacao'
+          : 'calcular_recomendacao';
+
         const rpcResponse = await withRetry(() =>
-          supabaseClient.rpc('calcular_recomendacao', {
+          supabaseClient.rpc(rpcName, {
             p_sessao: state.sessionId,
             p_mulheres: payload.mulheres,
             p_educacao: payload.educacao,
@@ -660,6 +691,7 @@
       const statusViabilidade = row?.status_viabilidade || viabilidadeLabel(afinidade);
 
       resultName.textContent = nome;
+      resultPhoto.alt = nome || 'Foto do candidato';
 
       resultMeta.innerHTML = `
         <strong>Número:</strong> ${escapeHtml(String(numero))}<br>
@@ -681,7 +713,6 @@
         resultMeta.innerHTML += `<br><strong>Instagram:</strong> <a href="${escapeAttr(instagram)}" target="_blank" rel="noopener noreferrer">Abrir Instagram</a>`;
       }
 
-      const altList = document.getElementById('altList');
       if (row?.alternativas && row.alternativas.length) {
         altList.style.display = 'grid';
         altList.innerHTML = `<p class="alt-title">Outras opções compatíveis:</p>` +
