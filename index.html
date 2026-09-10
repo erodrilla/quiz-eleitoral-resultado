@@ -107,9 +107,7 @@
         </div>
       </div>
 
-      <div class="footer-note">
-        Se o candidato não mudar quando você altera os sliders, o problema está na função SQL de recomendação.
-      </div>
+
     </section>
   </div>
 
@@ -390,12 +388,12 @@
       resultPill.classList.remove('blocked');
       resultName.textContent = nome;
 
-      resultMeta.innerHTML = `
-        <strong>Partido:</strong> ${escapeHtml(partido)}<br>
-        <strong>Score:</strong> ${escapeHtml(String(afinidade))}<br>
-        <strong>Status:</strong> ${escapeHtml(statusViabilidade)}<br>
-        <strong>Justificativa:</strong> ${escapeHtml(justificativa)}
-      `;
+resultMeta.innerHTML = `
+  <strong>Partido:</strong> ${escapeHtml(partido)}<br>
+  <strong>Score:</strong> ${escapeHtml(String(afinidade))}<br>
+  <strong>Chance:</strong> ${escapeHtml(statusViabilidade)}<br>
+  <strong>Justificativa:</strong> ${escapeHtml(justificativa)}
+`;
 
       if (foto) {
         resultPhoto.src = foto;
