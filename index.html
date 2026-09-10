@@ -587,18 +587,18 @@
           bloqueado: true
         };
 
+        showSemCandidato();
+        setStatus('Resultado exibido.', 'warn');
+
         try {
           const insertResponse = await withRetry(() =>
             supabaseClient.from(SUPABASE_TABLE).insert(savePayload)
           );
 
           if (insertResponse.error) throw insertResponse.error;
-
-          showSemCandidato();
-          setStatus('Resultado salvo.', 'warn');
         } catch (err) {
-          console.error(err);
-          setStatus('Erro ao salvar o resultado.', 'err');
+          console.error('Falha ao salvar resultado bloqueado:', err);
+          setStatus('Resultado exibido, mas houve falha ao salvar.', 'warn');
         }
 
         return;
@@ -646,12 +646,6 @@
           bloqueado: recomendacaoFinal.bloqueado ?? false
         };
 
-        const insertResponse = await withRetry(() =>
-          supabaseClient.from(SUPABASE_TABLE).insert(savePayload)
-        );
-
-        if (insertResponse.error) throw insertResponse.error;
-
         const finalRow = {
           ...savePayload,
           numero_candidato: recomendacaoFinal.numero_candidato || null,
@@ -662,10 +656,21 @@
         };
 
         showResult(finalRow);
-        setStatus('Recomendação salva e exibida.', 'ok');
+        setStatus('Recomendação exibida.', 'ok');
+
+        try {
+          const insertResponse = await withRetry(() =>
+            supabaseClient.from(SUPABASE_TABLE).insert(savePayload)
+          );
+
+          if (insertResponse.error) throw insertResponse.error;
+        } catch (err) {
+          console.error('Falha ao salvar recomendação:', err);
+          setStatus('Recomendação exibida, mas houve falha ao salvar.', 'warn');
+        }
       } catch (err) {
         console.error(err);
-        setStatus('Erro ao gerar ou salvar a recomendação.', 'err');
+        setStatus('Erro ao gerar a recomendação.', 'err');
       }
     }
 
