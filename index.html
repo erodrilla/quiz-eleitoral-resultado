@@ -11,33 +11,43 @@
       --text:#152033;
       --muted:#5f6b7a;
       --line:#e6eaf0;
-      --primary:#15803d;
-      --primary-2:#0f766e;
+      --primary:#0f766e;
+      --primary-2:#15803d;
       --danger:#b91c1c;
       --soft:#f8fafc;
       --shadow:0 10px 30px rgba(18, 28, 45, .08);
       --radius:18px;
     }
+
     *{box-sizing:border-box}
+
     body{
       margin:0;
       font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
       background:linear-gradient(180deg, #eff4fb 0%, #f8fafc 100%);
       color:var(--text);
     }
+
     .wrap{
-      max-width:1080px;
+      max-width:1120px;
       margin:0 auto;
       padding:24px 16px 48px;
     }
-    .hero{
+
+    .hero,
+    .panel,
+    .result-shell{
       background:var(--card);
       border:1px solid var(--line);
       border-radius:24px;
       box-shadow:var(--shadow);
+    }
+
+    .hero{
       padding:24px;
       margin-bottom:18px;
     }
+
     .badge{
       display:inline-flex;
       align-items:center;
@@ -50,42 +60,45 @@
       font-weight:700;
       margin-bottom:12px;
     }
+
     h1{
       margin:0 0 8px;
       font-size:28px;
       line-height:1.1;
       letter-spacing:-.02em;
     }
+
     .sub{
       margin:0;
       color:var(--muted);
       font-size:14px;
       line-height:1.45;
-      max-width:760px;
+      max-width:840px;
     }
+
     .panel{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:24px;
-      box-shadow:var(--shadow);
       padding:18px;
       margin-bottom:18px;
     }
+
     .panel h2{
       margin:0 0 10px;
       font-size:18px;
     }
+
     .panel p.note{
       margin:0 0 14px;
       font-size:13px;
       color:var(--muted);
     }
+
     .toggle-row{
       display:flex;
       flex-wrap:wrap;
       gap:10px;
       margin-bottom:14px;
     }
+
     .toggle{
       position:relative;
       display:inline-flex;
@@ -100,18 +113,24 @@
       font-size:14px;
       min-width:180px;
     }
+
     .toggle input{display:none}
+
     .toggle .dot{
-      width:14px;height:14px;border-radius:50%;
+      width:14px;
+      height:14px;
+      border-radius:50%;
       border:2px solid #94a3b8;
       display:inline-block;
       position:relative;
       flex:none;
     }
+
     .toggle input:checked + .dot{
       border-color:#2563eb;
       box-shadow:inset 0 0 0 3px #2563eb;
     }
+
     .toggle.active{
       border-color:#c7d2fe;
       background:#eff6ff;
@@ -124,6 +143,7 @@
       margin-bottom:12px;
       background:linear-gradient(180deg, #fff 0%, #fbfdff 100%);
     }
+
     .q-head{
       display:flex;
       justify-content:space-between;
@@ -131,20 +151,23 @@
       gap:12px;
       margin-bottom:10px;
     }
+
     .q-title{
       font-size:16px;
       font-weight:800;
       margin:0;
     }
+
     .q-status{
       font-size:12px;
       color:var(--muted);
       white-space:nowrap;
     }
+
     .q-desc{
       font-size:13px;
       color:var(--muted);
-      margin:6px 0 14px;
+      margin:6px 0 0;
       line-height:1.4;
     }
 
@@ -154,6 +177,7 @@
       gap:12px;
       align-items:center;
     }
+
     .slider-label{
       font-size:12px;
       color:var(--muted);
@@ -164,8 +188,8 @@
       background:var(--soft);
       border:1px solid var(--line);
     }
+
     .slider-label.left{color:#b91c1c}
-    .slider-label.mid{color:#b45309}
     .slider-label.right{color:#0f766e}
 
     input[type="range"]{
@@ -177,17 +201,21 @@
       outline:none;
       border:1px solid #dbe2ea;
     }
+
     input[type="range"]::-webkit-slider-thumb{
       appearance:none;
-      width:26px;height:26px;
+      width:26px;
+      height:26px;
       border-radius:50%;
       background:#fff;
       border:3px solid #2563eb;
       box-shadow:0 4px 14px rgba(37,99,235,.28);
       cursor:pointer;
     }
+
     input[type="range"]::-moz-range-thumb{
-      width:26px;height:26px;
+      width:26px;
+      height:26px;
       border-radius:50%;
       background:#fff;
       border:3px solid #2563eb;
@@ -201,6 +229,7 @@
       gap:10px;
       margin-top:16px;
     }
+
     button{
       border:0;
       border-radius:12px;
@@ -210,83 +239,111 @@
       cursor:pointer;
       transition:.18s ease;
     }
+
     button:hover{transform:translateY(-1px)}
+
     .btn-primary{background:#0f766e;color:#fff}
     .btn-soft-green{background:#dcfce7;color:#14532d}
     .btn-soft-amber{background:#fef3c7;color:#92400e}
     .btn-soft-red{background:#fee2e2;color:#991b1b}
-    .btn-link{
-      background:#eef2ff;
-      color:#1d4ed8;
-    }
 
     .result-shell{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:24px;
-      box-shadow:var(--shadow);
-      padding:0;
       overflow:hidden;
       margin-top:18px;
     }
+
     .result-top{
       padding:20px;
       border-bottom:1px solid var(--line);
       background:linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
     }
+
     .result-title{
       margin:0 0 8px;
       font-size:22px;
       line-height:1.2;
     }
+
     .result-text{
       margin:0;
       color:var(--muted);
       font-size:14px;
       line-height:1.45;
     }
-    .result-card{
+
+    .cards-grid{
       display:grid;
-      grid-template-columns: 140px 1fr;
-      gap:18px;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:16px;
       padding:20px;
     }
-    .photo{
-      width:140px;
-      height:180px;
-      border-radius:18px;
+
+    .candidate-card{
+      border:1px solid var(--line);
+      border-radius:20px;
+      overflow:hidden;
+      background:#fff;
+      box-shadow:0 8px 24px rgba(18, 28, 45, .05);
+      display:flex;
+      flex-direction:column;
+      min-height:100%;
+    }
+
+    .candidate-photo{
+      width:100%;
+      aspect-ratio: 4 / 5;
       background:#eef2f7;
       overflow:hidden;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border:1px solid var(--line);
-      flex:none;
+      position:relative;
+      border-bottom:1px solid var(--line);
     }
-    .photo img{
+
+    .candidate-photo img{
       width:100%;
       height:100%;
       object-fit:cover;
       display:block;
     }
+
     .placeholder{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
       color:#94a3b8;
-      font-size:12px;
+      font-size:13px;
       text-align:center;
-      padding:10px;
+      padding:12px;
     }
+
+    .candidate-body{
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      flex:1;
+    }
+
     .candidate-name{
-      font-size:24px;
+      font-size:20px;
       font-weight:900;
-      margin:0 0 4px;
+      margin:0;
       line-height:1.1;
     }
+
+    .candidate-urna{
+      font-size:13px;
+      color:var(--muted);
+      margin-top:4px;
+    }
+
     .meta{
       display:flex;
       flex-wrap:wrap;
       gap:8px;
-      margin:8px 0 14px;
     }
+
     .pill{
       display:inline-flex;
       align-items:center;
@@ -297,20 +354,26 @@
       border:1px solid var(--line);
       font-size:13px;
       color:#334155;
+      line-height:1.2;
     }
+
     .pill strong{font-weight:900}
+
     .pill.party{
       background:#ecfeff;
       color:#155e75;
     }
+
     .pill.score{
       background:#f0fdf4;
       color:#166534;
     }
+
     .pill.viab{
       background:#eff6ff;
       color:#1d4ed8;
     }
+
     .justificativa{
       background:#f8fafc;
       border:1px solid var(--line);
@@ -319,14 +382,15 @@
       color:#223047;
       font-size:14px;
       line-height:1.55;
-      margin-bottom:14px;
+      min-height:72px;
     }
+
     .links{
       display:flex;
       flex-wrap:wrap;
       gap:10px;
-      margin-top:10px;
     }
+
     .links a{
       text-decoration:none;
       border:1px solid var(--line);
@@ -337,15 +401,18 @@
       font-weight:800;
       font-size:14px;
     }
+
     .share{
-      margin-top:14px;
+      margin-top:auto;
       display:flex;
       flex-wrap:wrap;
       gap:10px;
     }
+
     .share button{
       background:#111827;
       color:#fff;
+      width:100%;
     }
 
     .blocked-box{
@@ -355,6 +422,7 @@
       gap:18px;
       align-items:start;
     }
+
     .blocked-img{
       width:170px;
       min-height:170px;
@@ -363,43 +431,53 @@
       overflow:hidden;
       background:#eef2f7;
     }
+
     .blocked-img img{
       display:block;
       width:100%;
       height:100%;
       object-fit:cover;
     }
+
     .blocked-message h3{
       margin:0 0 10px;
       font-size:24px;
       line-height:1.1;
       color:#0f172a;
     }
+
     .blocked-message p{
       margin:0 0 12px;
       font-size:15px;
       line-height:1.55;
       color:#334155;
     }
-    .blocked-message .fine{
-      font-size:13px;
-      color:var(--muted);
-      margin-top:8px;
-    }
+
     .hidden{display:none !important;}
+
+    @media (max-width: 980px){
+      .cards-grid{
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+      }
+    }
 
     @media (max-width: 760px){
       h1{font-size:24px}
+
       .slider-wrap{
-        grid-template-columns: 1fr;
+        grid-template-columns:1fr;
       }
+
       .slider-label{
         text-align:left;
       }
-      .result-card, .blocked-box{
+
+      .cards-grid,
+      .blocked-box{
         grid-template-columns:1fr;
       }
-      .photo, .blocked-img{
+
+      .blocked-img{
         width:100%;
         max-width:240px;
       }
@@ -413,13 +491,14 @@
       <h1>Resultado com bloqueio automático para contrariedade crítica</h1>
       <p class="sub">
         Se houver 2 ou mais respostas Contrário, ou se Mulheres &amp; Gênero ou Meio Ambiente forem Contrário,
-        o card de candidato não aparece. Em vez disso, mostramos a mensagem de investigação independente.
+        o card de candidato não aparece. Se não houver candidato viável, também mostramos a mensagem de investigação independente.
       </p>
     </section>
 
     <section class="panel">
       <h2>Como você quer ver o resultado?</h2>
       <p class="note">O quiz é o mesmo para todos. O que muda é o cálculo final.</p>
+
       <div class="toggle-row">
         <label class="toggle active">
           <input type="radio" name="modo" value="tradicionais" checked />
@@ -439,11 +518,12 @@
       <div id="questions"></div>
 
       <div class="btn-row">
-        <button class="btn-primary" id="btnEnviar">Enviar respostas</button>
-        <button class="btn-soft-green" id="btnFav">Preencher Favorável</button>
-        <button class="btn-soft-amber" id="btnMod">Preencher Moderado</button>
-        <button class="btn-soft-red" id="btnCont">Preencher Contrário</button>
+        <button class="btn-primary" id="btnEnviar" type="button">Enviar respostas</button>
+        <button class="btn-soft-green" id="btnFav" type="button">Preencher Favorável</button>
+        <button class="btn-soft-amber" id="btnMod" type="button">Preencher Moderado</button>
+        <button class="btn-soft-red" id="btnCont" type="button">Preencher Contrário</button>
       </div>
+
       <p class="note" style="margin-top:12px;">
         Use o slider de cada pergunta. Esquerda = Contrário, meio = Moderado, direita = Favorável.
       </p>
@@ -455,28 +535,7 @@
         <p class="result-text" id="resultadoSubtitulo"></p>
       </div>
 
-      <div id="cardNormal" class="result-card hidden">
-        <div class="photo">
-          <img id="fotoCandidato" alt="Foto do candidato" />
-          <div id="fotoPlaceholder" class="placeholder">Sem foto</div>
-        </div>
-        <div>
-          <h3 class="candidate-name" id="nomeCandidato"></h3>
-          <div class="meta">
-            <span class="pill party"><strong id="partidoCandidato"></strong></span>
-            <span class="pill"><strong>Nº</strong> <span id="numeroCandidato"></span></span>
-            <span class="pill score"><strong>Score</strong> <span id="scoreCandidato"></span></span>
-            <span class="pill viab"><strong>Viabilidade</strong> <span id="viabilidadeCandidato"></span></span>
-          </div>
-          <div class="justificativa" id="justificativaCandidato"></div>
-          <div class="links">
-            <a id="linkInstagram" href="#" target="_blank" rel="noopener noreferrer">Instagram</a>
-          </div>
-          <div class="share">
-            <button id="btnCompartilhar">Compartilhar</button>
-          </div>
-        </div>
-      </div>
+      <div id="cardsGrid" class="cards-grid hidden"></div>
 
       <div id="cardBloqueio" class="blocked-box hidden">
         <div class="blocked-img">
@@ -492,9 +551,6 @@
             <a href="https://quemfoiquem.org.br/" target="_blank" rel="noopener noreferrer">Quem Foi Quem</a>
             <a href="https://www.agencialupa.org/institucional/2026/07/31/deputometro-conheca-o-painel-de-monitoramento-lupa/" target="_blank" rel="noopener noreferrer">Deputômetro</a>
           </div>
-          <p class="fine">
-            Use esses sites para comparar trajetórias, votos e posicionamentos com mais independência.
-          </p>
         </div>
       </div>
     </section>
@@ -509,40 +565,143 @@
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const QUESTIONS = [
-      { id: 'mulheres', label: 'Mulheres & Gênero', desc: 'Como você se posiciona sobre direitos das mulheres e igualdade de gênero?' },
-      { id: 'educacao', label: 'Educação & Serv. Público', desc: 'Qual é sua visão sobre educação e valorização do serviço público?' },
-      { id: 'meio_ambiente', label: 'Meio Ambiente', desc: 'Como você avalia as pautas de sustentabilidade e proteção ambiental?' },
-      { id: 'impostos', label: 'Taxação sobre Renda/Fortunas', desc: 'Qual a sua posição sobre tributação progressiva e distribuição de renda?' },
-      { id: 'direitos', label: 'Direitos Sociais', desc: 'Como você vê a ampliação ou proteção de direitos sociais?' },
-      { id: 'seguranca', label: 'Segurança Pública', desc: 'Como você avalia o equilíbrio entre segurança e garantias democráticas?' },
-      { id: 'transparencia', label: 'Transparência', desc: 'Qual a sua visão sobre transparência, controle e fiscalização pública?' }
+      {
+        id: 'mulheres',
+        label: 'Mulheres & Gênero',
+        desc: 'Como você se posiciona sobre direitos das mulheres e igualdade de gênero?'
+      },
+      {
+        id: 'educacao',
+        label: 'Educação & Serv. Público',
+        desc: 'Qual é sua visão sobre educação e valorização do serviço público?'
+      },
+      {
+        id: 'meio_ambiente',
+        label: 'Meio Ambiente',
+        desc: 'Como você avalia as pautas de sustentabilidade e proteção ambiental?'
+      },
+      {
+        id: 'impostos',
+        label: 'Taxação sobre Renda/Fortunas',
+        desc: 'Qual a sua posição sobre tributação progressiva e distribuição de renda?'
+      },
+      {
+        id: 'direitos',
+        label: 'Direitos Sociais',
+        desc: 'Como você vê a ampliação ou proteção de direitos sociais?'
+      },
+      {
+        id: 'seguranca',
+        label: 'Segurança Pública',
+        desc: 'Como você avalia o equilíbrio entre segurança e garantias democráticas?'
+      },
+      {
+        id: 'transparencia',
+        label: 'Transparência',
+        desc: 'Qual a sua visão sobre transparência, controle e fiscalização pública?'
+      }
     ];
 
-    const labels = ['Contrário', 'Moderado', 'Favorável'];
-    const values = ['Contrário', 'Moderado', 'Favorável'];
+    const RESPONSE_VALUES = ['Contrário', 'Moderado', 'Favorável'];
 
     const state = {
       modo: 'tradicionais',
       respostas: Object.fromEntries(QUESTIONS.map(q => [q.id, 'Moderado']))
     };
 
-    const $ = (sel) => document.querySelector(sel);
+    const SESSION_STORAGE_KEY = 'quiz_eleitoral_session_id';
 
+    function getSessionId() {
+      const current = sessionStorage.getItem(SESSION_STORAGE_KEY);
+      if (current) return current;
+      const created = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2))
+        .replace(/-/g, '')
+        .slice(0, 8);
+      sessionStorage.setItem(SESSION_STORAGE_KEY, created);
+      return created;
+    }
+
+    const SESSION_ID = getSessionId();
+
+    const $ = (sel) => document.querySelector(sel);
     const questionsEl = $('#questions');
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function cleanInstagram(url) {
+      if (!url) return '';
+      const raw = Array.isArray(url) ? url[0] : String(url);
+      return raw.split('|')[0].trim();
+    }
+
+    function isRenovacao(c) {
+      const v = c?.flag_renovacao;
+      return v === true || v === 'true' || v === 1 || v === '1';
+    }
+
+    function normalizeStatus(status) {
+      return String(status ?? '').trim().toLowerCase();
+    }
+
+    function isCandidateViable(c) {
+      const status = normalizeStatus(c?.status_viabilidade);
+      const score = Number(c?.score_final ?? 0);
+
+      if (status) {
+        if (
+          status.includes('muito baixa') ||
+          status.includes('baixa') ||
+          status.includes('invi') ||
+          status.includes('sem chance')
+        ) {
+          return false;
+        }
+        return true;
+      }
+
+      return score >= 0.35;
+    }
+
+    function formatScore(score) {
+      const n = Number(score);
+      if (!Number.isFinite(n)) return '—';
+      if (n <= 1) return `${(n * 100).toFixed(2)}%`;
+      return n.toFixed(2);
+    }
+
+    function getContraryCount() {
+      return Object.values(state.respostas).filter(v => v === 'Contrário').length;
+    }
+
+    function shouldBlockByAnswers() {
+      const contraryCount = getContraryCount();
+      return (
+        contraryCount >= 2 ||
+        state.respostas.mulheres === 'Contrário' ||
+        state.respostas.meio_ambiente === 'Contrário'
+      );
+    }
 
     function renderQuestions() {
       questionsEl.innerHTML = QUESTIONS.map((q, idx) => `
         <div class="question" data-q="${q.id}">
           <div class="q-head">
             <div>
-              <p class="q-title">${idx + 1}. ${q.label}</p>
-              <div class="q-desc">${q.desc}</div>
+              <p class="q-title">${idx + 1}. ${escapeHtml(q.label)}</p>
+              <div class="q-desc">${escapeHtml(q.desc)}</div>
             </div>
             <div class="q-status" id="status-${q.id}">Moderado</div>
           </div>
           <div class="slider-wrap">
             <div class="slider-label left">Contrário</div>
-            <input type="range" min="0" max="2" step="1" value="1" aria-label="${q.label}" />
+            <input type="range" min="0" max="2" step="1" value="1" aria-label="${escapeHtml(q.label)}" />
             <div class="slider-label right">Favorável</div>
           </div>
         </div>
@@ -551,7 +710,7 @@
       questionsEl.querySelectorAll('input[type="range"]').forEach((range, idx) => {
         const q = QUESTIONS[idx];
         range.addEventListener('input', () => {
-          const v = values[Number(range.value)];
+          const v = RESPONSE_VALUES[Number(range.value)];
           state.respostas[q.id] = v;
           $(`#status-${q.id}`).textContent = v;
         });
@@ -562,103 +721,150 @@
       QUESTIONS.forEach((q, idx) => {
         state.respostas[q.id] = value;
         const range = questionsEl.querySelectorAll('input[type="range"]')[idx];
-        range.value = values.indexOf(value);
+        range.value = RESPONSE_VALUES.indexOf(value);
         $(`#status-${q.id}`).textContent = value;
       });
-    }
-
-    function getContraryCount() {
-      return Object.values(state.respostas).filter(v => v === 'Contrário').length;
-    }
-
-    function shouldBlock() {
-      const contraryCount = getContraryCount();
-      return contraryCount >= 2 ||
-        state.respostas.mulheres === 'Contrário' ||
-        state.respostas.meio_ambiente === 'Contrário';
-    }
-
-    function formatScore(score) {
-      return Number(score).toFixed(2);
-    }
-
-    function cleanInstagram(url) {
-      if (!url) return '';
-      if (Array.isArray(url)) return cleanInstagram(url[0]);
-      return String(url).trim();
     }
 
     function showResultadoContainer() {
       $('#resultadoArea').classList.remove('hidden');
     }
 
-    function showBloqueio() {
+    function hideAllResultViews() {
+      $('#cardsGrid').classList.add('hidden');
+      $('#cardBloqueio').classList.add('hidden');
+    }
+
+    function showBloqueio(customSubtitle) {
       showResultadoContainer();
-      $('#resultadoTitulo').textContent = 'Resultado bloqueado por contrariedade crítica';
-      $('#resultadoSubtitulo').textContent = 'Como houve contrariedade nas pautas sensíveis, não exibimos recomendação de candidato.';
-      $('#cardNormal').classList.add('hidden');
+      hideAllResultViews();
+
+      $('#resultadoTitulo').textContent = 'Não foi possível calcular o resultado';
+      $('#resultadoSubtitulo').textContent = customSubtitle || 'Como houve contrariedade nas pautas sensíveis, não exibimos recomendação de candidato.';
       $('#cardBloqueio').classList.remove('hidden');
     }
 
-    function showNormalCard(c) {
+    function buildCardHtml(c, index) {
+      const nomeUrna = escapeHtml(c.nome_urna ?? c.nome_candidato ?? '');
+      const nomeCompleto = escapeHtml(c.nome_candidato ?? c.nome_urna ?? '');
+      const partido = escapeHtml(c.partido ?? '—');
+      const numero = escapeHtml(c.numero_candidato ?? '—');
+      const score = escapeHtml(formatScore(c.score_final));
+      const viabilidade = escapeHtml(c.status_viabilidade ?? '—');
+      const justificativa = escapeHtml(
+        c.justificativa ??
+        'Candidato selecionado por afinidade programática.'
+      );
+
+      const foto = cleanInstagram(c.foto || '');
+      const instagram = cleanInstagram(c.instagram || '');
+
+      return `
+        <article class="candidate-card">
+          <div class="candidate-photo">
+            <img class="candidate-img" alt="Foto de ${nomeUrna || 'candidato'}" />
+            <div class="placeholder">Sem foto</div>
+          </div>
+          <div class="candidate-body">
+            <div>
+              <h3 class="candidate-name">${index + 1}. ${nomeUrna || 'Sem nome'}</h3>
+              <div class="candidate-urna">Nome completo: ${nomeCompleto || '—'}</div>
+            </div>
+
+            <div class="meta">
+              <span class="pill party"><strong>Partido</strong> ${partido}</span>
+              <span class="pill"><strong>Nº</strong> ${numero}</span>
+              <span class="pill score"><strong>Score</strong> ${score}</span>
+              <span class="pill viab"><strong>Chance</strong> ${viabilidade}</span>
+            </div>
+
+            <div class="justificativa">${justificativa}</div>
+
+            <div class="links">
+              ${
+                instagram
+                  ? `<a href="${escapeHtml(instagram)}" target="_blank" rel="noopener noreferrer">Instagram</a>`
+                  : ''
+              }
+            </div>
+
+            <div class="share">
+              <button type="button" class="btn-share" data-share-index="${index}">Compartilhar</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function applyPhotos() {
+      document.querySelectorAll('.candidate-card').forEach((card, idx) => {
+        const img = card.querySelector('.candidate-img');
+        const placeholder = card.querySelector('.placeholder');
+        const c = state.resultados[idx];
+        const foto = cleanInstagram(c.foto || '');
+
+        if (foto) {
+          img.src = foto;
+          img.style.display = 'block';
+          placeholder.style.display = 'none';
+        } else {
+          img.removeAttribute('src');
+          img.style.display = 'none';
+          placeholder.style.display = 'flex';
+        }
+      });
+    }
+
+    function bindShareButtons() {
+      document.querySelectorAll('.btn-share').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const idx = Number(btn.dataset.shareIndex);
+          const c = state.resultados[idx];
+          if (!c) return;
+
+          const text = `Meu resultado no quiz eleitoral: ${c.nome_urna ?? c.nome_candidato ?? 'candidato'} (${c.partido ?? ''})`;
+
+          try {
+            if (navigator.share) {
+              await navigator.share({
+                title: 'Resultado do quiz',
+                text,
+                url: location.href
+              });
+            } else {
+              await navigator.clipboard.writeText(text + ' ' + location.href);
+              alert('Resultado copiado para a área de transferência.');
+            }
+          } catch (e) {}
+        });
+      });
+    }
+
+    function renderNormalCards(candidatos) {
+      state.resultados = candidatos;
+
       showResultadoContainer();
-      $('#resultadoTitulo').textContent = 'Resultado da recomendação';
-      $('#resultadoSubtitulo').textContent = 'Com base nas suas respostas, este é o candidato mais compatível no cálculo atual.';
-      $('#cardBloqueio').classList.add('hidden');
-      $('#cardNormal').classList.remove('hidden');
+      hideAllResultViews();
 
-      $('#nomeCandidato').textContent = c.nome_urna ?? c.nome_candidato ?? '';
-      $('#partidoCandidato').textContent = c.partido ?? '';
-      $('#numeroCandidato').textContent = c.numero_candidato ?? '—';
-      $('#scoreCandidato').textContent = formatScore(c.score_final ?? 0);
-      $('#viabilidadeCandidato').textContent = c.status_viabilidade ?? '—';
-      $('#justificativaCandidato').textContent = c.justificativa ?? 'Candidato selecionado por afinidade programática.';
+      $('#resultadoTitulo').textContent = 'Top 3 candidatos mais compatíveis';
+      $('#resultadoSubtitulo').textContent = 'Foram exibidos os três candidatos mais aderentes após o filtro de viabilidade e modo selecionado.';
+      $('#cardsGrid').innerHTML = candidatos.map((c, idx) => buildCardHtml(c, idx)).join('');
+      $('#cardsGrid').classList.remove('hidden');
 
-      const foto = c.foto || '';
-      const img = $('#fotoCandidato');
-      const placeholder = $('#fotoPlaceholder');
-      if (foto) {
-        img.src = foto;
-        img.style.display = 'block';
-        placeholder.style.display = 'none';
-      } else {
-        img.removeAttribute('src');
-        img.style.display = 'none';
-        placeholder.style.display = 'flex';
-      }
-
-      const insta = cleanInstagram(c.instagram);
-      const instaLink = $('#linkInstagram');
-      if (insta) {
-        instaLink.href = insta;
-        instaLink.style.display = 'inline-flex';
-      } else {
-        instaLink.href = '#';
-        instaLink.style.display = 'none';
-      }
-
-      $('#btnCompartilhar').onclick = async () => {
-        const text = `Meu resultado no quiz eleitoral: ${c.nome_urna ?? c.nome_candidato ?? 'candidato'} (${c.partido ?? ''})`;
-        try {
-          if (navigator.share) {
-            await navigator.share({ title: 'Resultado do quiz', text, url: location.href });
-          } else {
-            await navigator.clipboard.writeText(text + ' ' + location.href);
-            alert('Resultado copiado para a área de transferência.');
-          }
-        } catch (e) {}
-      };
+      applyPhotos();
+      bindShareButtons();
     }
 
     async function salvarResultadoBloqueio() {
       try {
         await supabase.from('resultados_quiz').insert([{
+          id_sessao: SESSION_ID,
           mulheres: state.respostas.mulheres,
           educacao: state.respostas.educacao,
           meio_ambiente: state.respostas.meio_ambiente,
           impostos: state.respostas.impostos,
           direitos: state.respostas.direitos,
-          seguranca: state.respostas.segurança,
+          seguranca: state.respostas.seguranca,
           transparencia: state.respostas.transparencia,
           pontuacao_afinidade: null,
           candidato_recomendado: 'Bloqueado por contrariedade crítica',
@@ -671,20 +877,21 @@
       }
     }
 
-    async function salvarResultadoNormal(c) {
+    async function salvarResultadoNormal(candidatoPrincipal) {
       try {
         await supabase.from('resultados_quiz').insert([{
+          id_sessao: SESSION_ID,
           mulheres: state.respostas.mulheres,
           educacao: state.respostas.educacao,
           meio_ambiente: state.respostas.meio_ambiente,
           impostos: state.respostas.impostos,
           direitos: state.respostas.direitos,
-          seguranca: state.respostas.segurança,
+          seguranca: state.respostas.seguranca,
           transparencia: state.respostas.transparencia,
-          pontuacao_afinidade: c.score_final ?? null,
+          pontuacao_afinidade: candidatoPrincipal?.score_final ?? null,
           candidato_recomendado: 'Candidato selecionado por afinidade programática.',
-          nome_candidato: c.nome_urna ?? c.nome_candidato ?? null,
-          partido: c.partido ?? null,
+          nome_candidato: candidatoPrincipal?.nome_urna ?? candidatoPrincipal?.nome_candidato ?? null,
+          partido: candidatoPrincipal?.partido ?? null,
           bloqueado: false
         }]);
       } catch (e) {
@@ -692,35 +899,46 @@
       }
     }
 
-    async function buscarTopCandidato() {
-      const { data, error } = await supabase.rpc('rpc_top_viabilidade', { p_limit: 1 });
+    async function buscarTopCandidatos() {
+      const { data, error } = await supabase.rpc('rpc_top_viabilidade');
       if (error) throw error;
-      if (!data || !data.length) throw new Error('Nenhum candidato retornado.');
-      return data[0];
+      if (!Array.isArray(data) || !data.length) return [];
+
+      const sorted = [...data].sort((a, b) => Number(b?.score_final ?? 0) - Number(a?.score_final ?? 0));
+
+      const porModo = sorted.filter(c => {
+        const renovacao = isRenovacao(c);
+        if (state.modo === 'novos') return renovacao;
+        return !renovacao;
+      });
+
+      const viaveis = porModo.filter(isCandidateViable);
+
+      return viaveis.slice(0, 3);
     }
 
     async function enviarRespostas() {
-      if (shouldBlock()) {
+      if (shouldBlockByAnswers()) {
         await salvarResultadoBloqueio();
-        showBloqueio();
+        showBloqueio('Pelas suas respostas, não temos um candidato a sugerir neste momento.');
         return;
       }
 
       try {
-        const candidato = await buscarTopCandidato();
-        await salvarResultadoNormal(candidato);
-        showNormalCard(candidato);
+        const candidatos = await buscarTopCandidatos();
+
+        if (!candidatos.length) {
+          await salvarResultadoBloqueio();
+          showBloqueio('Pelas suas respostas e pela viabilidade atual, não há candidato seguro para sugerir agora.');
+          return;
+        }
+
+        await salvarResultadoNormal(candidatos[0]);
+        renderNormalCards(candidatos);
       } catch (error) {
         console.error(error);
-        $('#resultadoArea').classList.remove('hidden');
-        $('#resultadoTitulo').textContent = 'Não foi possível calcular o resultado';
-        $('#resultadoSubtitulo').textContent = 'A consulta de candidatos não retornou um resultado válido agora.';
-        $('#cardNormal').classList.add('hidden');
-        $('#cardBloqueio').classList.remove('hidden');
-        $('#cardBloqueio').querySelector('h3').textContent = 'Não se deixe ser manipulado';
-        $('#cardBloqueio').querySelector('p').textContent =
-          'Não foi possível calcular um candidato neste momento. Consulte as plataformas independentes abaixo.';
         await salvarResultadoBloqueio();
+        showBloqueio('Não foi possível calcular um candidato neste momento. Consulte as plataformas independentes abaixo.');
       }
     }
 
