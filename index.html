@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Quiz Eleitoral SP</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -32,7 +31,7 @@
     }
 
     .wrap{
-      max-width:980px;
+      max-width:1120px;
       margin:0 auto;
       padding:28px 16px 56px;
     }
@@ -188,131 +187,218 @@
       background:linear-gradient(180deg,#fff8ed 0%,#fff 100%);
     }
 
-    .result-top{
+    .candidate-grid{
       display:grid;
-      grid-template-columns:180px 1fr;
-      gap:0;
-      align-items:stretch;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:16px;
+      padding:18px;
     }
 
-    .photo-box{
-      min-height:210px;
-      background:#f5f8fb;
+    .candidate-card{
+      border:1px solid var(--line);
+      border-radius:20px;
+      overflow:hidden;
+      background:#fff;
+      box-shadow:0 8px 24px rgba(16,32,56,.06);
+      display:flex;
+      flex-direction:column;
+      min-height:100%;
+    }
+
+    .candidate-photo{
+      width:100%;
+      aspect-ratio:4 / 5;
+      background:#eef3f9;
+      overflow:hidden;
+      border-bottom:1px solid var(--line);
       display:flex;
       align-items:center;
       justify-content:center;
-      border-right:1px solid #e4f2e8;
-      overflow:hidden;
       position:relative;
     }
 
-    .result.blocked .photo-box{
-      border-right:1px solid #f5d0a0;
-      background:#fff6e8;
-    }
-
-    .photo-box img{
+    .candidate-photo img{
       width:100%;
       height:100%;
       object-fit:cover;
       display:block;
-      max-height:280px;
     }
 
-    .result-body{
-      padding:18px;
-    }
-
-    .pill{
-      display:inline-flex;
+    .photo-placeholder{
+      display:flex;
       align-items:center;
-      gap:6px;
-      padding:6px 10px;
-      border-radius:999px;
-      background:#0f7d63;
-      color:#fff;
-      font-size:12px;
-      font-weight:800;
-      margin-bottom:10px;
+      justify-content:center;
+      width:100%;
+      height:100%;
+      color:#94a3b8;
+      font-size:13px;
+      text-align:center;
+      padding:12px;
     }
 
-    .pill.blocked{background:#b45309;}
-
-    .candidate{
-      margin:0 0 6px;
-      font-size:24px;
-      line-height:1.1;
-      letter-spacing:-.02em;
+    .candidate-body{
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      flex:1;
     }
 
-    .meta{
+    .candidate-name{
+      font-size:18px;
+      font-weight:900;
       margin:0;
-      font-size:14px;
-      line-height:1.55;
+      line-height:1.15;
+    }
+
+    .candidate-meta{
+      font-size:13px;
+      line-height:1.5;
       color:#25415e;
     }
 
-    .meta strong{color:#102038}
-    .meta a{
-      color:var(--accent);
-      text-decoration:none;
-      font-weight:700;
+    .candidate-meta strong{
+      color:#102038;
     }
-    .meta a:hover{text-decoration:underline}
 
-    .alt-list{
-      padding:0 18px 18px;
-      display:none;
+    .candidate-pills{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .candidate-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:7px 10px;
+      border-radius:999px;
+      background:#f1f5f9;
+      border:1px solid var(--line);
+      font-size:12px;
+      color:#334155;
+      line-height:1.2;
+      font-weight:800;
+    }
+
+    .candidate-links{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:auto;
+    }
+
+    .candidate-links a{
+      text-decoration:none;
+      border:1px solid var(--line);
+      background:#fff;
+      color:#0f172a;
+      padding:10px 12px;
+      border-radius:12px;
+      font-weight:800;
+      font-size:13px;
+    }
+
+    .candidate-justificativa{
+      background:#f8fafc;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      color:#223047;
+      font-size:13px;
+      line-height:1.55;
+    }
+
+    .blocked-box{
+      padding:20px;
+      display:grid;
+      grid-template-columns:170px 1fr;
+      gap:18px;
+      align-items:start;
+    }
+
+    .blocked-img{
+      width:170px;
+      min-height:170px;
+      border-radius:18px;
+      border:1px solid var(--line);
+      overflow:hidden;
+      background:#eef2f7;
+    }
+
+    .blocked-img img{
+      display:block;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+
+    .blocked-message h3{
+      margin:0 0 10px;
+      font-size:24px;
+      line-height:1.1;
+      color:#0f172a;
+    }
+
+    .blocked-message p{
+      margin:0 0 12px;
+      font-size:15px;
+      line-height:1.55;
+      color:#334155;
+    }
+
+    .links{
+      display:flex;
+      flex-wrap:wrap;
       gap:10px;
     }
 
-    .alt-title{
-      margin:0 0 4px;
-      font-size:13px;
-      font-weight:700;
-      color:var(--muted);
-    }
-
-    .alt-item{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      padding:10px 12px;
+    .links a{
+      text-decoration:none;
       border:1px solid var(--line);
+      background:#fff;
+      color:#0f172a;
+      padding:11px 14px;
       border-radius:12px;
-      background:#fafcff;
-    }
-
-    .alt-item img{
-      width:44px;
-      height:44px;
-      border-radius:50%;
-      object-fit:cover;
-      background:#eef3f9;
-      flex-shrink:0;
-    }
-
-    .alt-info{
-      font-size:13px;
-      line-height:1.4;
-    }
-
-    .alt-info strong{
-      display:block;
+      font-weight:800;
       font-size:14px;
     }
 
-    @media (max-width:720px){
-      .result-top{grid-template-columns:1fr}
-      .photo-box{
-        border-right:0;
-        border-bottom:1px solid #e4f2e8;
+    .share-row{
+      padding:0 18px 18px;
+      display:flex;
+      justify-content:flex-start;
+    }
+
+    .hidden{display:none !important;}
+
+    @media (max-width: 980px){
+      .candidate-grid{
+        grid-template-columns:repeat(2, minmax(0, 1fr));
       }
-      .result.blocked .photo-box{
-        border-bottom:1px solid #f5d0a0;
+    }
+
+    @media (max-width: 700px){
+      .candidate-grid{
+        grid-template-columns:1fr;
       }
-      .qhead{flex-direction:column}
-      .badge{min-width:auto}
+
+      .blocked-box{
+        grid-template-columns:1fr;
+      }
+
+      .blocked-img{
+        width:100%;
+        max-width:240px;
+      }
+
+      .qhead{
+        flex-direction:column;
+      }
+
+      .badge{
+        min-width:auto;
+      }
     }
   </style>
 </head>
@@ -367,18 +453,33 @@
       <div class="status" id="status">Pronto para testar.</div>
 
       <div class="result" id="resultBox">
-        <div class="result-top">
-          <div class="photo-box">
-            <img id="resultPhoto" src="" alt="Imagem do resultado" style="display:none" />
+        <div id="candidateGrid" class="candidate-grid"></div>
+
+        <div id="blockedBox" class="blocked-box hidden">
+          <div class="blocked-img">
+            <img src="assets/nao_manipulado.jpeg" alt="Não se deixe ser manipulado" />
           </div>
-          <div class="result-body">
-            <div class="pill" id="resultPill">Última recomendação</div>
-            <h2 class="candidate" id="resultName">—</h2>
-            <p class="meta" id="resultMeta">—</p>
-            <button class="btn secondary" id="shareBtn" type="button" style="display:none; margin-top:12px;">Compartilhar resultado</button>
+          <div class="blocked-message">
+            <h3>Não se deixe ser manipulado</h3>
+            <p>
+              Nenhum candidato do nosso levantamento se alinhou totalmente ao seu perfil — e isso é exatamente o momento de ir mais fundo antes de decidir seu voto.
+            </p>
+            <p>
+              Consulte o histórico e as posições reais de cada candidato nas fontes abaixo:
+            </p>
+            <div class="links">
+              <a href="https://quemfoiquem.org.br/" target="_blank" rel="noopener noreferrer">Quem Foi Quem</a>
+              <a href="https://www.agencialupa.org/institucional/2026/07/31/deputometro-conheca-o-painel-de-monitoramento-lupa/" target="_blank" rel="noopener noreferrer">Deputômetro</a>
+            </div>
+            <p style="margin-top:12px;">
+              Seu voto consciente começa com informação — vale muito a pena esse passo a mais.
+            </p>
           </div>
         </div>
-        <div class="alt-list" id="altList"></div>
+
+        <div class="share-row">
+          <button class="btn secondary hidden" id="shareBtn" type="button">Compartilhar resultado</button>
+        </div>
       </div>
     </section>
   </div>
@@ -387,23 +488,48 @@
     const SUPABASE_URL = 'https://hglifytalonmncphycfp.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_0SyoXPILkEfgIOrzWnEh7A_LTp6BHKf';
     const SUPABASE_TABLE = 'eleitores_respostas';
+
     const QUEM_FOI_QUEM_URL = 'https://quemfoiquem.org.br/';
     const DEPUTOMETRO_URL = 'https://www.agencialupa.org/institucional/2026/07/31/deputometro-conheca-o-painel-de-monitoramento-lupa/';
     const BLOCK_IMAGE = 'assets/nao_manipulado.jpeg';
 
     const QUESTIONS = [
-      { key: 'mulheres', label: 'Mulheres & Gênero', desc: 'A criação de políticas públicas específicas e orçamento garantido para o combate à violência contra a mulher e apoio à igualdade de gênero deve ser prioridade no mandato?' },
-      { key: 'educacao', label: 'Educação & Serv. Público', desc: 'O foco principal dos investimentos em educação deve ser o fortalecimento e a expansão do ensino público e gratuito?' },
-      { key: 'meio_ambiente', label: 'Meio Ambiente', desc: 'A fiscalização ambiental deve ser mais rigorosa, restringindo empreendimentos que impactem áreas de preservação?' },
-      { key: 'impostos', label: 'Taxação sobre Renda/Fortunas', desc: 'Você apoia o aumento da taxação sobre grandes fortunas e rendas mais altas para financiar serviços públicos?' },
-      { key: 'direitos', label: 'Direitos Sociais', desc: 'A defesa dos direitos de pessoas negras, povos indígenas e da comunidade LGBTQIA+, com foco no combate ao racismo e à discriminação, deve ser pauta prioritária do candidato?' },
-      { key: 'seguranca', label: 'Segurança Pública', desc: 'A atuação na segurança pública deve focar prioritariamente em prevenção, inteligência e direitos humanos, em vez de apenas no endurecimento de penas?' },
-      { key: 'transparencia', label: 'Transparência', desc: 'Candidatos devem ter o compromisso explícito de combater mecanismos opacos como o orçamento secreto/emendas de relator?' }
+      {
+        key: 'mulheres',
+        label: 'Mulheres & Gênero',
+        desc: 'A criação de políticas públicas específicas e orçamento garantido para o combate à violência contra a mulher e apoio à igualdade de gênero deve ser prioridade no mandato?'
+      },
+      {
+        key: 'educacao',
+        label: 'Educação & Serv. Público',
+        desc: 'O foco principal dos investimentos em educação deve ser o fortalecimento e a expansão do ensino público e gratuito?'
+      },
+      {
+        key: 'meio_ambiente',
+        label: 'Meio Ambiente',
+        desc: 'A fiscalização ambiental deve ser mais rigorosa, restringindo empreendimentos que impactem áreas de preservação?'
+      },
+      {
+        key: 'impostos',
+        label: 'Taxação sobre Renda/Fortunas',
+        desc: 'Você apoia o aumento da taxação sobre grandes fortunas e rendas mais altas para financiar serviços públicos?'
+      },
+      {
+        key: 'direitos',
+        label: 'Direitos Sociais',
+        desc: 'A defesa dos direitos de pessoas negras, povos indígenas e da comunidade LGBTQIA+, com foco no combate ao racismo e à discriminação, deve ser pauta prioritária do candidato?'
+      },
+      {
+        key: 'seguranca',
+        label: 'Segurança Pública',
+        desc: 'A atuação na segurança pública deve focar prioritariamente em prevenção, inteligência e direitos humanos, em vez de apenas no endurecimento de penas?'
+      },
+      {
+        key: 'transparencia',
+        label: 'Transparência',
+        desc: 'Candidatos devem ter o compromisso explícito de combater mecanismos opacos como o orçamento secreto/emendas de relator?'
+      }
     ];
-
-    const supabaseClient = window.supabase?.createClient
-      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-      : null;
 
     const PARTIDOS_PROGRESSISTAS = new Set([
       'PT',
@@ -415,9 +541,14 @@
       'PV'
     ]);
 
+    const supabaseClient = window.supabase?.createClient
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
+
     const state = {
       sessionId: generateSessionId(),
-      values: {}
+      values: {},
+      resultados: []
     };
 
     let lastShareText = '';
@@ -425,12 +556,9 @@
     const questionsRoot = document.getElementById('questions');
     const statusEl = document.getElementById('status');
     const resultBox = document.getElementById('resultBox');
-    const resultPill = document.getElementById('resultPill');
-    const resultName = document.getElementById('resultName');
-    const resultMeta = document.getElementById('resultMeta');
-    const resultPhoto = document.getElementById('resultPhoto');
+    const candidateGrid = document.getElementById('candidateGrid');
+    const blockedBox = document.getElementById('blockedBox');
     const shareBtn = document.getElementById('shareBtn');
-    const altList = document.getElementById('altList');
 
     function normalizeParty(party) {
       return String(party ?? '')
@@ -468,7 +596,174 @@
       return 0;
     }
 
-    questionsRoot.innerHTML = '';
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeAttr(str) {
+      return escapeHtml(String(str)).replace(/`/g, '&#96;');
+    }
+
+    function generateSessionId() {
+      return Math.random().toString(36).slice(2, 9);
+    }
+
+    function sliderLabel(v) {
+      if (v <= 33) return 'Contrário';
+      if (v <= 66) return 'Moderado';
+      return 'Favorável';
+    }
+
+    function badgeClass(v) {
+      if (v <= 33) return 'contrario';
+      if (v <= 66) return 'moderado';
+      return 'favoravel';
+    }
+
+    function computeAfinidade(values) {
+      const nums = Object.values(values);
+      return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
+    }
+
+    function viabilidadeLabel(score) {
+      if (score >= 90) return 'Muito alta';
+      if (score >= 75) return 'Alta';
+      if (score >= 60) return 'Média';
+      return 'Baixa';
+    }
+
+    function setStatus(text, kind) {
+      statusEl.textContent = text;
+      statusEl.className = 'status' + (kind ? ' ' + kind : '');
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function withRetry(fn, attempts = 3, delayMs = 350) {
+      let lastError;
+      for (let i = 1; i <= attempts; i++) {
+        try {
+          return await fn();
+        } catch (err) {
+          lastError = err;
+          const code = Number(err?.code || err?.status || err?.statusCode);
+          const retryable = ![400, 401, 403, 404, 409, 422].includes(code);
+          if (i === attempts || !retryable) throw err;
+          await sleep(delayMs * i);
+        }
+      }
+      throw lastError;
+    }
+
+    function setAll(value) {
+      document.querySelectorAll('input[type="range"]').forEach(input => {
+        input.value = value;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    }
+
+    function buildPayload() {
+      return {
+        mulheres: sliderLabel(state.values.mulheres),
+        educacao: sliderLabel(state.values.educacao),
+        meio_ambiente: sliderLabel(state.values.meio_ambiente),
+        impostos: sliderLabel(state.values.impostos),
+        direitos: sliderLabel(state.values.direitos),
+        seguranca: sliderLabel(state.values.seguranca),
+        transparencia: sliderLabel(state.values.transparencia),
+        pontuacao_afinidade: computeAfinidade(state.values)
+      };
+    }
+
+    function countContrarios() {
+      return Object.values(state.values).filter(v => Number(v) <= 33).length;
+    }
+
+    function mustBlockCandidate() {
+      return Number(state.values.mulheres) <= 33
+        || Number(state.values.meio_ambiente) <= 33
+        || countContrarios() >= 2;
+    }
+
+    function renderCandidateCard(c, index) {
+      const nome = c?.nome_urna || c?.nome_candidato || '—';
+      const partido = c?.partido || '—';
+      const numero = c?.numero_candidato || '—';
+      const foto = cleanUrl(c?.foto || '');
+      const instagram = cleanUrl(c?.instagram || '');
+      const viabilidade = c?.status_viabilidade || '—';
+      const score = c?.score_final ?? c?.pontuacao_afinidade ?? '—';
+      const votos = c?.total_votos ?? '—';
+      const justificativa = c?.candidato_recomendado || 'Candidato selecionado por afinidade programática.';
+
+      return `
+        <article class="candidate-card">
+          <div class="candidate-photo">
+            ${
+              foto
+                ? `<img src="${escapeAttr(foto)}" alt="Foto de ${escapeHtml(nome)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />`
+                : ''
+            }
+            <div class="photo-placeholder" style="${foto ? 'display:none;' : ''}">Sem foto</div>
+          </div>
+
+          <div class="candidate-body">
+            <h3 class="candidate-name">${index + 1}. ${escapeHtml(nome)}</h3>
+
+            <div class="candidate-pills">
+              <span class="candidate-pill"><strong>Partido</strong> ${escapeHtml(String(partido))}</span>
+              <span class="candidate-pill"><strong>Nº</strong> ${escapeHtml(String(numero))}</span>
+              <span class="candidate-pill"><strong>Viabilidade</strong> ${escapeHtml(String(viabilidade))}</span>
+              <span class="candidate-pill"><strong>Score</strong> ${escapeHtml(String(score))}</span>
+              <span class="candidate-pill"><strong>Votos</strong> ${escapeHtml(String(votos))}</span>
+            </div>
+
+            <div class="candidate-justificativa">${escapeHtml(String(justificativa))}</div>
+
+            <div class="candidate-links">
+              ${
+                instagram
+                  ? `<a href="${escapeAttr(instagram)}" target="_blank" rel="noopener noreferrer">Instagram</a>`
+                  : ''
+              }
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function showResult(candidatos) {
+      resultBox.classList.remove('blocked');
+      blockedBox.classList.add('hidden');
+
+      const lista = (Array.isArray(candidatos) ? candidatos : [])
+        .filter(Boolean)
+        .slice(0, 3);
+
+      candidateGrid.innerHTML = lista.map((c, idx) => renderCandidateCard(c, idx)).join('');
+      candidateGrid.classList.remove('hidden');
+
+      shareBtn.classList.remove('hidden');
+      lastShareText = `Meu top 3 candidatos do quiz eleitoral: ${lista.map(c => c.nome_urna || c.nome_candidato || '—').join(', ')}.`;
+      shareBtn.style.display = 'inline-flex';
+    }
+
+    function showSemCandidato() {
+      resultBox.classList.add('blocked');
+      candidateGrid.innerHTML = '';
+      candidateGrid.classList.add('hidden');
+      blockedBox.classList.remove('hidden');
+      shareBtn.classList.add('hidden');
+      shareBtn.style.display = 'none';
+      lastShareText = '';
+    }
 
     QUESTIONS.forEach((q, index) => {
       state.values[q.key] = 50;
@@ -544,80 +839,6 @@
       return el ? el.value : 'tradicional';
     }
 
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    async function withRetry(fn, attempts = 3, delayMs = 350) {
-      let lastError;
-      for (let i = 1; i <= attempts; i++) {
-        try {
-          return await fn();
-        } catch (err) {
-          lastError = err;
-          const code = Number(err?.code || err?.status || err?.statusCode);
-          const retryable = ![400, 401, 403, 404, 409, 422].includes(code);
-          if (i === attempts || !retryable) throw err;
-          await sleep(delayMs * i);
-        }
-      }
-      throw lastError;
-    }
-
-    function setAll(value) {
-      document.querySelectorAll('input[type="range"]').forEach(input => {
-        input.value = value;
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-      });
-    }
-
-    function sliderLabel(v) {
-      if (v <= 33) return 'Contrário';
-      if (v <= 66) return 'Moderado';
-      return 'Favorável';
-    }
-
-    function badgeClass(v) {
-      if (v <= 33) return 'contrario';
-      if (v <= 66) return 'moderado';
-      return 'favoravel';
-    }
-
-    function computeAfinidade(values) {
-      const nums = Object.values(values);
-      return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
-    }
-
-    function viabilidadeLabel(score) {
-      if (score >= 90) return 'Muito alta';
-      if (score >= 75) return 'Alta';
-      if (score >= 60) return 'Média';
-      return 'Baixa';
-    }
-
-    function buildPayload() {
-      return {
-        mulheres: sliderLabel(state.values.mulheres),
-        educacao: sliderLabel(state.values.educacao),
-        meio_ambiente: sliderLabel(state.values.meio_ambiente),
-        impostos: sliderLabel(state.values.impostos),
-        direitos: sliderLabel(state.values.direitos),
-        seguranca: sliderLabel(state.values.seguranca),
-        transparencia: sliderLabel(state.values.transparencia),
-        pontuacao_afinidade: computeAfinidade(state.values)
-      };
-    }
-
-    function countContrarios() {
-      return Object.values(state.values).filter(v => Number(v) <= 33).length;
-    }
-
-    function mustBlockCandidate() {
-      return Number(state.values.mulheres) <= 33
-        || Number(state.values.meio_ambiente) <= 33
-        || countContrarios() >= 2;
-    }
-
     async function submitQuiz() {
       const payload = buildPayload();
       const modoResultado = getModoResultado();
@@ -682,18 +903,13 @@
           })
         );
 
-        console.log('RPC ERROR:', rpcResponse.error);
-        console.log('RPC DATA:', rpcResponse.data);
-
         if (rpcResponse.error) throw rpcResponse.error;
 
         const base = (Array.isArray(rpcResponse.data) ? rpcResponse.data : [rpcResponse.data])
           .filter(Boolean);
 
-        const progressistas = base.filter(isProgressista);
-        const linhasBase = progressistas.length ? progressistas : base;
-
-        const linhas = linhasBase
+        const linhas = base
+          .filter(isProgressista)
           .filter(c => c.bloquear_candidatos !== true && c.bloquear_candidatos !== 'true')
           .filter(c => c.bloqueado !== true && c.bloqueado !== 'true')
           .sort((a, b) => {
@@ -732,15 +948,16 @@
         };
 
         const finalRow = {
-          ...savePayload,
-          numero_candidato: recomendacaoFinal.numero_candidato || null,
+          ...recomendacaoFinal,
+          alternativas,
+          pontuacao_afinidade: recomendacaoFinal.pontuacao_afinidade ?? payload.pontuacao_afinidade,
+          score_final: recomendacaoFinal.score_final ?? recomendacaoFinal.pontuacao_afinidade ?? payload.pontuacao_afinidade,
           foto: cleanUrl(recomendacaoFinal.foto || null),
           instagram: cleanUrl(recomendacaoFinal.instagram || null),
-          status_viabilidade: recomendacaoFinal.status_viabilidade || viabilidadeLabel(savePayload.pontuacao_afinidade),
-          alternativas
+          status_viabilidade: recomendacaoFinal.status_viabilidade || viabilidadeLabel(recomendacaoFinal.score_final ?? payload.pontuacao_afinidade)
         };
 
-        showResult(finalRow);
+        showResult([finalRow, ...alternativas]);
         setStatus('Recomendação exibida.', 'ok');
 
         try {
@@ -756,117 +973,8 @@
       } catch (err) {
         console.error(err);
         setStatus('Erro ao gerar a recomendação.', 'err');
-      }
-    }
-
-    function showResult(row) {
-      if (row?.bloqueado || row?.bloquear_candidatos) {
         showSemCandidato();
-        return;
       }
-
-      resultBox.classList.remove('blocked');
-      resultBox.style.display = 'block';
-      resultPill.style.display = 'inline-flex';
-      resultPill.classList.remove('blocked');
-      resultPill.textContent = 'Última recomendação';
-
-      const nome = row?.nome_candidato || '—';
-      const partido = row?.partido || '—';
-      const numero = row?.numero_candidato || '—';
-      const foto = row?.foto || '';
-      const instagram = row?.instagram || '';
-      const afinidade = row?.pontuacao_afinidade ?? computeAfinidade(state.values);
-      const justificativa = row?.candidato_recomendado || 'Candidato selecionado por afinidade programática.';
-      const statusViabilidade = row?.status_viabilidade || viabilidadeLabel(afinidade);
-
-      resultName.textContent = nome;
-      resultPhoto.alt = nome || 'Foto do candidato';
-
-      resultMeta.innerHTML = `
-        <strong>Número:</strong> ${escapeHtml(String(numero))}<br>
-        <strong>Partido:</strong> ${escapeHtml(partido)}<br>
-        <strong>Score:</strong> ${escapeHtml(String(afinidade))}<br>
-        <strong>Chance:</strong> ${escapeHtml(statusViabilidade)}<br>
-        <strong>Justificativa:</strong> ${escapeHtml(justificativa)}
-      `;
-
-      if (foto) {
-        resultPhoto.src = foto;
-        resultPhoto.style.display = 'block';
-      } else {
-        resultPhoto.removeAttribute('src');
-        resultPhoto.style.display = 'none';
-      }
-
-      if (instagram) {
-        resultMeta.innerHTML += `<br><strong>Instagram:</strong> <a href="${escapeAttr(instagram)}" target="_blank" rel="noopener noreferrer">Abrir Instagram</a>`;
-      }
-
-      if (row?.alternativas && row.alternativas.length) {
-        altList.style.display = 'grid';
-        altList.innerHTML = `<p class="alt-title">Outras opções compatíveis:</p>` +
-          row.alternativas.map(alt => `
-            <div class="alt-item">
-              ${alt.foto ? `<img src="${escapeAttr(alt.foto)}" alt="">` : ''}
-              <div class="alt-info">
-                <strong>${escapeHtml(alt.nome_urna || alt.nome_candidato || '—')}</strong>
-                Nº ${escapeHtml(String(alt.numero_candidato || '—'))} · ${escapeHtml(alt.partido || '—')} · Score ${escapeHtml(String(alt.pontuacao_afinidade ?? '—'))}
-              </div>
-            </div>
-          `).join('');
-      } else {
-        altList.style.display = 'none';
-        altList.innerHTML = '';
-      }
-
-      lastShareText = `Meu candidato recomendado: ${nome} (${numero} - ${partido}). Faça o teste também!`;
-      shareBtn.style.display = 'inline-flex';
-    }
-
-    function showSemCandidato() {
-      resultBox.classList.add('blocked');
-      resultBox.style.display = 'block';
-      resultPill.style.display = 'none';
-      resultName.textContent = 'Não se deixe ser manipulado';
-
-      resultPhoto.src = BLOCK_IMAGE;
-      resultPhoto.alt = 'Não se deixe ser manipulado';
-      resultPhoto.style.display = 'block';
-
-      shareBtn.style.display = 'none';
-      altList.style.display = 'none';
-      altList.innerHTML = '';
-
-      resultMeta.innerHTML = `
-        Nenhum candidato do nosso levantamento se alinhou totalmente ao seu perfil — e isso é exatamente o momento de ir mais fundo antes de decidir seu voto.<br><br>
-        Consulte o histórico e as posições reais de cada candidato nas fontes abaixo:<br><br>
-        <strong>Quem Foi Quem:</strong> <a href="${escapeAttr(QUEM_FOI_QUEM_URL)}" target="_blank" rel="noopener noreferrer">Abrir Quem Foi Quem</a><br>
-        <strong>Deputômetro / Agência Lupa:</strong> <a href="${escapeAttr(DEPUTOMETRO_URL)}" target="_blank" rel="noopener noreferrer">Abrir painel</a><br><br>
-        Seu voto consciente começa com informação — vale muito a pena esse passo a mais.
-      `;
-    }
-
-    function setStatus(text, kind) {
-      statusEl.textContent = text;
-      statusEl.className = 'status' + (kind ? ' ' + kind : '');
-    }
-
-    function generateSessionId() {
-      return Math.random().toString(36).slice(2, 9);
-    }
-
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    function escapeAttr(str) {
-      return escapeHtml(String(str)).replace(/`/g, '&#96;');
     }
   </script>
 </body>
