@@ -586,34 +586,7 @@ QUESTIONS.forEach((q, index) => {
         || Number(state.values.meio_ambiente) <= 33
         || countContrarios() >= 2;
     }
-    const PARTIDOS_PROGRESSISTAS = new Set([
-  'PT',
-  'PSOL',
-  'PSB',
-  'REDE',
-  'PCDOB',
-  'PSTU',
-  'PV'
-]);
 
-function normalizeParty(party) {
-  return String(party ?? '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\./g, '')
-    .trim()
-    .toUpperCase();
-}
-
-function isProgressista(row) {
-  const party = normalizeParty(row?.partido || row?.Partido);
-  return !!party && PARTIDOS_PROGRESSISTAS.has(party);
-}
-
-function cleanUrl(url) {
-  if (!url) return '';
-  return String(url).split('|')[0].trim();
-}
     async function submitQuiz() {
       const payload = buildPayload();
       const modoResultado = getModoResultado();
