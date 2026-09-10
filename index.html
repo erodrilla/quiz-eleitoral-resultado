@@ -468,23 +468,35 @@
     }
 
     function fetchTopCandidates(rawData) {
-      const base = (Array.isArray(rawData) ? rawData : [rawData]).filter(Boolean);
+      const base = (Array.isArray(rpcResponse.data) ? rpcResponse.data : [rpcResponse.data])
+  .filter(Boolean);
 
-      return base
-        .filter(isProgressista)
-        .filter(c => c.bloquear_candidatos !== true && c.bloquear_candidatos !== 'true')
-        .filter(c => c.bloqueado !== true && c.bloqueado !== 'true')
-        .sort((a, b) => {
-          const vr = viabilityRank(b.status_viabilidade) - viabilityRank(a.status_viabilidade);
-          if (vr !== 0) return vr;
+const progressistas = base.filter(isProgressista);
 
-          const sr = Number(b?.score_final ?? 0) - Number(a?.score_final ?? 0);
-          if (sr !== 0) return sr;
+const renovacao = base.filter(c =>
+  c.flag_renovacao === true || c.flag_renovacao === 'true'
+);
 
-          return Number(b?.total_votos ?? 0) - Number(a?.total_votos ?? 0);
-        });
-    }
+let linhasBase = base;
 
+if (modoResultado === 'renovacao') {
+  linhasBase = renovacao.length ? renovacao : base;
+} else {
+  linhasBase = progressistas.length ? progressistas : base;
+}
+
+const linhas = linhasBase
+  .filter(c => c.bloquear_candidatos !== true && c.bloquear_candidatos !== 'true')
+  .filter(c => c.bloqueado !== true && c.bloqueado !== 'true')
+  .sort((a, b) => {
+    const vr = viabilityRank(b.status_viabilidade) - viabilityRank(a.status_viabilidade);
+    if (vr !== 0) return vr;
+
+    const sr = Number(b?.score_final ?? 0) - Number(a?.score_final ?? 0);
+    if (sr !== 0) return sr;
+
+    return Number(b?.total_votos ?? 0) - Number(a?.total_votos ?? 0);
+  });
     questionsRoot.innerHTML = '';
 
     QUESTIONS.forEach((q, index) => {
