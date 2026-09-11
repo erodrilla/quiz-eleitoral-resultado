@@ -481,8 +481,9 @@
         .filter(c => c.bloquear_candidatos !== true && c.bloquear_candidatos !== 'true')
         .filter(c => c.bloqueado !== true && c.bloqueado !== 'true');
 
+      // A RPC já filtra por flag_renovacao quando p_modo = 'renovacao'.
+      // Este filtro extra é só uma rede de segurança caso o dado venha com a flag.
       const renovacao = progressistas.filter(c => normalizeBool(c.flag_renovacao));
-
       const pool = (modoResultado === 'renovacao' && renovacao.length)
         ? renovacao
         : progressistas;
@@ -724,7 +725,8 @@
             p_impostos: payload.impostos,
             p_direitos: payload.direitos,
             p_seguranca: payload.seguranca,
-            p_transparencia: payload.transparencia
+            p_transparencia: payload.transparencia,
+            p_modo: modoResultado
           })
         );
 
@@ -737,7 +739,12 @@
 
         if (!linhas.length) {
           showSemCandidato();
-          setStatus('Nenhum candidato progressista retornou da consulta.', 'warn');
+          setStatus(
+            modoResultado === 'renovacao'
+              ? 'Nenhum candidato de renovação disponível para este perfil.'
+              : 'Nenhum candidato progressista retornou da consulta.',
+            'warn'
+          );
           return;
         }
 
@@ -811,9 +818,6 @@
       const justificativa = row?.candidato_recomendado || 'Candidato selecionado por afinidade programática.';
       const statusViabilidade = row?.status_viabilidade || viabilidadeLabel(afinidade);
       const modoResultado = row?.modo_resultado === 'renovacao' ? 'Novos entrantes / renovação' : 'Candidatos tradicionais';
-      const observacao = row?.modo_resultado === 'renovacao'
-        ? 'usando filtragem de renovação com fallback para não deixar a tela vazia.'
-        : 'seleção padrão por afinidade e viabilidade.';
 
       resultName.textContent = nome;
       resultPhoto.alt = nome || 'Foto do candidato';
@@ -824,8 +828,7 @@
         <strong>Score:</strong> ${escapeHtml(String(afinidade))}<br>
         <strong>Chance:</strong> ${escapeHtml(statusViabilidade)}<br>
         <strong>Justificativa:</strong> ${escapeHtml(justificativa)}<br>
-        <strong>Modo:</strong> ${escapeHtml(modoResultado)}<br>
-        <strong>Observação:</strong> ${escapeHtml(observacao)}
+        <strong>Modo:</strong> ${escapeHtml(modoResultado)}
       `;
 
       if (foto) {
