@@ -59,7 +59,10 @@
       max-width:78ch;
     }
 
-    .grid{display:grid;gap:14px;}
+    .grid{
+      display:grid;
+      gap:14px;
+    }
 
     .card{
       background:var(--card);
@@ -262,7 +265,7 @@
     .alt-list{
       padding:0 18px 18px;
       display:none;
-      gap:10px;
+      gap:12px;
     }
 
     .alt-title{
@@ -272,33 +275,70 @@
       color:var(--muted);
     }
 
-    .alt-item{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      padding:10px 12px;
+    .main-card,
+    .alt-card{
       border:1px solid var(--line);
-      border-radius:12px;
+      border-radius:14px;
       background:#fafcff;
+      padding:12px;
     }
 
-    .alt-item img{
-      width:44px;
-      height:44px;
+    .main-card-top,
+    .alt-card-top{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+    }
+
+    .main-card-photo,
+    .alt-card-photo{
+      width:52px;
+      height:52px;
       border-radius:50%;
       object-fit:cover;
       background:#eef3f9;
       flex-shrink:0;
     }
 
-    .alt-info{
-      font-size:13px;
-      line-height:1.4;
-    }
-
-    .alt-info strong{
+    .main-card-head strong,
+    .alt-card-head strong{
       display:block;
       font-size:14px;
+      line-height:1.2;
+    }
+
+    .main-card-sub,
+    .alt-card-sub{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:4px;
+    }
+
+    .main-card-meta,
+    .alt-card-meta{
+      margin-top:10px;
+      display:grid;
+      gap:6px;
+      font-size:13px;
+      line-height:1.4;
+      color:#25415e;
+    }
+
+    .main-card-meta strong,
+    .alt-card-meta strong{
+      color:#102038;
+    }
+
+    .main-card-meta a,
+    .alt-card-meta a{
+      color:var(--accent);
+      text-decoration:none;
+      font-weight:700;
+    }
+
+    .main-card-meta a:hover,
+    .alt-card-meta a:hover{
+      text-decoration:underline;
     }
 
     @media (max-width:720px){
@@ -481,9 +521,8 @@
         .filter(c => c.bloquear_candidatos !== true && c.bloquear_candidatos !== 'true')
         .filter(c => c.bloqueado !== true && c.bloqueado !== 'true');
 
-      // A RPC já filtra por flag_renovacao quando p_modo = 'renovacao'.
-      // Este filtro extra é só uma rede de segurança caso o dado venha com a flag.
       const renovacao = progressistas.filter(c => normalizeBool(c.flag_renovacao));
+
       const pool = (modoResultado === 'renovacao' && renovacao.length)
         ? renovacao
         : progressistas;
@@ -492,10 +531,13 @@
         const vr = viabilityRank(b.status_viabilidade) - viabilityRank(a.status_viabilidade);
         if (vr !== 0) return vr;
 
-        const sr = Number(b?.score_final ?? 0) - Number(a?.score_final ?? 0);
+        const sr = Number(b?.score_final ?? b?.pontuacao_afinidade ?? 0) - Number(a?.score_final ?? a?.pontuacao_afinidade ?? 0);
         if (sr !== 0) return sr;
 
-        return Number(b?.total_votos ?? 0) - Number(a?.total_votos ?? 0);
+        const tr = Number(b?.total_votos ?? 0) - Number(a?.total_votos ?? 0);
+        if (tr !== 0) return tr;
+
+        return String(a?.nome_urna || a?.nome_candidato || '').localeCompare(String(b?.nome_urna || b?.nome_candidato || ''));
       });
     }
 
@@ -667,6 +709,43 @@
         || countContrarios() >= 2;
     }
 
+    function renderCandidateCard(c, compact = false) {
+      const nome = c?.nome_candidato || c?.nome_urna || '—';
+      const partido = c?.partido || '—';
+      const numero = c?.numero_candidato || '—';
+      const foto = c?.foto || '';
+      const score = c?.score_final ?? c?.pontuacao_afinidade ?? '—';
+      const chance = c?.status_viabilidade || '—';
+      const justificativa = c?.candidato_recomendado || 'Candidato selecionado por afinidade programática.';
+      const instagram = c?.instagram || '';
+      const modo = c?.modo_resultado === 'renovacao' ? 'Novos entrantes / renovação' : 'Candidatos tradicionais';
+      const totalVotos = c?.total_votos ?? null;
+      const socialScore = c?.social_score ?? null;
+
+      return `
+        <article class="${compact ? 'alt-card' : 'main-card'}">
+          <div class="${compact ? 'alt-card-top' : 'main-card-top'}">
+            ${foto ? `<img class="${compact ? 'alt-card-photo' : 'main-card-photo'}" src="${escapeAttr(foto)}" alt="${escapeAttr(nome)}">` : ''}
+            <div class="${compact ? 'alt-card-head' : 'main-card-head'}">
+              <strong>${escapeHtml(nome)}</strong>
+              <div class="${compact ? 'alt-card-sub' : 'main-card-sub'}">
+                Nº ${escapeHtml(String(numero))} · ${escapeHtml(partido)} · Score ${escapeHtml(String(score))}
+              </div>
+            </div>
+          </div>
+
+          <div class="${compact ? 'alt-card-meta' : 'main-card-meta'}">
+            <div><strong>Chance:</strong> ${escapeHtml(String(chance))}</div>
+            ${totalVotos != null ? `<div><strong>Total de votos:</strong> ${escapeHtml(String(totalVotos))}</div>` : ''}
+            ${socialScore != null ? `<div><strong>Social:</strong> ${escapeHtml(String(socialScore))}</div>` : ''}
+            <div><strong>Justificativa:</strong> ${escapeHtml(justificativa)}</div>
+            <div><strong>Modo:</strong> ${escapeHtml(modo)}</div>
+            ${instagram ? `<div><strong>Instagram:</strong> <a href="${escapeAttr(instagram)}" target="_blank" rel="noopener noreferrer">Abrir Instagram</a></div>` : ''}
+          </div>
+        </article>
+      `;
+    }
+
     async function submitQuiz() {
       const payload = buildPayload();
       const modoResultado = getModoResultado();
@@ -739,17 +818,17 @@
 
         if (!linhas.length) {
           showSemCandidato();
-          setStatus(
-            modoResultado === 'renovacao'
-              ? 'Nenhum candidato de renovação disponível para este perfil.'
-              : 'Nenhum candidato progressista retornou da consulta.',
-            'warn'
-          );
+          setStatus('Nenhum candidato progressista retornou da consulta.', 'warn');
           return;
         }
 
         const recomendacaoFinal = linhas[0] || {};
-        const alternativas = linhas.slice(1, 3);
+        const alternativas = linhas.slice(1, 3).map(alt => ({
+          ...alt,
+          modo_resultado: modoResultado,
+          candidato_recomendado: alt.candidato_recomendado || 'Candidato selecionado por afinidade programática.',
+          status_viabilidade: alt.status_viabilidade || viabilidadeLabel(alt.score_final ?? alt.pontuacao_afinidade ?? payload.pontuacao_afinidade)
+        }));
 
         const savePayload = {
           id_sessao: state.sessionId,
@@ -760,7 +839,7 @@
           direitos: payload.direitos,
           seguranca: payload.seguranca,
           transparencia: payload.transparencia,
-          pontuacao_afinidade: recomendacaoFinal.pontuacao_afinidade ?? payload.pontuacao_afinidade,
+          pontuacao_afinidade: recomendacaoFinal.pontuacao_afinidade ?? recomendacaoFinal.score_final ?? payload.pontuacao_afinidade,
           candidato_recomendado: recomendacaoFinal.candidato_recomendado || 'Candidato selecionado por afinidade programática.',
           nome_candidato: recomendacaoFinal.nome_candidato || recomendacaoFinal.nome_urna || null,
           partido: recomendacaoFinal.partido || null,
@@ -774,6 +853,8 @@
           instagram: cleanUrl(recomendacaoFinal.instagram || null),
           status_viabilidade: recomendacaoFinal.status_viabilidade || viabilidadeLabel(savePayload.pontuacao_afinidade),
           modo_resultado: modoResultado,
+          total_votos: recomendacaoFinal.total_votos ?? null,
+          social_score: recomendacaoFinal.social_score ?? null,
           alternativas
         };
 
@@ -814,10 +895,15 @@
       const numero = row?.numero_candidato || '—';
       const foto = row?.foto || '';
       const instagram = row?.instagram || '';
-      const afinidade = row?.pontuacao_afinidade ?? computeAfinidade(state.values);
+      const afinidade = row?.score_final ?? row?.pontuacao_afinidade ?? computeAfinidade(state.values);
+      const totalVotos = row?.total_votos;
+      const socialScore = row?.social_score;
       const justificativa = row?.candidato_recomendado || 'Candidato selecionado por afinidade programática.';
       const statusViabilidade = row?.status_viabilidade || viabilidadeLabel(afinidade);
       const modoResultado = row?.modo_resultado === 'renovacao' ? 'Novos entrantes / renovação' : 'Candidatos tradicionais';
+      const observacao = row?.modo_resultado === 'renovacao'
+        ? 'usando filtragem de renovação com fallback para não deixar a tela vazia.'
+        : 'seleção padrão por afinidade e viabilidade.';
 
       resultName.textContent = nome;
       resultPhoto.alt = nome || 'Foto do candidato';
@@ -826,9 +912,12 @@
         <strong>Número:</strong> ${escapeHtml(String(numero))}<br>
         <strong>Partido:</strong> ${escapeHtml(partido)}<br>
         <strong>Score:</strong> ${escapeHtml(String(afinidade))}<br>
+        ${totalVotos != null ? `<strong>Total de votos:</strong> ${escapeHtml(String(totalVotos))}<br>` : ''}
+        ${socialScore != null ? `<strong>Social:</strong> ${escapeHtml(String(socialScore))}<br>` : ''}
         <strong>Chance:</strong> ${escapeHtml(statusViabilidade)}<br>
         <strong>Justificativa:</strong> ${escapeHtml(justificativa)}<br>
-        <strong>Modo:</strong> ${escapeHtml(modoResultado)}
+        <strong>Modo:</strong> ${escapeHtml(modoResultado)}<br>
+        <strong>Observação:</strong> ${escapeHtml(observacao)}
       `;
 
       if (foto) {
@@ -845,16 +934,10 @@
 
       if (row?.alternativas && row.alternativas.length) {
         altList.style.display = 'grid';
-        altList.innerHTML = `<p class="alt-title">Outras opções compatíveis:</p>` +
-          row.alternativas.map(alt => `
-            <div class="alt-item">
-              ${alt.foto ? `<img src="${escapeAttr(alt.foto)}" alt="">` : ''}
-              <div class="alt-info">
-                <strong>${escapeHtml(alt.nome_urna || alt.nome_candidato || '—')}</strong>
-                Nº ${escapeHtml(String(alt.numero_candidato || '—'))} · ${escapeHtml(alt.partido || '—')} · Score ${escapeHtml(String(alt.pontuacao_afinidade ?? '—'))}
-              </div>
-            </div>
-          `).join('');
+        altList.innerHTML = `
+          <p class="alt-title">Outras opções compatíveis:</p>
+          ${row.alternativas.map(alt => renderCandidateCard(alt, true)).join('')}
+        `;
       } else {
         altList.style.display = 'none';
         altList.innerHTML = '';
