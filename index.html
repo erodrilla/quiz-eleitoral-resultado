@@ -827,8 +827,7 @@
           if (insertResponse.error) throw insertResponse.error;
         } catch (err) {
           console.error('Falha ao salvar resultado bloqueado:', err);
-          setStatus('Resultado exibido, mas houve falha ao salvar.', 'warn');
-        }
+                 }
 
         return;
       }
