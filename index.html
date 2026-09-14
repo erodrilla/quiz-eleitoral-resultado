@@ -800,19 +800,16 @@
       }
 
       if (mustBlockCandidate()) {
+        // savePayload ajustado para usar somente colunas que existem em eleitores_respostas
         const savePayload = {
           id_sessao: state.sessionId,
-          mulheres: payload.mulheres,
-          educacao: payload.educacao,
-          meio_ambiente: payload.meio_ambiente,
-          impostos: payload.impostos,
-          direitos: payload.direitos,
-          seguranca: payload.seguranca,
-          transparencia: payload.transparencia,
-          pontuacao_afinidade: payload.pontuacao_afinidade,
-          candidato_recomendado: 'Sem candidato recomendado — perfil incompatível com os critérios mínimos.',
+          id_candidato: null,
           nome_candidato: null,
           partido: null,
+          numero_candidato: null,
+          justificativa: 'Sem candidato recomendado — perfil incompatível com os critérios mínimos.',
+          foto: null,
+          instagram: null,
           bloquear_candidatos: true
         };
 
@@ -827,7 +824,7 @@
           if (insertResponse.error) throw insertResponse.error;
         } catch (err) {
           console.error('Falha ao salvar resultado bloqueado:', err);
-                 }
+        }
 
         return;
       }
@@ -870,28 +867,28 @@
           status_viabilidade: alt.status_viabilidade || viabilidadeLabel(alt.score_final ?? alt.pontuacao_afinidade ?? payload.pontuacao_afinidade)
         }));
 
+        // savePayload ajustado para usar somente colunas que existem em eleitores_respostas
         const savePayload = {
           id_sessao: state.sessionId,
-          mulheres: payload.mulheres,
-          educacao: payload.educacao,
-          meio_ambiente: payload.meio_ambiente,
-          impostos: payload.impostos,
-          direitos: payload.direitos,
-          seguranca: payload.seguranca,
-          transparencia: payload.transparencia,
-          pontuacao_afinidade: recomendacaoFinal.pontuacao_afinidade ?? recomendacaoFinal.score_final ?? payload.pontuacao_afinidade,
-          candidato_recomendado: recomendacaoFinal.candidato_recomendado || 'Candidato selecionado por afinidade programática.',
+          id_candidato: recomendacaoFinal.numero_candidato || null,
           nome_candidato: recomendacaoFinal.nome_candidato || recomendacaoFinal.nome_urna || null,
           partido: recomendacaoFinal.partido || null,
+          numero_candidato: recomendacaoFinal.numero_candidato || null,
+          justificativa: recomendacaoFinal.candidato_recomendado || 'Candidato selecionado por afinidade programática.',
+          foto: cleanUrl(recomendacaoFinal.foto || null),
+          instagram: cleanUrl(recomendacaoFinal.instagram || null),
           bloquear_candidatos: false
         };
 
         const finalRow = {
-          ...savePayload,
-          numero_candidato: recomendacaoFinal.numero_candidato || null,
-          foto: cleanUrl(recomendacaoFinal.foto || null),
-          instagram: cleanUrl(recomendacaoFinal.instagram || null),
-          status_viabilidade: recomendacaoFinal.status_viabilidade || viabilidadeLabel(savePayload.pontuacao_afinidade),
+          nome_candidato: savePayload.nome_candidato,
+          partido: savePayload.partido,
+          numero_candidato: savePayload.numero_candidato,
+          foto: savePayload.foto,
+          instagram: savePayload.instagram,
+          candidato_recomendado: savePayload.justificativa,
+          pontuacao_afinidade: recomendacaoFinal.pontuacao_afinidade ?? recomendacaoFinal.score_final ?? payload.pontuacao_afinidade,
+          status_viabilidade: recomendacaoFinal.status_viabilidade || viabilidadeLabel(recomendacaoFinal.pontuacao_afinidade ?? recomendacaoFinal.score_final ?? payload.pontuacao_afinidade),
           modo_resultado: modoResultado,
           total_votos: recomendacaoFinal.total_votos ?? null,
           social_score: recomendacaoFinal.social_score ?? null,
@@ -909,7 +906,6 @@
           if (insertResponse.error) throw insertResponse.error;
         } catch (err) {
           console.error('Falha ao salvar recomendação:', err);
-          setStatus('Recomendação exibida, mas houve falha ao salvar.', 'warn');
         }
       } catch (err) {
         console.error(err);
