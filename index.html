@@ -848,10 +848,7 @@
       const instagram = row?.instagram || '';
       const afinidade = row?.pontuacao_afinidade ?? computeAfinidade(state.values);
       const justificativa = row?.candidato_recomendado || 'Candidato selecionado por afinidade programática.';
-      const statusViabilidade =
-  modoResultado === 'renovacao'
-    ? (recomendacaoFinal.viabilidade_social || viabilidadeLabel(recomendacaoFinal.score_social ?? 0))
-    : (recomendacaoFinal.status_viabilidade || viabilidadeLabel(recomendacaoFinal.score_final ?? 0));
+      const statusViabilidade = row?.status_viabilidade || viabilidadeLabel(afinidade);
 
       resultName.textContent = nome;
       resultPhoto.alt = nome || 'Foto do candidato';
